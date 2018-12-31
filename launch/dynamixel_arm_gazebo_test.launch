@@ -1,0 +1,56 @@
+<launch>
+
+ <!-- GAZEBO-->
+      <arg name="paused" default="false"/>
+      <arg name="use_sim_time" default="true"/>
+      <arg name="gui" default="true"/>
+      <arg name="headless" default="false"/>
+      <arg name="debug" default="false"/>
+
+   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+	    <arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit_xl.world"/>
+	    <arg name="paused" value="$(arg paused)"/>
+	    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+	    <arg name="gui" value="$(arg gui)"/>
+	    <arg name="headless" value="$(arg headless)"/>
+	    <arg name="debug" value="$(arg debug)"/>            
+  </include>
+ <node name="control" pkg="ed_control" type="acontrol_arm" output="screen" required="true"/>  
+<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
+<!--  ROBOT1 -->
+ <group ns="robot1">
+  	
+  	<!--hsdb--> <node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" />
+	 <include file="$(find dynmxl_pro_moveit_arm)/launch/demo.launch" >
+		 <arg name="z" default="0.05"/>
+	 	 <arg name="x" default="0.0"/> <!-- -1.5-->
+	 	 <arg name="y" default="0.0"/>
+ 	 </include>	
+ </group>
+ 	
+ 	   <!-- ROBOT2   -->
+  <group ns="robot2">
+ 	 <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch" >
+	 	 <arg name="z" default="6.0"/>
+	 	 <arg name="x" default="0.2"/>
+	 	 <arg name="y" default="0.0"/>
+  	</include>
+  </group>
+ 	
+<!--sd -->
+
+ <node pkg="apriltags_ros" type="apriltag_detector_node" name="apriltag_detector" output="screen">
+    <remap from="image_rect" to="/robot1/cam/image_raw" />
+    <remap from="camera_info" to="/robot1/cam/camera_info" />
+    <param name="tag_family" type="str" value="36h11" />
+    <param name="projected_optics" type="bool" value="true" />
+    <rosparam param="tag_descriptions">[{id: 13, size: 0.04, frame_id: odom_combined}]
+ </rosparam>
+  </node>
+
+    vdfg
+ 	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/> 
+
+
+
+</launch>

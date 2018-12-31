@@ -1,0 +1,79 @@
+<launch>
+
+ <!-- GAZEBO-->
+      <arg name="paused" default="false"/>
+      <arg name="use_sim_time" default="true"/>
+      <arg name="gui" default="true"/>
+      <arg name="headless" default="false"/>
+      <arg name="debug" default="false"/>
+
+   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+	    <arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit_xl.world"/>
+	    <arg name="paused" value="$(arg paused)"/>
+	    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+	    <arg name="gui" value="$(arg gui)"/>
+	    <arg name="headless" value="$(arg headless)"/>
+	    <arg name="debug" value="$(arg debug)"/>
+  </include>
+ <node name="control" pkg="ed_control" type="acontrol_arm" output="screen" required="true"/>  
+ <node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
+ <!--ROBOT1-->
+ <group ns="robot1">
+  	
+  	 <node pkg="ed_pmov" type="pmov" name="pmov" output="screen" />
+	 <include file="$(find dynmxl_pro_moveit_arm)/launch/demo.launch" >
+		 <arg name="z" default="0.05"/>
+	 	 <arg name="x" default="0.0"/> <!-- -1.5-->
+	 	 <arg name="y" default="0.0"/>
+ 	 </include>
+ </group>
+ 	  
+ 	   <!-- ROBOT2-->
+  <group ns="robot2">
+ 	 <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch" > 
+	 	 <arg name="z" default="10.0"/>
+	 	 <arg name="x" default="0.2"/>
+	 	 <arg name="y" default="0.0"/>
+  	</include> 	
+  </group>
+ 	 
+  <!--	sd
+<include file="$(find arm_dual_moveit)/launch/camara.launch"/>--> 
+
+  <node pkg="apriltags_ros" type="apriltag_detector_node" name="apriltag_detector" output="screen">
+    <remap from="image_rect" to="/robot1/cam/image_raw" />
+    <remap from="camera_info" to="/robot1/cam/camera_info" />
+    <param name="tag_family" type="str" value="36h11" />
+    <param name="projected_optics" type="bool" value="true" />
+    <rosparam param="tag_descriptions">[{id: 13, size: 0.04, frame_id: a_frame}]
+    </rosparam>
+  </node>
+
+
+<!--
+<arg name="launch_prefix" default="" />
+  <arg name="node_namespace" default="apriltags2_ros_continuous_node" />
+  <arg name="camera_name" default="/camera_rect" />
+  <arg name="camera_frame" default="camera" />
+  <arg name="image_topic" default="image_rect" />
+
+  <rosparam command="load" file="$(find apriltags2_ros)/config/settings.yaml" ns="$(arg node_namespace)" />
+  <rosparam command="load" file="$(find apriltags2_ros)/config/tags.yaml" ns="$(arg node_namespace)" />
+  
+  <node pkg="apriltags2_ros" type="apriltags2_ros_continuous_node" name="$(arg node_namespace)" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" >
+    
+    <remap from="image_rect" to="/robot1/cam/image_raw" />
+    <remap from="camera_info" to="/robot1/cam/camera_info" />
+
+    <param name="camera_frame" type="str" value="/robot1/cam" />
+    <param name="publish_tag_detections_image" type="bool" value="true" />     
+  </node>
+ default: false -->
+
+
+  <!--  vdfg-->
+ 	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/> 
+ <include file="$(find pro_arm_move)/launch/all_motors_pos_control.launch"/>
+
+
+</launch>

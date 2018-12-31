@@ -1,0 +1,48 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/edd/catkin_ws/devel/include",
+                "/opt/ros/kinetic/include",
+                "/home/edd/catkin_ws/src/apriltags_ros/apriltags/include",
+                "/home/edd/catkin_ws/src/apriltags2_ros/apriltags2/include",
+                "/home/edd/catkin_ws/src/apriltags2_ros/apriltags2_ros/include",
+                "/home/edd/catkin_ws/src/apriltags_ros/apriltags_ros/include",
+                "/home/edd/catkin_ws/src/dynamixel-workbench/dynamixel_workbench_controllers/include",
+                "/home/edd/catkin_ws/src/dynamixel-workbench/dynamixel_workbench_single_manager/include",
+                "/home/edd/catkin_ws/src/dynamixel-workbench/dynamixel_workbench_single_manager_gui/include",
+                "/home/edd/catkin_ws/src/dynamixel-workbench/dynamixel_workbench_toolbox/include",
+                "/home/edd/catkin_ws/src/ed_control/include",
+                "/home/edd/catkin_ws/src/ed_pmov/include",
+                "/home/edd/catkin_ws/src/hector_localization/hector_pose_estimation/include",
+                "/home/edd/catkin_ws/src/hector_localization/hector_pose_estimation_core/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_quadrotor_controller/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_quadrotor_controller_gazebo/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_quadrotor_gazebo_plugins/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_quadrotor_model/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_quadrotor_pose_estimation/include",
+                "/home/edd/catkin_ws/src/hector_quadrotor/hector_uav_msgs/include",
+                "/home/edd/catkin_ws/src/jog_arm/jog_api/include",
+                "/home/edd/catkin_ws/src/jog_arm/jog_arm/include",
+                "/home/edd/catkin_ws/src/ROBOTIS-MANIPULATOR-H/manipulator_h_base_module/include",
+                "/home/edd/catkin_ws/src/ROBOTIS-MANIPULATOR-H/manipulator_h_gui/include",
+                "/home/edd/catkin_ws/src/ROBOTIS-MANIPULATOR-H/manipulator_h_kinematics_dynamics/include",
+                "/home/edd/catkin_ws/src/my_dynamixel/include",
+                "/home/edd/catkin_ws/src/octomap/octomap_server/include",
+                "/home/edd/catkin_ws/src/pro_arm_move/include",
+                "/home/edd/catkin_ws/src/summit_xl_common/summit_xl_localization/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
