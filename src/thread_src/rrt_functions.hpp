@@ -63,9 +63,9 @@ public:
     RRT() : ArmModel(){
         sequence_loop=false;
 
-        d_prv = 5;      // profundidad de datos previos disponibles para prediccion
+        d_prv = 4;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 2;     // datos previos a usar para calculo de mean values
-        prof_expl = 8;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 12;  // Profundidad de exploracion  Esz=prof_f
         image  = cv::Mat::zeros( 400, 400, CV_8UC3 );
         image_Ptraj = cv::Mat::zeros( 400, 400, CV_8UC3 );
         acum_x.resize((d_prv+1));
@@ -108,7 +108,7 @@ public:
         r_interior = 0.08;
         maxsc = 0.4;
         scale = floor(400/(2*maxsc));
-
+        f_dist=0.1;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -172,8 +172,10 @@ private:
     double r_interior;
     double maxsc;
     double scale;
+    double f_dist;
     Printer Print;
     mutex m_rrt;
+
 
 };
 

@@ -33,7 +33,8 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     traj.yval.resize(prof_expl+1);
     traj.zval.resize(prof_expl+1);
     Tr=traj;
-    double fixed_dist=0.1;//seria la distancia fija a la que se extiende la prediccion
+    
+    double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
@@ -78,10 +79,14 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
            // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i]=zvalue;
         }
-        float Fixf_dist=0.0015;
+        double Fixf_dist = 0.0025;
         Print("dist for fix: ",abs(acum_x[d_prv]-acum_x[d_prv-1]),abs(acum_y[d_prv]-acum_y[d_prv-1]));
-        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) < Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) < Fixf_dist) fixed_dist=0.002;//antes era 0.1. Para cuando el UAV esta quieto
 
+        Print("marker positon x:",acum_x[d_prv]);Print("marker positon x:",acum_y[d_prv]);
+
+    Print("marker positon old x:",acum_x[d_prv-1]);Print("marker positon old x:",acum_y[d_prv-1]);
+        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { fixed_dist=0.003; Print("fixed in 0.003");}//antes era 0.1. Para cuando el UAV esta quieto
+        else {fixed_dist=f_dist;Print("fixed in ",fixed_dist);}
         //=======================================================================================================================================
         if (abs(mean.vx) > abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
         {
@@ -162,7 +167,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
-       Print("step-Prediction -5 ");
+      // Print("step-Prediction -5 ");
        double maxsc1=0.4;
         double scale1=floor(400/(2*maxsc1));
         if (nodes_reordered == 1)
@@ -194,12 +199,12 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 }
                  //cv::circle( image1, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
-            Print("step-Prediction -6 ");
+            //Print("step-Prediction -6 ");
             CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl);
         }
-        fixed_dist=0.1;
+        fixed_dist=f_dist;
     }
-    Print("step-Prediction -7 ");
+    //Print("step-Prediction -7 ");
     Tr_old = Tr;
 return;
 }

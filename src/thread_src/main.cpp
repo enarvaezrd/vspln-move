@@ -75,9 +75,10 @@ int main(int argc, char** argv)
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
 
                 RRT_model.RRT_Sequence(CurrentRequest_Thread);
+                RRT_model.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
                 loop_rate_thread.sleep();
-                Print("step-RRt5");
+//Print("step-RRt5");
                 sequence_loop = RRT_model.getLoopState();
 
            }
@@ -136,8 +137,9 @@ int main(int argc, char** argv)
         CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
         long double elapsed_time =RRT_model.ArmModel.toc();
-
+        RRT_model.loop_end();
         RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
+        RRT_model.loop_start();
         RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest ,2);//type 1 with normal execution, type 2 for last joint preference
         UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime();
 

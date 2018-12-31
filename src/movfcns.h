@@ -331,10 +331,10 @@ struct Etraj Traj_Prediction(int vcnt, int d_prm, int d_prv, int &prof_e, Delta_
         }
 
 
-        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) < 0.0025 && abs(acum_y[d_prv]-acum_y[d_prv-1]) < 0.0025) fixed_dist=0.003;//antes era 0.1
+        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) < 0.0025 && abs(acum_y[d_prv]-acum_y[d_prv-1]) < 0.0025) fixed_dist=0.003;//antes sin restriccion era 0.1
 
         //=======================================================================================================================================
-        if (abs(Dv.dx) > abs(Dv.dy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
+        if (abs(Dv.dx) > abs(Dv.dy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayor informacion, pasos mas grandes
         {
             Regression(acum_x,acum_y,d_prv,1,n,coeffs);
 
