@@ -63,9 +63,9 @@ public:
     RRT() : ArmModel(){
         sequence_loop=false;
 
-        d_prv = 4;      // profundidad de datos previos disponibles para prediccion
-        d_pr_m = 2;     // datos previos a usar para calculo de mean values
-        prof_expl = 12;  // Profundidad de exploracion  Esz=prof_f
+        d_prv = 6;      // profundidad de datos previos disponibles para prediccion
+        d_pr_m = 3;     // datos previos a usar para calculo de mean values
+        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
         image  = cv::Mat::zeros( 400, 400, CV_8UC3 );
         image_Ptraj = cv::Mat::zeros( 400, 400, CV_8UC3 );
         acum_x.resize((d_prv+1));
@@ -140,6 +140,7 @@ public:
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
     bool getLoopState(){return sequence_loop;}
+    void reset_nodes_reordered(){nodes_reordered=0;}
 
     void loop_start();
     void loop_end();

@@ -25,20 +25,20 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     CurrentPoint.zval=Marker_Abs_Pose.position.z;
     int n=2;
     tr_brk=0;
-    //Print("step-Prediction -1 ");
+    Print("step-Prediction -1 ");
 
     std::vector<double> coeffs(n+1);
     Etraj traj;
     traj.xval.resize(prof_expl+1);
     traj.yval.resize(prof_expl+1);
     traj.zval.resize(prof_expl+1);
-    Tr=traj;
+    Tr=traj;Print("step-Prediction -100 ");
     
     double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
-        {
+        {Print("step-Prediction -10 ");
             for(int i=0;i<prof_expl;i++)
             {
                traj.xval[i]=CurrentPoint.xval ;
@@ -48,7 +48,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
 
         else
-        {
+        {Print("step-Prediction -11 ");
             for(int i=0;i<prof_expl;i++)
             {
                traj.xval[i]=CurrentPoint.xval+(i*mean.vx/2) ;
@@ -57,7 +57,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             }
         }
         Tr=traj;
-        //Print("step-Prediction -2 ");
+        Print("step-Prediction -2 ");
     }
     else
     {  //Cuando ya se pueda calcular regresion, es decir cuando ya se hayan acumulado muchos valores para mean.vx mean.vy
@@ -80,15 +80,10 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             traj.zval[i]=zvalue;
         }
         double Fixf_dist = 0.0025;
-        Print("dist for fix: ",abs(acum_x[d_prv]-acum_x[d_prv-1]),abs(acum_y[d_prv]-acum_y[d_prv-1]));
-
-        Print("marker positon x:",acum_x[d_prv]);Print("marker positon x:",acum_y[d_prv]);
-
-    Print("marker positon old x:",acum_x[d_prv-1]);Print("marker positon old x:",acum_y[d_prv-1]);
         if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { fixed_dist=0.003; Print("fixed in 0.003");}//antes era 0.1. Para cuando el UAV esta quieto
         else {fixed_dist=f_dist;Print("fixed in ",fixed_dist);}
         //=======================================================================================================================================
-        if (abs(mean.vx) > abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
+        if (abs(mean.vx) >= abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
         {
             Regression(acum_x,acum_y,d_prv,1,n,coeffs);
 
@@ -111,7 +106,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 double hipx=sqrt((pow((CurrentPoint.yval-yvala[i]),2)) + (pow((CurrentPoint.xval-xvala[i]),2)) );
                 if (hipx > fixed_dist)
                 {
-                    indxj=i;//cout<<"===============Indice x "<<i<<endl;
+                    indxj=i;
                     break;
                 }
             }
@@ -167,7 +162,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
-      // Print("step-Prediction -5 ");
+       Print("step-Prediction -5 ");
        double maxsc1=0.4;
         double scale1=floor(400/(2*maxsc1));
         if (nodes_reordered == 1)
@@ -197,6 +192,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     Tr.yval[j]=traj.yval[j];
                     Tr.zval[j]=zvalue;
                 }
+                Print("trajvalues", Tr.xval[j],Tr.yval[j]);
                  //cv::circle( image1, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
             //Print("step-Prediction -6 ");
@@ -227,17 +223,19 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
   
 
     if (acum_values != (d_pr_m+1))
-            acum_values++;
-        else
-            acum_values = (d_pr_m+1);
+        acum_values++;
+    else
+        acum_values = (d_pr_m+1);
 
-    for(int i = (d_prv-d_pr_m+1);i<(d_prv);i++)
+    //for(int i = (d_prv-d_pr_m+1);i<(d_prv);i++)
+    for(int i = d_prv;i>(d_prv-d_pr_m);i--)
     {
         mean.vx += (acum_x[i]-acum_x[i-1]); //Acumulo todo el vector (diferencias)
         mean.vy += (acum_y[i]-acum_y[i-1]);
     }
     mean.vx /= (acum_values-1); // Acumulacion sobre numero de datos　vx　es la variacion promedio en x
     mean.vy /= (acum_values-1);
+    Print("mean values", mean.vx,mean.vy, acum_values);
 return mean;
 }
 
@@ -450,7 +448,7 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
              if (diff_prev>0.1)
              {
                  cndf++;
-                 if (diff_prev>0.25) sc=100;
+                 if (diff_prev>0.15) sc=100;
 
                  x[i] = xo + ((diffxa) / (cndf*sc));
                  y[i] = yo + ((diffya) / (cndf*sc));
@@ -477,6 +475,7 @@ void RRT::Initialize_VicinityRRT()
         vdr.TP[j][0]=Tr.xval[j];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
         vdr.TP[j][1]=Tr.yval[j];
         vdr.TP[j][2]=Tr.zval[j];
+        Print("Trajectory points",Tr.xval[j],Tr.yval[j],Tr.zval[j]);
     }
         for (int j=0;j<prof_expl;j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
         {
@@ -512,7 +511,7 @@ void RRT::Initialize_VicinityRRT()
             //if (dm<=0.001) dm=0.001;
 
             //VD.R[j][2]=0.001;
-            vdr.R[j][1]=0.001;//valor de z
+            vdr.R[j][1]=0.005;//valor de z
             vdr.R[j][0]=dm;//0 es dm
             double acDist=0;
 
@@ -528,6 +527,7 @@ void RRT::Initialize_VicinityRRT()
 
             //vdr.R[j][0]=0.01;
             vdr.R[j][1]=0.01;//fijos, cambiar a variables
+            Print("Radios",vdr.R[j][0],vdr.R[j][1],vdr.R[j][2] );
             //vdr.R[j][2]=0.1;
         }
         vdr.L=prof_expl;
@@ -776,7 +776,8 @@ void RRT::Add_Node(int It)
     std::uniform_int_distribution<int> distx(-xmax,xmax);
     std::uniform_int_distribution<int> disty(-ymax,ymax);
     std::uniform_int_distribution<int> distz(-zmax,zmax);
-    int max_tries=150;
+    Print("add nodes start");
+    int max_tries=10;
     while (found_ik==0)
     {
         try_count++;
@@ -793,27 +794,30 @@ void RRT::Add_Node(int It)
         q_rand[2]=rnz;
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
     }
+    Print("add nodes 0");
     //======================================================================================================================================================
     //Transformaciones, rotacion y traslacion
     vector<std::vector<double> > Rpitch,Rroll,Ryaw;
     Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
     rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);
     allwd = Check_Boundaries(rnTemp1);
-
-    bool found_ik_tmp=0;
+    bool found_ik_tmp = false;
     if (allwd==1)
       {
           //======Chequeo de colisiones===========================================
-           std::vector<double> tempPosit(7);
+           std::vector<double> tempPosit(3);
+           Print("add nodes 000");
            tempPosit[0] = rnTemp1[0];
            tempPosit[1] = rnTemp1[1];
            tempPosit[2] = rnTemp1[2];
+           Print("add nodes 001",tempPosit[0],tempPosit[1],tempPosit[2]);
            found_ik_tmp = ArmModel.Check_Collision(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
-
+            Print("add nodes 002");
       }
+       Print("add nodes 02");
     found_ik=found_ik_tmp;
     }
-
+Print("add nodes 03");
 
    if (try_count<=max_tries)
    {
@@ -823,6 +827,7 @@ void RRT::Add_Node(int It)
     std::vector<double> ndist;
     double tmp_dist;
     //Hallar el minimo
+    Print("add nodes 1");
     for (int k=0;k<nodes.N;k++)
     {
        std::vector<double>  temp_coords(3);
@@ -844,7 +849,7 @@ void RRT::Add_Node(int It)
         }
     }
     Node q_near,q_new;
-
+Print("add nodes 2");
     Extract_Node_from_Nodes( q_near,nodes,index_near); //almacenar en q_near el nodo mas cercano al punto q_new
     //Funcion steer
 
@@ -871,7 +876,7 @@ void RRT::Add_Node(int It)
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
     //Update parent to least cost-from node.
     q_new.parent=q_min_Indx;
-
+Print("add nodes 3");
     //Ahora hacer steer otra vez para cumplir con las restricciones de dist max de movimiento
     double val=Distance(q_new.coord,q_min.coord);
     Node q_new_f;
@@ -978,6 +983,7 @@ VectorDbl RRT::Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vect
     temp[0]+=vdr.TP[It][0];
     temp[1]+=vdr.TP[It][1];
     temp[2]+=vdr.TP[It][2];
+
     //     or eliminate the variable.
 return temp;
 }
@@ -1072,14 +1078,14 @@ void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
     //Print("step-RRt1");
     XYMean_Calculation(Marker_Abs_Pose);
     Trajectory_Prediction(Marker_Abs_Pose);
-    /*Print("step-RRt2");
+    Print("step-RRt2");
     Initialize_VicinityRRT();
     Print("step-RRt3");
     Node_Filter();
-    Print("step-RRt4");*/
+    Print("step-RRt4");
     Nodes_Reorder();
     //Print("step-RRt5");
-    //RRT_Generation();
+    RRT_Generation();
     //Print("step-RRt5",nodes_reordered);
 
     return;

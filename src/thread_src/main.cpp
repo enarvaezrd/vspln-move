@@ -1,5 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
+#define thread_
 
 
 #include "uav_arm_tools.hpp"
@@ -61,12 +62,13 @@ int main(int argc, char** argv)
     int TrackingState=0;
     int ThreadStep=0;
     geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
+#ifdef thread
    auto rrt_thread = std::thread([&](){
-       ros::Rate loop_rate_thread(30);
+       ros::Rate loop_rate_thread(20);
        // std::unique_lock<std::mutex> lck(mtx);
        // while (!sequence_loop) cv.wait(lck);
        bool sequence_loop=true;
-       sleep(11.0);
+       sleep(10.0);
        while(ros::ok())
         {
            sequence_loop = RRT_model.getLoopState();
@@ -80,17 +82,20 @@ int main(int argc, char** argv)
                 loop_rate_thread.sleep();
 //Print("step-RRt5");
                 sequence_loop = RRT_model.getLoopState();
-
+            ros::spinOnce();
            }
            while(!sequence_loop && ros::ok())
            {
                Print("RRT paused ");
                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                sequence_loop = RRT_model.getLoopState();
+               loop_rate_thread.sleep();
+               ros::spinOnce();
            }
-           loop_rate_thread.sleep();
+          
         }
         });
+#endif
 
         //std::unique_lock<std::mutex> lck(mtx_main);
     while(ros::ok())
@@ -111,8 +116,10 @@ int main(int argc, char** argv)
         }
         else
         {
+            #ifdef thread
             RRT_model.loop_end();
-
+            #endif
+            RRT_model.reset_nodes_reordered();
             UavArm_tools.PIDReset(); //reset, set zeros to errors and integrals
             TrackingState=0;
             UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
@@ -121,8 +128,9 @@ int main(int argc, char** argv)
 
         if (TrackingState > 1)
         {
-
+            #ifdef thread
             RRT_model.loop_start();
+            #endif
             UavArm_tools.counter_addOne();
             //actualiza desde la posicion del brazo
             //RRT_model.ArmModel.PrintCurrentPose("PR");
@@ -130,8 +138,13 @@ int main(int argc, char** argv)
             //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process
            
             UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
-             m.unlock();
+            m.unlock();
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
+            #ifndef thread
+            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
+            RRT_model.RRT_Sequence(CurrentRequest_Thread);
+            #endif
+
         }
 
         CurrentRequest = UavArm_tools.getArmPoseReq();
@@ -147,7 +160,6 @@ int main(int argc, char** argv)
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
         //RRT_model.ArmModel.PrintCurrentPose("FN");
 
-        ThreadStep++;
 
        /* if (recognition.joinable()&&ThreadStep>5){
             cout<<"step11"<<endl;
@@ -160,7 +172,7 @@ int main(int argc, char** argv)
         cv::imshow("Image1",RRT_model.getImage_Ptraj());
         cv::waitKey(1);
         loop_rate.sleep();
-        //ros::spinOnce();
+        ros::spinOnce();
     }
 
    // if (rrt_thread.joinable()) rrt_thread.join();
