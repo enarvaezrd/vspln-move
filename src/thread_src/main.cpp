@@ -1,6 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-#define thread_
+#define threadMode
 
 
 #include "uav_arm_tools.hpp"
@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     Printer Print;
     rrt_planif::RRT RRT_model;
     ua_ns::uav_arm_tools UavArm_tools;
-    sleep(4.0);
+    sleep(2.0);
 
     std::vector<double> joint_valuesT(6);
     std::mutex m;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     int TrackingState=0;
     int ThreadStep=0;
     geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
-#ifdef thread
+#ifdef threadMode
    auto rrt_thread = std::thread([&](){
        ros::Rate loop_rate_thread(20);
        // std::unique_lock<std::mutex> lck(mtx);
@@ -73,16 +73,17 @@ int main(int argc, char** argv)
         {
            sequence_loop = RRT_model.getLoopState();
            while (sequence_loop && ros::ok())
-           { 
+           {    Print("-- start");
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
-
+                Print("-- pose read");
                 RRT_model.RRT_Sequence(CurrentRequest_Thread);
+                Print("-- delay");
                 RRT_model.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
                 loop_rate_thread.sleep();
-//Print("step-RRt5");
+                Print("-- get loop state");
                 sequence_loop = RRT_model.getLoopState();
-            ros::spinOnce();
+            //ros::spinOnce();
            }
            while(!sequence_loop && ros::ok())
            {
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                sequence_loop = RRT_model.getLoopState();
                loop_rate_thread.sleep();
-               ros::spinOnce();
+               //ros::spinOnce();
            }
           
         }
@@ -116,7 +117,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            #ifdef thread
+            #ifdef threadMode
             RRT_model.loop_end();
             #endif
             RRT_model.reset_nodes_reordered();
@@ -128,19 +129,23 @@ int main(int argc, char** argv)
 
         if (TrackingState > 1)
         {
-            #ifdef thread
+            #ifdef threadMode
             RRT_model.loop_start();
             #endif
             UavArm_tools.counter_addOne();
             //actualiza desde la posicion del brazo
             //RRT_model.ArmModel.PrintCurrentPose("PR");
+            #ifdef threadMode
             m.lock();
-            //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process
-           
+            //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process           
             UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
             m.unlock();
+            #else
+            UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
+            #endif
+
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
-            #ifndef thread
+            #ifndef threadMode
             CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
             RRT_model.RRT_Sequence(CurrentRequest_Thread);
             #endif
@@ -149,17 +154,26 @@ int main(int argc, char** argv)
 
         CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
+        Print(">>time stp 1");
         long double elapsed_time =RRT_model.ArmModel.toc();
+        #ifdef threadMode
         RRT_model.loop_end();
         RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
         RRT_model.loop_start();
+        Print("thread");
+        #else
+        Print("no thread");
+        RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
+        #endif
+        Print(">>sleep stp 2");    
         RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest ,2);//type 1 with normal execution, type 2 for last joint preference
+        Print(">>sleep stp 21"); 
         UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime();
-
+        Print(">>current pose stp 3");
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
         //RRT_model.ArmModel.PrintCurrentPose("FN");
-
+        Print(">>finish stp 4" );
 
        /* if (recognition.joinable()&&ThreadStep>5){
             cout<<"step11"<<endl;
@@ -172,7 +186,6 @@ int main(int argc, char** argv)
         cv::imshow("Image1",RRT_model.getImage_Ptraj());
         cv::waitKey(1);
         loop_rate.sleep();
-        ros::spinOnce();
     }
 
    // if (rrt_thread.joinable()) rrt_thread.join();

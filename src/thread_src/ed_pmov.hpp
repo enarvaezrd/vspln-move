@@ -17,9 +17,9 @@ public:
     Ed_Pmov() : group("pro_arm")
     {
         group.setPlannerId("RRTConnectkConfigDefault");//PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group.setGoalTolerance(0.004);//0.004
-        group.setGoalOrientationTolerance(0.005);//0.008
-        group.setPlanningTime(0.01);
+        group.setGoalTolerance(0.005);//0.004
+        group.setGoalOrientationTolerance(0.008);//0.008
+        group.setPlanningTime(0.1);
 
         RobotModelLoader robot_model_loader("robot1/robot_description");   //--
 

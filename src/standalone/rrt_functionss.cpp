@@ -1,6 +1,6 @@
 #ifndef RRT_PLANIF_CODE
 #define RRT_PLANIF_CODE
-#include"rrt_functions.hpp"
+#include"rrt_functionss.hpp"
 using namespace rrt_planif;
 
 void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
@@ -113,6 +113,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             double stepx=(vxtm*indxj/prof_expl);//paso resultante, para distancia fija
             for(int i=0;i<prof_expl;i++)
             {   traj.xval[i]=CurrentPoint.xval+(i*stepx);
+                Print("generacion de x", traj.xval[i],i);
                 //cout<<"==XVAl "<<traj.xval[i]<<endl;
             }
 
@@ -827,7 +828,7 @@ void RRT::Add_Node(int It)
            tempPosit[1] = rnTemp1[1];
            tempPosit[2] = rnTemp1[2];
            Print("add nodes 001",tempPosit[0],tempPosit[1],tempPosit[2]);
-           found_ik_tmp = ArmModel.Check_Collision(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
+           found_ik_tmp = Check_CollisionA(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
             Print("add nodes 002");
       }
        Print("add nodes 02");
@@ -1093,19 +1094,19 @@ double RRT::Distance(VectorDbl P0, VectorDbl P1)
 
 void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
-    Print("--RRt1 XYMeanCalc");
+    Print("-------RRt1 XYMeanCalc-------------");
     XYMean_Calculation(Marker_Abs_Pose);
-    Print("--RRt2 TrajPredict");
+    Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
-    Print("--RRt3 InitVicinity");
+    Print("-------RRt3 InitVicinity-----------");
     Initialize_VicinityRRT();
-    Print("--RRt4 NodelFilter");
+    Print("-------RRt4 NodelFilter------------");
     Node_Filter();
-    Print("--RRt5 NodesReorder");
+    Print("-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
-    //Print("--RRt6 RRTGEN");
+    //Print("-----RRt6 RRTGEN-----------------");
     //RRT_Generation();
-    Print("--RRt7 Finish");
+    Print("-------RRt7 Finish-----------------");
 
     return;
 }
@@ -1122,6 +1123,9 @@ void RRT::loop_end()
     sequence_loop=false;
    // cv.notify_all();
 }
-
+bool RRT::Check_CollisionA(std::vector<double> posit, int i)
+{
+   return true;
+}
 
 #endif
