@@ -59,7 +59,6 @@ struct Vicinity{
 class RRT
 {
 
-
 public:
     
     RRT(){
@@ -89,8 +88,8 @@ public:
             vdr.TP[i].resize(7);//4 positions 4 orientations
             vdr.R[i].resize(3); //3 radius, each axis
             vdr.R[i][0] = 0.01;
-            vdr.R[i][1] = 0.01;
-            vdr.R[i][2] = (0.005+((i*i*1.0)/3000)); //fixed radius
+            vdr.R[i][2] = 0.01;
+            vdr.R[i][1] = (0.005+((i*i*1.0)/3000)); //fixed radius
             //vdr.RP[i].resize(1);
             //vdr.RP[i][1].resize(7);
             vdr.angles[i].resize(3);
@@ -143,7 +142,7 @@ public:
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
-
+    void PrintNode(cv::Mat ,VectorDbl );
     void loop_start();
     void loop_end();
 

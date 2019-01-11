@@ -3,10 +3,10 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #define PI 3.141592654
-struct Position{
+struct Position_{
     double x,y,z;
 };
-struct Orientation{
+struct Orientation_{
     double w,x,y,z;
 };
 namespace geometry_msgs{
@@ -14,14 +14,14 @@ class Pose{
     
     public:
     Pose(){};
-    Orientation orientation;
-    Position position;
+    Orientation_ orientation;
+    Position_ position;
 };
 }
 class Printer{
 public:
     Printer(){}
-    void operator()(std::string str, double a = -1111, double b = -1111 , double c = -1111,double d = -1111,double e = -1111,double f = -1111)
+    void operator()(std::string str, double a = -11111, double b = -11111 , double c = -11111,double d = -11111,double e = -11111,double f = -11111)
     {
         #ifdef VERBOSE 
             return;
@@ -40,7 +40,7 @@ public:
         for(auto i : input )
         {
             //std::cout<<i;
-            if (i != -1111)
+            if (i != -11111)
             {
                 std::ostringstream str_s;
                 str_s << i;
@@ -52,10 +52,10 @@ public:
 
         }
         std::cout<<std::endl;
-        for (int i = 0; i < strSize; i++)
+       /* for (int i = 0; i < strSize; i++)
         {
             std::cout<<'\b';
-        }
+        }*/
         return;
     }
 

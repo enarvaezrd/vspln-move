@@ -8,6 +8,7 @@
 using namespace std;
 int main(int argc, char** argv)
 {
+
     rrt_planif::RRT RRT_model;
     geometry_msgs::Pose CurrentRequest;
     CurrentRequest.orientation.w =0;
@@ -18,10 +19,14 @@ int main(int argc, char** argv)
     CurrentRequest.position.y =0;
     CurrentRequest.position.z =0;
      Printer Print;
+     Print("=============================================Start Program======================================");
     bool sequence_loop=true;
-    double count=0,b=1;
+    double count=0,b=1,cnt1=0;
     while (sequence_loop)
-           {    count = count+b;
+           {
+               Print("=======Step=====",cnt1);
+               cnt1++;
+                count = count+b;
                 if (count> 100) b=-1;
                 if (count<-100) b=1;
                 CurrentRequest.position.x = count/250;
