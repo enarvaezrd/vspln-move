@@ -138,7 +138,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 yvala[i]=CurrentPoint.yval+(i*vytm);
 
             int indyj=1;
-            for(int i=0;i<stepc;i++)  //Calculo de distancia junto con la regresion
+            for(int i=0;i<stepc;i++)  //Calculo de distancia junto con la regresion-
             {
                 xvala[i]=0.0;
                 for (int j=0;j<=n;j++)
@@ -209,7 +209,7 @@ return;
 
 struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {
-    image_Ptraj = cv::Mat::zeros( 400, 400, CV_8UC3 );
+    image_Ptraj = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
     mean.vx = 0.0;
     mean.vy = 0.0;
     for(int i = 0;i < d_prv;i++)
@@ -220,8 +220,7 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
     acum_x[d_prv] = Marker_Abs_Pose.position.x;
     acum_y[d_prv] = Marker_Abs_Pose.position.y;
     double maxsc1=0.4;
-    double scale1=floor(400/(2*maxsc1));
-    cv::circle( image_Ptraj, cv::Point( ( Marker_Abs_Pose.position.x+maxsc1)*scale1,( Marker_Abs_Pose.position.y+maxsc1)*scale1 ), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
+    cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
   
 
     if (acum_values != (d_pr_m+1))
@@ -335,8 +334,6 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
     double cat1, cat2, offx,offy;
     offx=0.0;
     offy=0.0;
-    double maxsc1=0.4;
-    double scale1=floor(400/(2*maxsc1));
     double theta=0;
     double radext=0.41;
     double rad;
@@ -463,8 +460,8 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
                  }
                  colorred=160;
              }
-      cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc1)*scale1),round(( y[i]+maxsc1)*scale1) ), 1, cv::Scalar( 0, 0, 150 ),  2, 8 );
-      Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc1)*scale1),round(( y[i]+maxsc1)*scale1));
+      cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, cv::Scalar( 0, 0, 150 ),  2, 8 );
+      Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
 
     }
     return;
@@ -524,16 +521,18 @@ void RRT::Initialize_VicinityRRT()
             {
                 acDist +=1*vdr.R[k][0];
             }
-            //Print("Acdist",acDist);
+
+            Print("Acdist",acDist);
 
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
-            vdr.R[j][1] =(acDist*acDist*1000.0)/10;//+((j*j*1.0)/5000)
+            vdr.R[j][1] =(acDist*acDist*100.0)/10;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
             //cout<<"Valores de Radios Generados: 0"<<vdr.R[j][0]<<", 1: "<<vdr.R[j][1]<<", 2: "<<vdr.R[j][2]<<endl;
 
             //vdr.R[j][0]=0.01;
            // vdr.R[j][1]=0.01;//fijos, cambiar a variables
             Print("Radios",vdr.R[j][0],vdr.R[j][1],vdr.R[j][2], acDist);
+            Print("Angles",vdr.angles[j][0],vdr.angles[j][1],vdr.angles[j][2]);
             //vdr.R[j][2]=0.1;
         }
         vdr.L=prof_expl;
@@ -757,7 +756,7 @@ Print("reorder -3");
 
 void RRT::RRT_Generation()
 {
-    int Num_Added_Nodes=1*prof_expl;
+    int Num_Added_Nodes=2*prof_expl;
 
     for (int j=0;j < prof_expl ;j++)
     {
@@ -775,10 +774,6 @@ void RRT::RRT_Generation()
         else
             Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
     }
-    /*for (int k=0;k<nodes.coord.size();k++)
-    {
-        PrintNode(image_Ptraj, nodes.coord[k]);
-    }*/
 
 return;
 }
@@ -800,9 +795,9 @@ void RRT::Add_Node(int It)
     std::mt19937 genx(rdx());
     std::mt19937 geny(rdy());
     std::mt19937 genz(rdz());
-    const int xmax=round(vdr.R[It][0] *10000);
-    const int ymax=round(vdr.R[It][1] *10000);
-    const int zmax=round(vdr.R[It][2] *10000);
+    const int xmax=round(vdr.R[It][0] *100000);
+    const int ymax=round(vdr.R[It][1] *100000);
+    const int zmax=round(vdr.R[It][2] *100000);
     int try_count=0;
     double tm=100;
     std::uniform_int_distribution<int> distx(-xmax,xmax);
@@ -810,43 +805,53 @@ void RRT::Add_Node(int It)
     std::uniform_int_distribution<int> distz(-zmax,zmax);
     Print("Radios",rx,ry,rz);
     Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=10;
+    int max_tries=20;
+    int max_rnd_tries=100;
     while (found_ik==0)
     {
         try_count++;
         if (try_count>max_tries) break;
         tm=100;
-
+        bool rnd_point_found=false;
+        int rnd_point_counts=0;
     while (tm>1)
     {
-        double rnx = distx(genx)*0.0001;
-        double rny = disty(geny)*0.0001;
-        double rnz = distz(genz)*0.0001;
+        rnd_point_counts++;
+        if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; break;}
+        double rnx = distx(genx)*0.00001;
+        double rny = disty(geny)*0.00001;
+        double rnz = distz(genz)*0.00001;
         
         
         q_rand[0]=rnx;
         q_rand[1]=rny;
         q_rand[2]=rnz;
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
+        
     }
-    Print("Distribution",q_rand[0],q_rand[1],q_rand[2]);
+    if (tm<=1) rnd_point_found=true; 
+    //Print("Distribution",q_rand[0],q_rand[1],q_rand[2]);
     //======================================================================================================================================================
     //Transformaciones, rotacion y traslacion
-    vector<std::vector<double> > Rpitch,Rroll,Ryaw;
-    Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
-    rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);
-    allwd = Check_Boundaries(rnTemp1);
     bool found_ik_tmp = false;
-    if (allwd==1)
-      {
-          //======Chequeo de colisiones===========================================
-           std::vector<double> tempPosit(3);
-           tempPosit[0] = rnTemp1[0];
-           tempPosit[1] = rnTemp1[1];
-           tempPosit[2] = rnTemp1[2];
-           //Print("add nodes 001",tempPosit[0],tempPosit[1],tempPosit[2]);
-           found_ik_tmp = Check_CollisionA(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
-      }
+    if (rnd_point_found){
+        vector<std::vector<double> > Rpitch,Rroll,Ryaw;
+        Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
+        rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);
+        allwd = Check_Boundaries(rnTemp1);
+        
+        if (allwd==1)
+        {
+            //======Chequeo de colisiones===========================================
+            std::vector<double> tempPosit(3);
+            tempPosit[0] = rnTemp1[0];
+            tempPosit[1] = rnTemp1[1];
+            tempPosit[2] = rnTemp1[2];
+            //Print("add nodes 001",tempPosit[0],tempPosit[1],tempPosit[2]);
+            found_ik_tmp = Check_CollisionA(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
+        }
+    }
+    
     found_ik=found_ik_tmp;
     }
 
@@ -916,9 +921,9 @@ void RRT::Add_Node(int It)
 
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
-    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 2, cv::Scalar( 00, 230, 50 ),  1, 8 );
+    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, cv::Scalar( 00, 230, 50 ),  1, 8 );
 
-    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  2, 8 );
     }
    else
    {
@@ -1076,11 +1081,14 @@ VectorDbl  RRT::Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2)/
     double dx1=P1[0]-P0[0];
     double dy1=P1[1]-P0[1];
     double dz1=P1[2]-P0[2];
-
+    Print("P1 P0 x",dx1,P1[0],P0[0]);
+    Print("P1 P0 y",dy1,P1[1],P0[1]);
+    Print("P1 P0 z",dz1,P1[2],P0[2]);
     double dxy1=sqrt((dx1*dx1)+(dy1*dy1));
     double yaw1=atan2(dy1,dx1);//+M_PI_2;
-    double pitch1=atan2(dxy1,dz1);
+    double pitch1=atan2(dz1,dxy1);//(dxy1,dz1);
     double roll1=0;
+    Print("dxy1",dxy1,pitch1 );
 
     double dx2=P2[0]-P1[0];
     double dy2=P2[1]-P1[1];
@@ -1088,10 +1096,10 @@ VectorDbl  RRT::Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2)/
 
     double dxy2=sqrt((dx2*dx2)+(dy2*dy2));
     double yaw2= atan2(dy2,dx2);//+M_PI_2;
-    double pitch2=atan2(dxy2,dz2);
+    double pitch2=atan2(dz2,dxy1);
     double roll2=0;
 
-    double yaw=(yaw1+yaw2)/2;
+    double yaw=(yaw1+yaw2)/2;  //mean values
     double pitch=(pitch1+pitch2)/2;
     double roll=(roll1+roll2)/2;
     angles.push_back(yaw);

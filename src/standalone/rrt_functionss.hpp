@@ -63,12 +63,12 @@ public:
     
     RRT(){
         sequence_loop=false;
-
+        image_size=800;
         d_prv = 6;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 7;  // Profundidad de exploracion  Esz=prof_f
-        image  = cv::Mat::zeros( 400, 400, CV_8UC3 );
-        image_Ptraj = cv::Mat::zeros( 400, 400, CV_8UC3 );
+        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
+        image  = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
+        image_Ptraj = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
         acum_x.resize((d_prv+1));
         acum_y.resize((d_prv+1));
 
@@ -107,8 +107,8 @@ public:
         }
         r_exterior = 0.45;
         r_interior = 0.08;
-        maxsc = 0.4;
-        scale = floor(400/(2*maxsc));
+        maxsc = 0.45;
+        scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
     }
 
@@ -156,6 +156,7 @@ private:
     VectorDbl acum_x;
     VectorDbl acum_y;
     cv::Mat image ,image_Ptraj;
+    int image_size;
 
     bool sequence_loop;
     int vicinities_init;
