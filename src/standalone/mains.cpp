@@ -29,9 +29,10 @@ cv::namedWindow("Image1",cv::WINDOW_NORMAL);
                Print("=======Step=====",cnt1);
                cnt1++;
                 count = count+b;
-                if (count> 100) b=-1;
-                if (count<-100) b=1;
-                CurrentRequest.position.x = count/250;
+                //if (count> 100) b=-1;
+                //if (count<-100) b=1;
+                CurrentRequest.position.x = 0.3*cos(PI*count/150);
+                CurrentRequest.position.y = 0.3*sin(PI*count/150);
                 Print("Current point",CurrentRequest.position.x,count);
                 RRT_model.RRT_Sequence(CurrentRequest);
                  Print("end rrt,now image");
@@ -42,7 +43,7 @@ cv::namedWindow("Image1",cv::WINDOW_NORMAL);
                 cv::imshow("Image1",image);
                 cv::waitKey(1);
                 Print("finish, now pause");
-               std::this_thread::sleep_for(std::chrono::milliseconds(100));
+               std::this_thread::sleep_for(std::chrono::milliseconds(10));
                Print("finish already paused");
 
            }

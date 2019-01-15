@@ -25,20 +25,18 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     CurrentPoint.zval=Marker_Abs_Pose.position.z;
     int n=2;
     tr_brk=0;
-    Print("step-Prediction -1 ");
 
     std::vector<double> coeffs(n+1);
     Etraj traj;
     traj.xval.resize(prof_expl+1);
     traj.yval.resize(prof_expl+1);
     traj.zval.resize(prof_expl+1);
-    Tr=traj;Print("step-Prediction -100 ");
     
     double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
-        {Print("step-Prediction -10 ");
+        {
             for(int i=0;i<prof_expl;i++)
             {
                traj.xval[i]=CurrentPoint.xval ;
@@ -48,7 +46,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
 
         else
-        {Print("step-Prediction -11 ");
+        {
             for(int i=0;i<prof_expl;i++)
             {
                traj.xval[i]=CurrentPoint.xval+(i*mean.vx/2) ;
@@ -58,7 +56,6 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         Tr=traj;
         tr_brk=prof_expl;
-        Print("step-Prediction -2 ");
     }
     else
     {  //Cuando ya se pueda calcular regresion, es decir cuando ya se hayan acumulado muchos valores para mean.vx mean.vy
@@ -114,7 +111,6 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             double stepx=(vxtm*indxj/prof_expl);//paso resultante, para distancia fija
             for(int i=0;i<prof_expl;i++)
             {   traj.xval[i]=CurrentPoint.xval+(i*stepx);
-                Print("generacion de x", traj.xval[i],i);
                 //cout<<"==XVAl "<<traj.xval[i]<<endl;
             }
 
@@ -128,7 +124,6 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         else
         {
             Regression(acum_y,acum_x,d_prv,1,n,coeffs); //lado contrario, ejes cambiados
-
             double signy = acum_y[d_prv]-acum_y[d_prv-1];
             if (signy>=0)
                         vytm=vytm;
@@ -147,7 +142,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 double hipy=sqrt((pow((CurrentPoint.yval-yvala[i]),2)) + (pow((CurrentPoint.xval-xvala[i]),2)) );
                 if (hipy > fixed_dist)
                 {
-                    indyj=i;//cout<<"===============Indice Y "<<i<<endl;
+                    indyj=i;
                     break;
                 }
             }
@@ -164,7 +159,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
-       Print("step-Prediction -5 ");
+       
        double maxsc1=0.4;
         double scale1=floor(400/(2*maxsc1));
         if (nodes_reordered == 1)
@@ -197,7 +192,6 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 Print("trajvalues", Tr.xval[j],Tr.yval[j]);
                  //cv::circle( image1, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
-            //Print("step-Prediction -6 ");
             CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl);
         }
         fixed_dist=f_dist;
@@ -209,7 +203,7 @@ return;
 
 struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {
-    image_Ptraj = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
+    image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
     mean.vx = 0.0;
     mean.vy = 0.0;
     for(int i = 0;i < d_prv;i++)
@@ -236,7 +230,6 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
     }
     mean.vx /= (acum_values-1); // Acumulacion sobre numero de datos　vx　es la variacion promedio en x
     mean.vy /= (acum_values-1);
-    Print("mean values", mean.vx,mean.vy, acum_values);
 return mean;
 }
 
@@ -461,7 +454,7 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
                  colorred=160;
              }
       cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, cv::Scalar( 0, 0, 150 ),  2, 8 );
-      Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
+     // Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
 
     }
     return;
@@ -476,9 +469,7 @@ void RRT::Initialize_VicinityRRT()
         vdr.TP[j][0]=Tr.xval[j];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
         vdr.TP[j][1]=Tr.yval[j];
         vdr.TP[j][2]=Tr.zval[j];
-        Print("Trajectory points",j,Tr.xval[j],Tr.yval[j],Tr.zval[j]);
     }
-    Print("Init vecinity size tp",vdr.TP.size());
         for (int j=0;j<prof_expl;j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
         {
             if (j==0)    //Si es el primer paso
@@ -522,21 +513,12 @@ void RRT::Initialize_VicinityRRT()
                 acDist +=1*vdr.R[k][0];
             }
 
-            Print("Acdist",acDist);
-
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
             vdr.R[j][1] =(acDist*acDist*100.0)/10;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
-            //cout<<"Valores de Radios Generados: 0"<<vdr.R[j][0]<<", 1: "<<vdr.R[j][1]<<", 2: "<<vdr.R[j][2]<<endl;
 
-            //vdr.R[j][0]=0.01;
-           // vdr.R[j][1]=0.01;//fijos, cambiar a variables
-            Print("Radios",vdr.R[j][0],vdr.R[j][1],vdr.R[j][2], acDist);
-            Print("Angles",vdr.angles[j][0],vdr.angles[j][1],vdr.angles[j][2]);
-            //vdr.R[j][2]=0.1;
         }
         vdr.L=prof_expl;
-        Print("vdr TP size", vdr.TP.size());
     return;
 }
 void RRT::Node_Filter()
@@ -658,7 +640,6 @@ void RRT::delete_branch(int indx)
 //cout<<" ----DB 2---- "<<endl;
     //Ahora se corrige los parents de los nodos finales, para que apunten al nodo correcto
     //es decir, buscar si hay cambios en el indice de un nodo, y si los hay, buscar nodos hijos y corregirles el parent.
-    Print("delete branch ",fcn);
     for(int i=0;i<fcn;i++)
     {
         if(i!=indxlist[i])
@@ -668,7 +649,6 @@ void RRT::delete_branch(int indx)
                 if(Fin_Nodes.parent[j]==indxlist[i])
                 {
                     Fin_Nodes.parent[j]=i;
-                    //cout<<" ----DB 3---- "<<endl;
                 }
             }
         }
@@ -679,19 +659,15 @@ void RRT::delete_branch(int indx)
 
 void RRT::Nodes_Reorder()
 {    
-Print("reorder -3");
     //NUEVOS NODOS DE TRAYECTORIA
 
     if (nodes.coord.size()<prof_expl) nodes.coord.resize(prof_expl+1);
-    Print("vector",vdr.TP.size(),tr_brk);
     for (int j=tr_brk;j < prof_expl;j++)//son los nuevos, requieren inicializar hijos, solo para los puntos de trayectoria
     {
-        //Inicializacion
-        
+        //Inicializacion        
         nodes.coord[j] = vdr.TP[j];
 
         nodes.id[j] = j;
-       // Print("reorder init0",double(j));
         if(j == 0)
         {
             nodes.parent[j] = -1;
@@ -705,9 +681,7 @@ Print("reorder -3");
             nodes.cost[j] = Distance(vdr.TP[j-1], vdr.TP[j]) + nodes.cost[j-1]; //Aqui tiene que calcularse en funcion de la pose actual del eeff..Aqui tambien se puede calcular acumulando paso a paso
        
         }
-        //Print("reorder init",j);
     }
-    //Print("reorder -2");
     //ANTIGUOS NODOS DE TRAYECTORIA, REQUIEREN SWEEP Y ACTUALIZACION DE PADRES
 
     for (int j=0;j < tr_brk ;j++) // son los nuevos, requieren inicializar hijos, solo para los puntos de trayectoria
@@ -732,10 +706,8 @@ Print("reorder -3");
             }
         }
     }
-    //Print("reorder 1");
 
     if (nodes.N < prof_expl-2) nodes.N = prof_expl;//ya que los nodos estan inicializados
- //Print("reorder 2",nodes.N);
     for (int k=prof_expl;k < nodes.N ;k++)  //  A todos lo que tengan padres entre 1 y q_tr les cambiamos el padre, a j-1
     {
         if(nodes.parent[k] >= 0 && nodes.parent[k] < tr_brk-1 )
@@ -743,26 +715,21 @@ Print("reorder -3");
 
             nodes.parent[k] = nodes.parent[k]-1;
         }
-         //Print("reorder 22",k);
-
     }
-// Print("reorder 3");
 
     nodes_reordered=1;
-   // Print("reorder 4");
     return;
 }
 
 
 void RRT::RRT_Generation()
 {
-    int Num_Added_Nodes=2*prof_expl;
+    int Num_Added_Nodes=NumNodesToAdd;
 
     for (int j=0;j < prof_expl ;j++)
     {
         if(abs(vdr.R[j][0])>=0.005)
         {
-            Print("Node to add, radio",j, vdr.R[j][0]);
            //cout<< " radio: "<<vdr.R[j][0]<<endl;
             for (int k=0;k < Num_Added_Nodes ;k++)
             {
@@ -788,7 +755,7 @@ void RRT::Add_Node(int It)
     VectorDbl rnTemp1(3); //poque despues en chequeo de colisiones se usa unicamente los 3 valores de posicion
     bool found_ik=0,allwd=0;
     VectorDbl q_rand(3);
-    //======================Creacion de puntos random centrados en cero con sus respectivos radios=========================================================
+    //====================== Creacion de puntos random centrados en cero con sus respectivos radios =========================================================
     std::random_device rdx;
     std::random_device rdy;
     std::random_device rdz;
@@ -803,33 +770,33 @@ void RRT::Add_Node(int It)
     std::uniform_int_distribution<int> distx(-xmax,xmax);
     std::uniform_int_distribution<int> disty(-ymax,ymax);
     std::uniform_int_distribution<int> distz(-zmax,zmax);
-    Print("Radios",rx,ry,rz);
-    Print("Maximum " , xmax,ymax,zmax);
+    //Print("Radios",rx,ry,rz);
+    //Print("Maximum " , xmax,ymax,zmax);
     int max_tries=20;
     int max_rnd_tries=100;
     while (found_ik==0)
     {
         try_count++;
-        if (try_count>max_tries) break;
+        if (try_count>max_tries) {Print("fail, too much tries");break;}
         tm=100;
         bool rnd_point_found=false;
         int rnd_point_counts=0;
     while (tm>1)
     {
         rnd_point_counts++;
-        if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; break;}
+        if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too much rand tries");break;}
         double rnx = distx(genx)*0.00001;
         double rny = disty(geny)*0.00001;
         double rnz = distz(genz)*0.00001;
-        
-        
+
         q_rand[0]=rnx;
         q_rand[1]=rny;
         q_rand[2]=rnz;
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
-        
     }
-    if (tm<=1) rnd_point_found=true; 
+    if (tm<=1) 
+        rnd_point_found=true; 
+        
     //Print("Distribution",q_rand[0],q_rand[1],q_rand[2]);
     //======================================================================================================================================================
     //Transformaciones, rotacion y traslacion
@@ -847,14 +814,11 @@ void RRT::Add_Node(int It)
             tempPosit[0] = rnTemp1[0];
             tempPosit[1] = rnTemp1[1];
             tempPosit[2] = rnTemp1[2];
-            //Print("add nodes 001",tempPosit[0],tempPosit[1],tempPosit[2]);
-            found_ik_tmp = Check_CollisionA(tempPosit,1);//modo 1 porque no estoy agregando las orientaciones en rnTemp
+            found_ik_tmp = Check_CollisionA(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp
         }
-    }
-    
+    }    
     found_ik=found_ik_tmp;
     }
-
    if (try_count<=max_tries)
    {
     q_rand=rnTemp1;//Valor final del numero random ya transformado y chequeado
@@ -870,7 +834,6 @@ void RRT::Add_Node(int It)
         temp_coords[0]=nodes.coord[k][0];
         temp_coords[1]=nodes.coord[k][1];
         temp_coords[2]=nodes.coord[k][2];
-
         tmp_dist = Distance(q_rand,temp_coords);
         ndist.push_back(tmp_dist);
     }
@@ -908,6 +871,7 @@ void RRT::Add_Node(int It)
              }
          }
     }
+    Print("Point to add or not",q_rand[0],q_rand[1]);
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
     //Update parent to least cost-from node.
     q_new.parent=q_min_Indx;
@@ -927,7 +891,7 @@ void RRT::Add_Node(int It)
     }
    else
    {
-       Print("-------ERROR en demasiados valores buscados en el ciclo while-------");
+       Print("-------ERROR en demasiados valores buscados en el ciclo while-------",xmax,ymax,q_rand[0],q_rand[1]);
    }
    return;
 }
@@ -1068,7 +1032,7 @@ VectorDbl  RRT::Angles_Calculation(VectorDbl P0, VectorDbl P1)
 
     double dxy1=sqrt((dx1*dx1)+(dy1*dy1));
     double yaw1=atan2(dy1,dx1);//+M_PI_2;
-    double pitch1=atan2(dxy1,dz1);
+    double pitch1=atan2(dz1,dxy1);
     double roll=0;
     angles.push_back(yaw1);
     angles.push_back(pitch1);
@@ -1081,14 +1045,10 @@ VectorDbl  RRT::Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2)/
     double dx1=P1[0]-P0[0];
     double dy1=P1[1]-P0[1];
     double dz1=P1[2]-P0[2];
-    Print("P1 P0 x",dx1,P1[0],P0[0]);
-    Print("P1 P0 y",dy1,P1[1],P0[1]);
-    Print("P1 P0 z",dz1,P1[2],P0[2]);
     double dxy1=sqrt((dx1*dx1)+(dy1*dy1));
     double yaw1=atan2(dy1,dx1);//+M_PI_2;
     double pitch1=atan2(dz1,dxy1);//(dxy1,dz1);
     double roll1=0;
-    Print("dxy1",dxy1,pitch1 );
 
     double dx2=P2[0]-P1[0];
     double dy2=P2[1]-P1[1];

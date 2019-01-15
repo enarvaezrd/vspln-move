@@ -64,11 +64,11 @@ public:
     RRT(){
         sequence_loop=false;
         image_size=800;
-        d_prv = 6;      // profundidad de datos previos disponibles para prediccion
+        d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
-        image  = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
-        image_Ptraj = cv::Mat::zeros( image_size, image_size, CV_8UC3 );
+        prof_expl = 12;  // Profundidad de exploracion  Esz=prof_f
+        image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
+        image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         acum_x.resize((d_prv+1));
         acum_y.resize((d_prv+1));
 
@@ -110,6 +110,7 @@ public:
         maxsc = 0.45;
         scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
+        NumNodesToAdd=prof_expl*2;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -165,6 +166,7 @@ private:
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
     int nm;//numero maximo de muestras en cada region
     int pt;//Puntos de trayectoria Esz en matlab
+    int NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
     double  acum_values;

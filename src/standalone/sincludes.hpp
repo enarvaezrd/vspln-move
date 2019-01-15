@@ -4,7 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #define PI 3.141592654
 
-#define PRINT
+#define PRINT_
 struct Position_{
     double x,y,z;
 };
@@ -26,7 +26,7 @@ public:
     void operator()(std::string str, double a = -11111, double b = -11111 , double c = -11111,double d = -11111,double e = -11111,double f = -11111)
     {
         
-        #ifdef PRINT 
+        #ifndef PRINT 
             return;
         #endif 
         std::vector<double> input;
