@@ -506,7 +506,7 @@ void RRT::Initialize_VicinityRRT()
             //VD.R[j][2]=0.001;
             vdr.R[j][2]=0.005;//valor de z
             vdr.R[j][0]=dm;//0 es dm
-            double acDist=0;
+            double acDist=1.0;
 
             for (int k=0;k<=j;k++)
             {
@@ -514,7 +514,7 @@ void RRT::Initialize_VicinityRRT()
             }
 
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
-            vdr.R[j][1] =(acDist*acDist*100.0)/10;//+((j*j*1.0)/5000)
+            vdr.R[j][1] =((acDist*acDist)-1.0)/5;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
 
         }
@@ -772,8 +772,8 @@ void RRT::Add_Node(int It)
     std::uniform_int_distribution<int> distz(-zmax,zmax);
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=20;
-    int max_rnd_tries=100;
+    int max_tries=10;
+    int max_rnd_tries=50;
     while (found_ik==0)
     {
         try_count++;
@@ -1106,6 +1106,8 @@ void RRT::loop_end()
 }
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
+
+   std::this_thread::sleep_for(std::chrono::milliseconds(1));
    return true;
 }
 

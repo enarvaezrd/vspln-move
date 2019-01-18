@@ -66,7 +66,7 @@ public:
         image_size=800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 12;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         acum_x.resize((d_prv+1));
@@ -110,7 +110,7 @@ public:
         maxsc = 0.45;
         scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
-        NumNodesToAdd=prof_expl*2;
+        NumNodesToAdd=prof_expl*1;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);

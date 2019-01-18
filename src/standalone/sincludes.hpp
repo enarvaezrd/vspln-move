@@ -3,7 +3,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #define PI 3.141592654
-
+#include <thread>
+#include <chrono>
 #define PRINT_
 struct Position_{
     double x,y,z;
