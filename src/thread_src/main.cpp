@@ -88,7 +88,7 @@ int main(int argc, char** argv)
            while(!sequence_loop && ros::ok())
            {
                Print("RRT paused ");
-               std::this_thread::sleep_for(std::chrono::milliseconds(10));
+               std::this_thread::sleep_for(std::chrono::milliseconds(1));
                sequence_loop = RRT_model.getLoopState();
                loop_rate_thread.sleep();
                //ros::spinOnce();
@@ -157,9 +157,9 @@ int main(int argc, char** argv)
         Print(">>time stp 1");
         long double elapsed_time =RRT_model.ArmModel.toc();
         #ifdef threadMode
-        RRT_model.loop_end();
+       // RRT_model.loop_end();
         RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
-        RRT_model.loop_start();
+        //RRT_model.loop_start();
         Print("thread");
         #else
         Print("no thread");
