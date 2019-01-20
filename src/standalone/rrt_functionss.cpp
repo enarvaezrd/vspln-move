@@ -77,7 +77,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
            // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i]=zvalue;
         }
-        double Fixf_dist = 0.0025;
+        double Fixf_dist = 0.002;
         if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { fixed_dist=0.003; Print("fixed in 0.003");}//antes era 0.1. Para cuando el UAV esta quieto
         else {fixed_dist=f_dist; Print("fixed in ",fixed_dist);}
         //=======================================================================================================================================
@@ -189,7 +189,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     Tr.yval[j]=traj.yval[j];
                     Tr.zval[j]=zvalue;
                 }
-                Print("trajvalues", Tr.xval[j],Tr.yval[j]);
+                //Print("trajvalues", Tr.xval[j],Tr.yval[j]);
                  //cv::circle( image1, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
             CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl);
@@ -203,7 +203,10 @@ return;
 
 struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {
-    image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
+    tic();
+    White_Imag.copyTo(image_Ptraj);
+    //  image_Ptraj = White_Imag.clone();//.setTo(cv::Scalar(255,255,255));
+    Print("tiempo GEN MATRIZ",toc());
     mean.vx = 0.0;
     mean.vy = 0.0;
     for(int i = 0;i < d_prv;i++)
@@ -213,7 +216,7 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
     }
     acum_x[d_prv] = Marker_Abs_Pose.position.x;
     acum_y[d_prv] = Marker_Abs_Pose.position.y;
-    double maxsc1=0.4;
+
     cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
   
 
@@ -653,14 +656,14 @@ void RRT::delete_branch(int indx)
             }
         }
     }
-    Print(" ----DB 4---- #nodos al entrar y salir de deletebranch: ",ln,Fin_Nodes.N);
+    //Print(" ----DB 4---- #nodos al entrar y salir de deletebranch: ",ln,Fin_Nodes.N);
     nodes=Fin_Nodes;//Fin_nodes seria el arreglo de nodos filtrado
 }
 
 void RRT::Nodes_Reorder()
 {    
     //NUEVOS NODOS DE TRAYECTORIA
-
+Print("nodes size",nodes.coord.size());
     if (nodes.coord.size()<prof_expl) nodes.coord.resize(prof_expl+1);
     for (int j=tr_brk;j < prof_expl;j++)//son los nuevos, requieren inicializar hijos, solo para los puntos de trayectoria
     {
@@ -725,8 +728,8 @@ void RRT::Nodes_Reorder()
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
-
-    for (int j=0;j < prof_expl ;j++)
+    int count=0;
+    for (int j=prof_expl-1;j >= 0 ;j--)
     {
         if(abs(vdr.R[j][0])>=0.005)
         {
@@ -735,11 +738,12 @@ void RRT::RRT_Generation()
             {
                 Add_Node(j);//agrega 1 nodo cada vez
                // Print("Node added, radio",j);
-
+                count++;
             }
         }
-        else
-            Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
+        else{}
+            //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
+        Print("//prof  expl and count",prof_expl,count,j);
     }
 
 return;
@@ -772,7 +776,7 @@ void RRT::Add_Node(int It)
     std::uniform_int_distribution<int> distz(-zmax,zmax);
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=10;
+    int max_tries=20;
     int max_rnd_tries=50;
     while (found_ik==0)
     {
@@ -840,7 +844,7 @@ void RRT::Add_Node(int It)
     double min_ndist=1000000.0;
     int index_near;
     for (int i = 0 ; i < ndist.size() ; i++ )
-    {
+    { 
         if(ndist[i]<=min_ndist)
         {
             min_ndist=ndist[i];
@@ -871,7 +875,7 @@ void RRT::Add_Node(int It)
              }
          }
     }
-    Print("Point to add or not",q_rand[0],q_rand[1]);
+    //Print("Point to add or not",q_rand[0],q_rand[1]);
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
     //Update parent to least cost-from node.
     q_new.parent=q_min_Indx;
@@ -884,7 +888,7 @@ void RRT::Add_Node(int It)
     q_new_f.id     = nodes.N+1;
 
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
-    Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
+    //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, cv::Scalar( 00, 230, 50 ),  1, 8 );
 
     cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  2, 8 );
@@ -1075,20 +1079,69 @@ double RRT::Distance(VectorDbl P0, VectorDbl P1)
 
 void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
+    double tic_time_rrt=clock();
+    tic();
     Print("-------RRt1 XYMeanCalc-------------");
     XYMean_Calculation(Marker_Abs_Pose);
+    Print("tiempo RRT XY Mean Calc",toc());
+    tic();
     Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
+    Print("tiempo Traj Predict",toc());
+    tic();
     Print("-------RRt3 InitVicinity-----------");
     Initialize_VicinityRRT();
+    Print("tiempo InitVicinity",toc());
+    tic();
     Print("-------RRt4 NodelFilter------------");
     Node_Filter();
+    Print("tiempo Node Filter",toc());
+    tic();
     Print("-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
+    Print("tiempo Nodes Reorder",toc());
+    tic();
     //Print("-----RRt6 RRTGEN-----------------");
     RRT_Generation();
     Print("-------RRt7 Finish-----------------");
-
+    Print("tiempo RRT Gen",toc());
+    Print("tiempo RRT Global",toc(tic_time_rrt));
+    return;
+}
+void RRT::RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
+{
+    finish=false;
+    tic();
+    Print("-------RRt1 XYMeanCalc-------------");
+    XYMean_Calculation(Marker_Abs_Pose);
+    Print("tiempo RRT XY Mean Calc",toc());
+    tic();
+    Print("-------RRt2 TrajPredict------------");
+    Trajectory_Prediction(Marker_Abs_Pose);
+    Print("tiempo Traj Predict",toc());
+   
+    return;    
+}
+void RRT::RRT_SequenceB()//extraer vecindad
+{  tic();
+finish=false;
+   // Print("//-------RRt3 InitVicinity-----------");
+    Initialize_VicinityRRT();
+    //Print("tiempo InitVicinity",toc());
+    tic();
+   // Print("//-------RRt4 NodelFilter------------");
+    Node_Filter();
+   // Print("tiempo Node Filter",toc());
+    tic();
+   // Print("//-------RRt5 NodesReorder-----------");
+    Nodes_Reorder();
+   // Print("tiempo Nodes Reorder",toc());
+    tic();
+   // Print("//-----RRt6 RRTGEN-----------------");
+    RRT_Generation();
+   // Print("//-------RRt7 Finish-----------------");
+   // Print("tiempo RRT Gen",toc());
+    finish=true;
     return;
 }
 
@@ -1104,11 +1157,31 @@ void RRT::loop_end()
     sequence_loop=false;
    // cv.notify_all();
 }
+
+//================================== For SImulator =======================================================
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
 
    std::this_thread::sleep_for(std::chrono::milliseconds(1));
    return true;
+}
+void RRT::tic()
+{
+    tic_clock_time=0;
+    tic_clock_time = clock();
+}
+long double RRT::toc() 
+{
+     double elapsed_time_clocks = clock() - tic_clock_time;
+    long double elapsed_time = elapsed_time_clocks*1.0/CLOCKS_PER_SEC;//tiempo transcurrido en el codigo
+    return elapsed_time;
+}
+long double RRT::toc(double tic_clock) 
+{
+     double elapsed_time_clocks;
+        elapsed_time_clocks= clock() - tic_clock;
+    long double elapsed_time = elapsed_time_clocks*1.0/CLOCKS_PER_SEC;//tiempo transcurrido en el codigo
+    return elapsed_time;
 }
 
 #endif

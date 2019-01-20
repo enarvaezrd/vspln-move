@@ -5,7 +5,9 @@
 #define PI 3.141592654
 #include <thread>
 #include <chrono>
-#define PRINT_
+#include<mutex>
+#define PRINT
+
 struct Position_{
     double x,y,z;
 };

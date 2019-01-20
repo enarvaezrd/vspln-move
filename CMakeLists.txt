@@ -21,7 +21,7 @@ add_compile_options(-std=c++14 -pthread)
 
 
 catkin_package(
- INCLUDE_DIRS include
+ INCLUDE_DIRS #include
 #  LIBRARIES ed_control
  CATKIN_DEPENDS roscpp
   cv_bridge
@@ -41,7 +41,8 @@ include_directories(
 include_directories(${OpenCV_INCLUDE_DIRS})
 
  add_executable(pmov src/pmov.cpp
-	include src/armfcn.h
+	#include 
+	src/armfcn.h
 	src/rrtfunctions.h
 	src/armbase.h
 	src/uavarmfcns.h
@@ -57,7 +58,8 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/ed_pmov.cpp
 	src/thread_src/trajectory_client.cpp
 	src/thread_src/rrt_functions.cpp
-	include src/thread_src/uav_arm_tools.hpp
+	#include
+	src/thread_src/uav_arm_tools.hpp
 	src/thread_src/ed_pmov.hpp
 	src/thread_src/trajectory_client.hpp
 	src/thread_src/includes.hpp
