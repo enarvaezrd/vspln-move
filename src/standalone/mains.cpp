@@ -21,7 +21,7 @@ int main(int argc, char** argv)
      Print("=============================================Start Program======================================");
     
     double count=0,b=1;
-    rrt_planif::RRTA RRT_modelB;
+    rrt_planif::RRT RRT_modelB;
     //cv::namedWindow("Image1",cv::WINDOW_NORMAL);
     bool RRT_Calc_state=false;
 
@@ -31,12 +31,12 @@ int main(int argc, char** argv)
     int cnTh=0;
     while(Thread_Run){
         while (sequence_loop_th && RRT_model.get_finish())
-        {   mtx.lock();
-            const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
-            RRT_model.Load_TR(etr);
+        {  
+            //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
+            RRT_model.Load_TR(RRT_modelB.Get_TR());
             RRT_model.Load_TRbr(RRT_modelB.Get_TRbr());
-            RRT_model.Load_Img(RRT_modelB.getImage_Ptraj());
-           
+           // RRT_model.Load_Img(RRT_modelB.getImage_Ptraj());
+           RRT_model.ResetImagePtraj();
             RRT_model.RRT_SequenceB();
            
             const cv::Mat image = RRT_model.getImage_Ptraj();
@@ -44,11 +44,10 @@ int main(int argc, char** argv)
             
             sequence_loop_th = RRT_model.getLoopState();
             cv::imshow("Image1",image);
-            cv::waitKey(2);
-            mtx.unlock();
+            cv::waitKey(1);
             cnTh++;
             Print("//  finish RRT", cnTh);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         while(!sequence_loop_th){
             Print("RRT paused ");
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
     int steps=300;
    
     while (sequence_loop)
-        {mtxA.lock();
+        {
             Print("=======Step=====",cnt1);
             cnt1++;
             count = count+b;
@@ -74,13 +73,14 @@ int main(int argc, char** argv)
             //if (count<-100) b=1;
             CurrentRequest.position.x = 0.3*cos(PI*count/steps);
             CurrentRequest.position.y = 0.3*sin(PI*count/steps);
-            Print("Current point",CurrentRequest.position.x,count);
+            //Print("Current point",CurrentRequest.position.x,count);
 
                 
-                //RRT_modelB.SetArmPose(CurrentRequest);
+             
                 RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
-                RRT_modelB.RRT_SequenceA(CurrentRequest);
-               
+                RRT_modelB.RRT_SequenceA(CurrentRequest);              
+            
+              
             cv::Mat imageA;
 
             //mtx.lock();
@@ -88,13 +88,10 @@ int main(int argc, char** argv)
             imageA=RRT_modelB.getImage_Ptraj();
             cv::imshow("Image11",imageA);
             cv::waitKey(1); 
-              
-            //mtx.unlock();
             RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(35));
+            std::this_thread::sleep_for(std::chrono::milliseconds(65));
             //Print("finish already paused");
-            mtxA.unlock();
         }
  });
 Print("finish main paused");

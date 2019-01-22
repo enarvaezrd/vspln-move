@@ -78,8 +78,14 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             traj.zval[i]=zvalue;
         }
         double Fixf_dist = 0.002;
-        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { fixed_dist=0.003; Print("fixed in 0.003");}//antes era 0.1. Para cuando el UAV esta quieto
-        else {fixed_dist=f_dist; Print("fixed in ",fixed_dist);}
+        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { 
+            fixed_dist=0.003; 
+            Print("fixed in 0.003");//antes era 0.1. Para cuando el UAV esta quieto
+        }
+        else {
+            fixed_dist=f_dist; 
+           // Print("fixed in ",fixed_dist);
+            }
         //=======================================================================================================================================
         if (abs(mean.vx) >= abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
         {
@@ -196,7 +202,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
-    Print("step-Prediction -7 ",tr_brk);
+    //Print("step-Prediction -7 ",tr_brk);
     Tr_old = Tr;
 return;
 }
@@ -507,7 +513,7 @@ void RRT::Initialize_VicinityRRT()
             //if (dm<=0.001) dm=0.001;
 
             //VD.R[j][2]=0.001;
-            vdr.R[j][2]=0.005;//valor de z
+            vdr.R[j][2]=0.004;//valor de z
             vdr.R[j][0]=dm;//0 es dm
             double acDist=1.0;
 
@@ -517,7 +523,7 @@ void RRT::Initialize_VicinityRRT()
             }
 
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
-            vdr.R[j][1] =((acDist*acDist)-1.0)/5;//+((j*j*1.0)/5000)
+            vdr.R[j][1] =((acDist*acDist)-1.0)/6;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
 
         }
@@ -743,8 +749,9 @@ void RRT::RRT_Generation()
         }
         else{}
             //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
-        Print("//prof  expl and count",prof_expl,count,j);
+       // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
+    Print("********//Nodes size", nodes.N,count);
 
 return;
 }
@@ -889,9 +896,12 @@ void RRT::Add_Node(int It)
 
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
-    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, cv::Scalar( 00, 230, 50 ),  1, 8 );
+    mtxA.lock();
+   
 
-    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  2, 8 );
+    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, cv::Scalar( 00, 20, 10 ),CV_FILLED,  1, 8 );
+    mtxA.unlock();
     }
    else
    {
@@ -1112,11 +1122,11 @@ void RRT::RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
     finish=false;
     tic();
-    Print("-------RRt1 XYMeanCalc-------------");
+    Print("-------RRt Sequence A-------------");
     XYMean_Calculation(Marker_Abs_Pose);
-    Print("tiempo RRT XY Mean Calc",toc());
-    tic();
-    Print("-------RRt2 TrajPredict------------");
+    //Print("tiempo RRT XY Mean Calc",toc());
+    //tic();
+    //Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
     Print("tiempo Traj Predict",toc());
    
