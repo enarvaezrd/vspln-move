@@ -97,14 +97,14 @@ public:
             vdr.N[i]=0;
         }
 
-        nodes.coord.resize(prof_expl);//longitud dinamica, empieza con el minimo
-        nodes.cost.resize(prof_expl);
-        nodes.parent.resize(prof_expl);
-        nodes.id.resize(prof_expl);
-        nodes.N=0;
+        nodes.coord.resize(prof_expl); //longitud dinamica, empieza con el minimo
+        nodes.cost.resize(prof_expl); 
+        nodes.parent.resize(prof_expl); 
+        nodes.id.resize(prof_expl); 
+        nodes.N=0; 
         for(int i=0;i<prof_expl;i++)
         {
-            nodes.coord[i].resize(3);
+            nodes.coord[i].resize(3); 
         }
         r_exterior = 0.45;
         r_interior = 0.08;
@@ -113,6 +113,8 @@ public:
         f_dist=0.1;
         NumNodesToAdd = (prof_expl*1.0);
         finish =true;
+        EmptyNodes.N=0;
+        OldNodes=EmptyNodes;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -128,6 +130,8 @@ public:
     void Add_Node(int It);
 
     void RRT_Generation();
+    void RRT_AddValidCoord(VectorDbl NewPoint);
+    void RRT_AddOldCoords();
     void RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose);
 
     cv::Mat getImage(){ return image;}
@@ -143,6 +147,7 @@ public:
     void       Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
+    void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, Nodes nodesG, int indx );
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
     void PrintNode(cv::Mat ,VectorDbl );
@@ -171,6 +176,8 @@ private:
     Etraj Tr_old,Tr_temp;
     Vicinity vdr;
     Nodes nodes;
+    Nodes OldNodes;
+    Nodes EmptyNodes;
     struct MeanValues mean;
     VectorDbl acum_x;
     VectorDbl acum_y;
