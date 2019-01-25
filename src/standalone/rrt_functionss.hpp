@@ -115,6 +115,7 @@ public:
         finish =true;
         EmptyNodes.N=0;
         OldNodes=EmptyNodes;
+        OldNodesLoaded=false;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -147,7 +148,7 @@ public:
     void       Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
-    void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, Nodes nodesG, int indx );
+    void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
     void PrintNode(cv::Mat ,VectorDbl );
@@ -207,6 +208,7 @@ private:
     geometry_msgs::Pose CurrentRequest_Simm;
     bool finish;
     mutex mtxA;
+    bool OldNodesLoaded;
 };
 
 }

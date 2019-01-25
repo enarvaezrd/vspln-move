@@ -535,6 +535,7 @@ void RRT::Node_Filter()
 {
     if (nodes_reordered)
     {
+        OldNodes = EmptyNodes;
         int allowed=0;
         int cndl=0;
         std::vector<int> del_List;
@@ -556,6 +557,8 @@ void RRT::Node_Filter()
                 }
                 else
                 {
+                    //Save old nodes, which have passed check collision 
+                    Push_Nodes_Elem_in_Nodes(OldNodes,i);
                     allowed=0;
                 }
             }
@@ -571,14 +574,7 @@ void RRT::Node_Filter()
             cndl++;
             del_List.push_back(i);  //se elimina puntos de trayectoria y sus branches
         }
-        OldNodes = EmptyNodes;
-
-        //Save old nodes, which have passed check collision 
-        Print("Del list size",del_List.size());
-         for (int i = 0; i < del_List.size(); i++)
-        {            
-            Push_Nodes_Elem_in_Nodes(OldNodes,nodes,del_List[i] );            
-        }
+      
         //Ahora eliminar los puntos en la lista y sus respectivas ramas        
         for (int i = 0; i < del_List.size(); i++)
         {            
@@ -742,7 +738,9 @@ Print("nodes size",nodes.coord.size());
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
+    Print("Nodes size",nodes.N);
     RRT_AddOldCoords();
+    Print("NodesOld size, new size",OldNodes.N,nodes.N );
     int count=0;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
@@ -850,20 +848,21 @@ void RRT::Add_Node(int It)
    return;
 }
 void RRT::RRT_AddOldCoords()
-{Print("Old nodes size",OldNodes.N);
+{
     if(OldNodes.N>0)
     {           
         double tm;
         bool allowed;
         for (int on=0;on<OldNodes.N;on++)
-        { Print("vdr size",vdr.R.size());
+        { 
             tm=100;allowed=false;
             VectorDbl ON(3);
             ON[0] = OldNodes.coord[on][0];
             ON[1] = OldNodes.coord[on][1];
             ON[2] = OldNodes.coord[on][2];
+
             for (int It=0;It<prof_expl;It++)
-            {
+            {                 
                 double rx=vdr.R[It][0];//revisar
                 double ry=vdr.R[It][1];
                 double rz=vdr.R[It][2];
@@ -872,6 +871,7 @@ void RRT::RRT_AddOldCoords()
                 if(tm<=1)
                 {
                     allowed = true;
+                    Print("ALLOWED");
                     break;
                 }
             }
@@ -879,7 +879,7 @@ void RRT::RRT_AddOldCoords()
             {
                 RRT_AddValidCoord(ON);
             }
-        }       
+        }
     }
  return;
 }
@@ -987,15 +987,20 @@ void RRT::Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node)
     nodes.parent[nIndx-1]= node.parent;
     return;
 }
-void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, Nodes nodesG, int indxG )
+void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
 {
-    Print("NodesG size", nodesG.coord.size(), indxG);
     if(indxG>=0)
-    {   
-        nodesR.coord.push_back(nodesG.coord[indxG]);
-        nodesR.cost.push_back(nodesG.cost[indxG]);
-        nodesR.parent.push_back(nodesG.parent[indxG]);
-        nodesR.id.push_back(nodesG.id[indxG]);
+    {  
+       // const int szcrd = nodesR.coord.size();
+        //nodesR.coord.resize(szcrd+1); 
+       // nodesR.coord[szcrd].resize(3);
+       /* nodesR.coord[szcrd][0]=nodes.coord[indxG][0];
+        nodesR.coord[szcrd][1]=nodes.coord[indxG][1]; 
+        nodesR.coord[szcrd][2]=nodes.coord[indxG][2];*/
+        nodesR.coord.push_back(nodes.coord[indxG]);
+        nodesR.cost.push_back(nodes.cost[indxG]);
+        nodesR.parent.push_back(nodes.parent[indxG]);
+        nodesR.id.push_back(nodes.id[indxG]);
         nodesR.N++;
     }
     return;
