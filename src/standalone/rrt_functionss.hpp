@@ -6,11 +6,13 @@
 
 using namespace std;
 typedef vector<double> VectorDbl;
+typedef std::chrono::high_resolution_clock Clock;  
 namespace rrt_planif
 {
 
 struct Nodes{
    vector<VectorDbl >  coord;
+   vector<VectorDbl >  coordT;
    VectorDbl cost;
    vector<int >   parent;
    vector<int >   id;  //No usado por ahora
@@ -19,6 +21,7 @@ struct Nodes{
 
 struct Node{
      VectorDbl coord;
+     VectorDbl coordT;
      double cost;
      int parent;
      int id;
@@ -67,6 +70,8 @@ public:
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
         prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
+        NumNodesToAdd = (prof_expl*1.0); //number of nodes to add in each region
+        MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
@@ -98,20 +103,22 @@ public:
         }
 
         nodes.coord.resize(prof_expl); //longitud dinamica, empieza con el minimo
+        nodes.coordT.resize(prof_expl);
         nodes.cost.resize(prof_expl); 
         nodes.parent.resize(prof_expl); 
         nodes.id.resize(prof_expl); 
         nodes.N=0; 
         for(int i=0;i<prof_expl;i++)
         {
-            nodes.coord[i].resize(3); 
+            nodes.coord[i].resize(3);
+            nodes.coordT[i].resize(3); 
         }
         r_exterior = 0.45;
         r_interior = 0.08;
         maxsc = 0.45;
         scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
-        NumNodesToAdd = (prof_expl*1.0);
+        
         finish =true;
         EmptyNodes.N=0;
         OldNodes=EmptyNodes;
@@ -131,7 +138,7 @@ public:
     void Add_Node(int It);
 
     void RRT_Generation();
-    void RRT_AddValidCoord(VectorDbl NewPoint);
+    void RRT_AddValidCoord(VectorDbl, VectorDbl);
     void RRT_AddOldCoords();
     void RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose);
 
@@ -140,6 +147,7 @@ public:
    
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
     VectorDbl  Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw);
+    VectorDbl  Translation(VectorDbl , int );
     VectorDbl  Matrix_Vector_MultiplyA(vector<VectorDbl > Matrix, VectorDbl Vector );
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1);
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2);
@@ -156,8 +164,10 @@ public:
     void loop_end();
     //For Simulator=====================
     void tic();
-    long double toc(double tic_clock);
-    long double toc();
+    std::chrono::microseconds toc();
+    std::chrono::time_point<std::chrono::high_resolution_clock>  tic_o();
+    std::chrono::microseconds toc(std::chrono::time_point<std::chrono::high_resolution_clock> );
+
     bool Check_CollisionA(std::vector<double> , int );
     void SetArmPose(geometry_msgs::Pose Pose){CurrentRequest_Simm=Pose;return;}
     geometry_msgs::Pose GetArmPose(){return CurrentRequest_Simm;}
@@ -171,7 +181,12 @@ public:
     const int Get_NdsReord(){return nodes_reordered;}
     void Load_Img(const cv::Mat img){image_Ptraj=img;return;}
     const bool get_finish(){return finish;}
-    void ResetImagePtraj(){White_Imag.copyTo(image_Ptraj);return;}
+    void ResetImagePtraj(){
+        #ifdef OPENCV_DRAW 
+        White_Imag.copyTo(image_Ptraj);
+        #endif
+        return;}
+        
 private:
     Etraj Tr;
     Etraj Tr_old,Tr_temp;
@@ -204,11 +219,12 @@ private:
     double scale;
     double f_dist;
     Printer Print;
-    double tic_clock_time;
+    std::chrono::time_point<std::chrono::high_resolution_clock>  tic_clock_time;
     geometry_msgs::Pose CurrentRequest_Simm;
     bool finish;
     mutex mtxA;
     bool OldNodesLoaded;
+    int MaxOldNodesReg;
 };
 
 }

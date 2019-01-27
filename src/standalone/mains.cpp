@@ -19,54 +19,58 @@ int main(int argc, char** argv)
     CurrentRequest.position.z =0;
      Printer Print;
      Print("=============================================Start Program======================================");
-    
+    cv::namedWindow("Image1", 0);
+    cv::resizeWindow("Image1", 1500,1500);
     double count=0,b=1;
     rrt_planif::RRT RRT_modelB;
     //cv::namedWindow("Image1",cv::WINDOW_NORMAL);
     bool RRT_Calc_state=false;
 
     auto rrt_thread = std::thread([&](){
-    bool sequence_loop_th=false;
-    bool Thread_Run=true;
-    int cnTh=0;
-    while(Thread_Run){
-        while (sequence_loop_th && RRT_model.get_finish())
-        {  
-            //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
-            RRT_model.Load_TR(RRT_modelB.Get_TR());
-            RRT_model.Load_TRbr(RRT_modelB.Get_TRbr());
-           // RRT_model.Load_Img(RRT_modelB.getImage_Ptraj());
-           RRT_model.ResetImagePtraj();
-            RRT_model.RRT_SequenceB();
-           
-            const cv::Mat image = RRT_model.getImage_Ptraj();
-            
-            
-            sequence_loop_th = RRT_model.getLoopState();
-            cv::imshow("Image1",image);
-            cv::waitKey(1);
-            cnTh++;
-            Print("//  finish RRT", cnTh);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        while(!sequence_loop_th){
-            Print("RRT paused ");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            sequence_loop_th = RRT_model.getLoopState();
-             Print("RRT paused ",sequence_loop_th);
-        }
-    }
-    
-
- });
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        bool sequence_loop_th=false;
+        bool Thread_Run=true;
+        int cnTh=0;
+        auto clB=std::chrono::high_resolution_clock::now();
+        while(Thread_Run){
+            while (sequence_loop_th && RRT_model.get_finish())
+            {  
+                Print("=======Step=====",cnTh);
+                //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
+                RRT_model.Load_TR(RRT_modelB.Get_TR());
+                RRT_model.Load_TRbr(RRT_modelB.Get_TRbr());
+            // RRT_model.Load_Img(RRT_modelB.getImage_Ptraj());
+            RRT_model.ResetImagePtraj();
+                RRT_model.RRT_SequenceB();
+                sequence_loop_th = RRT_model.getLoopState();
+            #ifdef OPENCV_DRAW
+                const cv::Mat image = RRT_model.getImage_Ptraj(); 
+                cv::imshow("Image1",image);
+                cv::waitKey(1);
+            #endif
+                
+                cnTh++;
+                Print("//  finish RRT", cnTh);
+                //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                Print("SEQUENCE B TIME ",RRT_model.toc(clB).count());
+                clB=std::chrono::high_resolution_clock::now();
+            }
+            while(!sequence_loop_th){
+                Print("RRT paused ");
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                sequence_loop_th = RRT_model.getLoopState();
+                Print("RRT paused ",sequence_loop_th);
+            }
+        }  
+    });
  auto rrt_threadA = std::thread([&](){
     double cnt1=0.0;
     bool sequence_loop=true;
-    int steps=300;
-   
+    int steps=200;
+   auto clA=std::chrono::high_resolution_clock::now();
     while (sequence_loop)
         {
-            Print("=======Step=====",cnt1);
+            //Print("=======Step=====",cnt1);
             cnt1++;
             count = count+b;
             //if (count> 100) b=-1;
@@ -84,19 +88,23 @@ int main(int argc, char** argv)
             cv::Mat imageA;
 
             //mtx.lock();
-
+        #ifdef OPENCV_DRAW
             imageA=RRT_modelB.getImage_Ptraj();
             cv::imshow("Image11",imageA);
             cv::waitKey(1); 
+        #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
             std::this_thread::sleep_for(std::chrono::milliseconds(65));
             //Print("finish already paused");
+            //Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
+            clA=std::chrono::high_resolution_clock::now();
         }
  });
 Print("finish main paused");
+rrt_thread.detach();
 rrt_threadA.join();
-rrt_thread.join();
+
 
 }
 #endif

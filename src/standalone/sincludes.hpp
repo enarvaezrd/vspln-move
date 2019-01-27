@@ -7,6 +7,7 @@
 #include <chrono>
 #include<mutex>
 #define PRINT
+#define OPENCV_DRAW
 
 struct Position_{
     double x,y,z;
