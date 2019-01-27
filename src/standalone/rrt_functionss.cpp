@@ -519,12 +519,12 @@ void RRT::Initialize_VicinityRRT()
 
             //VD.R[j][2]=0.001;
             vdr.R[j][2]=0.002;//valor de z
-            vdr.R[j][0]=dm;//0 es dm
+            vdr.R[j][0]=2*dm;//0 es dm
             double acDist=1.0;
 
             for (int k=0;k<=j;k++)
             {
-                acDist +=1*vdr.R[k][0];
+                acDist +=1*vdr.R[k][0]/2;
             }
 
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
@@ -568,7 +568,7 @@ void RRT::Node_Filter()
                 }
             }
             if (allowed == 0)  //Si es un punto rechazado
-            {                
+            { 
                 //Save old nodes, which have passed check collision 
                 //if (cn_Old<MaxOldNodesReg*i)
                  Push_Nodes_Elem_in_Nodes(OldNodes,i);
@@ -578,14 +578,14 @@ void RRT::Node_Filter()
         //Print("Old Nodes Size First", OldNodes.N);
         //filtrado por trayectoria, puntos no necesarios de la antigua trayectoria
         for (int i = tr_brk-1; i < prof_expl; i++)
-        {            
+        {
             del_List.push_back(i);  //se elimina puntos de trayectoria y sus branches
         }
         auto temp_tic = Clock::now();
         //Ahora eliminar los puntos en la lista y sus respectivas ramas        
         for (int i = 0; i < del_List.size(); i++)
-        {            
-            delete_branch(del_List[i]);            
+        {
+            delete_branch(del_List[i]);
         }
         Print("TIEMPO FILTER A1",toc(temp_tic).count());
     }
@@ -601,52 +601,50 @@ void RRT::delete_branch(int indx)
     Nodes Fin_Nodes;
      
     int ln=nodes.N;
-    int k=0;bool found=0;
-
-    auto temp_tic = Clock::now();
+    int k=0;bool found=false;
+    std::vector<int> valid_parents;
+    valid_parents.resize(0);
     while (k<ln)
     {
-        found=0;        
+        found=false;        
         for (int j=0;j<parents.size();j++)
         {
             if (parents[j] == nodestemp1.parent[k]&&parents[j]>tr_brk && nodestemp1.parent[k]>tr_brk)
             {
-                parents.push_back(k);
+                parents.push_back(nodestemp1.id[k]);
                 nodestemp1.parent[k]=-100; //borro el valor de parent para que no vuelva a caer aqui
-                found=1;
+                found=true;
             }
         }
+        
+        if (found==true)
+          {  k=-1; } //reinicio desde cero el bucle para revisar todos los nodos otra vez4
         k++;
-        if (found==1)
-          {  k=0; } //reinicio desde cero el bucle para revisar todos los nodos otra vez4
     }
-    Print("TIEMPO PARENTS",toc(temp_tic).count());
+
 
     //Ahora quitar los nodos invalidos, y dejar los nodos permitidos unicamente.
-temp_tic = Clock::now();
-    const int maxnodes=parents.size()*ln;
+  
+    const int maxnodes=ln;
     Fin_Nodes.coord.resize(maxnodes);
     Fin_Nodes.coordT.resize(maxnodes);
     Fin_Nodes.cost.resize(maxnodes);
     Fin_Nodes.parent.resize(maxnodes);
     Fin_Nodes.id.resize(maxnodes);
     Fin_Nodes.N=0;
+    
     int fcn=0;int badfound=0;
- for(int i=0;i<ln;i++)
+
+    for (int i=0; i<ln; i++) valid_parents.push_back(i);  
+ 
+    //erase parents elements from valid parents vector
+    for (int i=0; i<parents.size(); i++)
+        valid_parents.erase(std::remove(valid_parents.begin(), valid_parents.end(), parents[i]), valid_parents.end());
+   
+    for(int j=0;j<valid_parents.size();j++)
     {
-        //Print("rearrange",ln,i);
-        badfound=0;
-        for(int j=0;j<parents.size();j++)
-        {
-            if(i==parents[j])  //lista de parents a borrar
-            {
-                badfound=1;
-                break;
-            }
-        }
-        //cout<<" ----DB1 ---- "<<endl;
-        if(badfound==0)
-        {
+        int i = valid_parents[j];
+       // if (i>=0 && i<ln){
             Fin_Nodes.coord[fcn]=nodes.coord[i];
             Fin_Nodes.coordT[fcn]=nodes.coordT[i];
             Fin_Nodes.cost[fcn]=nodes.cost[i];
@@ -655,7 +653,7 @@ temp_tic = Clock::now();
             Fin_Nodes.N=fcn+1;
             indxlist.push_back(i); //orden en la lista seria el indice nuevo y valor es el indice antiguo
             fcn++;
-        }
+       // }
     }
     const int fin_sz= Fin_Nodes.N;
     Fin_Nodes.coord.resize(fin_sz);
@@ -664,7 +662,6 @@ temp_tic = Clock::now();
     Fin_Nodes.parent.resize(fin_sz);
     Fin_Nodes.id.resize(fin_sz);
 
-     Print("TIEMPO PARENTS 0001",toc(temp_tic).count());
 //cout<<" ----DB 2---- "<<endl;
     //Ahora se corrige los parents de los nodos finales, para que apunten al nodo correcto
     //es decir, buscar si hay cambios en el indice de un nodo, y si los hay, buscar nodos hijos y corregirles el parent.
@@ -752,7 +749,7 @@ void RRT::Nodes_Reorder()
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
-   
+   Print("********//Nodes size Start", nodes.N);     
     int count=0;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
@@ -770,7 +767,7 @@ void RRT::RRT_Generation()
             //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
        // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
-    Print("********//Nodes size Start", nodes.N);     
+    Print("********//Nodes size Med", nodes.N);     
     RRT_AddOldCoords();
     Print("NodesOld size, new size",OldNodes.N,nodes.N );
 
@@ -793,18 +790,17 @@ void RRT::Add_Node(int It)
     std::mt19937 genx(rdx());
     std::mt19937 geny(rdy());
     std::mt19937 genz(rdz());
-    const int xmax=round(vdr.R[It][0] *100000);
-    const int ymax=round(vdr.R[It][1] *100000);
-    const int zmax=round(vdr.R[It][2] *100000);
     int try_count=0;
     double tm=100;
-    std::uniform_int_distribution<int> distx(-xmax,xmax);
-    std::uniform_int_distribution<int> disty(-ymax,ymax);
-    std::uniform_int_distribution<int> distz(-zmax,zmax);
+    std::uniform_real_distribution<> distxr(-rx,rx);
+    std::uniform_real_distribution<> distyr(-ry,ry);
+    std::uniform_real_distribution<> distzr(-rz,rz);
+
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=20;
-    int max_rnd_tries=50;
+    int max_tries=5;
+    int max_rnd_tries=5;
+    double rnx,rny,rnz;
     while (found_ik==0)
     {
         try_count++;
@@ -814,25 +810,24 @@ void RRT::Add_Node(int It)
         int rnd_point_counts=0;
     while (tm>1)
     {
-        rnd_point_counts++;
-        if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too much rand tries");break;}
-        double rnx = distx(genx)*0.00001;
-        double rny = disty(geny)*0.00001;
-        double rnz = distz(genz)*0.00001;
-
+        //rnd_point_counts++;
+        //if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too much rand tries");break;}
+        rnx = distxr(genx);
+        rny = distyr(geny);
+        rnz = distzr(genz);
         q_rand[0]=rnx;
         q_rand[1]=rny;
         q_rand[2]=rnz;
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
     }
-    if (tm<=1) 
-        rnd_point_found=true; 
-        
-    //Print("Distribution",q_rand[0],q_rand[1],q_rand[2]);
+    
+   // if (tm<=1) 
+     //   rnd_point_found=true; 
+    //Print("RANDOM POINT",toc(temp_tic).count(),try_count,q_rand[0],tm,rnd_point_found);    
     //======================================================================================================================================================
     //Transformaciones, rotacion y traslacion
     bool found_ik_tmp = false;
-    if (rnd_point_found){
+    //if (rnd_point_found){
         vector<std::vector<double> > Rpitch,Rroll,Ryaw;
         Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
         rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);  //First rotate then translate
@@ -848,56 +843,62 @@ void RRT::Add_Node(int It)
             tempPosit[2] = rnTemp1[2];
             found_ik_tmp = Check_CollisionA(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp
         }
-    }
+   // }
     found_ik=found_ik_tmp;
     }
 
    if (try_count<=max_tries)
    {
+
+        //auto temp_tic=Clock::now();
        RRT_AddValidCoord(rnTemp1,rnTemp_T);
+       //Print("ADD NODE TIME",toc(temp_tic).count());
     }
    else
    {
-       Print("-------ERROR en demasiados valores buscados en el ciclo while-------",xmax,ymax,q_rand[0],q_rand[1]);
+       Print("-------ERROR en demasiados valores buscados en el ciclo while-------",q_rand[0],q_rand[1]);
    }
    return;
 }
 void RRT::RRT_AddOldCoords()
 {
-    if(OldNodes.N>0)
-    {           
-        double tm;
-        bool allowed;
-        for (int on=0;on<OldNodes.N;on++)
-        { 
-            tm=100;allowed=false;
-            VectorDbl ON_B(3);
-            ON_B[0] = OldNodes.coordT[on][0];
-            ON_B[1] = OldNodes.coordT[on][1];
-            ON_B[2] = OldNodes.coordT[on][2];
+    double tm;
+    bool allowed;
+    VectorDbl ON_B(3);
+    double rx,ry,rz,ON_x,ON_y,ON_z;
+    for (int on=0;on<OldNodes.N;on++)
+    { 
+        tm=100;
+        allowed=false;        
+        ON_B[0] = OldNodes.coordT[on][0];
+        ON_B[1] = OldNodes.coordT[on][1];
+        ON_B[2] = OldNodes.coordT[on][2];
+        Print("OLD ALLOWED",ON_B[0],ON_B[1]);
+        for (int It=0;It<prof_expl;It++)
+        {
+            rx=vdr.R[It][0];//revisar
+            ry=vdr.R[It][1];
+            rz=vdr.R[It][2];
+            ON_x = ON_B[0]-vdr.TP[It][0];
+            ON_y = ON_B[1]-vdr.TP[It][1];
+            ON_z = ON_B[2]-vdr.TP[It][2];
 
-            for (int It=0;It<prof_expl;It++)
-            {                 
-                double rx=vdr.R[It][0];//revisar
-                double ry=vdr.R[It][1];
-                double rz=vdr.R[It][2];
-                double ON_x = ON_B[0]-vdr.TP[It][0];
-                double ON_y = ON_B[1]-vdr.TP[It][1];
-                double ON_z = ON_B[2]-vdr.TP[It][2];
-
-                tm = ((ON_x/rx)*(ON_x/rx))+((ON_y/ry)*(ON_y/ry));
-                if(tm<=1)
-                {
-                    allowed = true;
-                    break;
-                }
-            }
-            if (allowed)
+            tm = ((ON_x/rx)*(ON_x/rx))+((ON_y/ry)*(ON_y/ry))+((ON_z/rz)*(ON_z/rz));
+           // Print("OLD ALLOWED",tm);
+            if(tm<=1)
             {
-                RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on]);
+               
+                allowed = true;
+                break;
             }
         }
+        if (allowed)
+        {
+
+            RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on]);
+        }
     }
+  
  return;
 }
 void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
@@ -906,29 +907,23 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
     double EPS=0.005; //Maximo movimiento Revisar//Valor final del numero random ya transformado y chequeado
 
     //AQUI EMPIEZA RRT
-    std::vector<double> ndist;
     double tmp_dist;
     //Hallar el minimo
-    //Print("add nodes 1");
-    for (int k=0;k<nodes.N;k++)
-    {
-       std::vector<double>  temp_coords(3);
-        temp_coords[0]=nodes.coord[k][0];
-        temp_coords[1]=nodes.coord[k][1];
-        temp_coords[2]=nodes.coord[k][2];
-        tmp_dist = Distance(q_rand_TR,temp_coords);
-        ndist.push_back(tmp_dist);
-    }
-    double min_ndist=1000000.0;
+    std::vector<double>  temp_coords(3);
+    
+     double min_ndist=1000000.0;
     int index_near;
-    for (int i = 0 ; i < ndist.size() ; i++ )
-    { 
-        if(ndist[i]<=min_ndist)
+    for (int k=0;k<nodes.N;k++)
+    {        
+        tmp_dist = Distance(q_rand_TR,nodes.coord[k]);
+        if(tmp_dist<=min_ndist)
         {
-            min_ndist=ndist[i];
-            index_near=i;
+            min_ndist=tmp_dist;
+            index_near=k;
         }
     }
+     
+   
     Node q_near,q_new;
     Extract_Node_from_Nodes( q_near,nodes,index_near); //almacenar en q_near el nodo mas cercano al punto q_new
     //Funcion steer
@@ -939,6 +934,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
     Node q_min=q_near;
     double C_min=q_new.cost;
     int q_min_Indx=index_near;
+   // auto ttic=Clock::now();
     for (int j=0;j<nodes.N;j++)
     {
          double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
@@ -953,6 +949,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
              }
          }
     }
+    //Print("DIST TIME",toc(ttic).count(),nodes.N);
     //Print("Point to add or not",q_rand[0],q_rand[1]);
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
     //Update parent to least cost-from node.
@@ -1011,15 +1008,13 @@ void RRT::Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node)
 }
 void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
 {
-    //if(indxG>=0 )
-    {  
+    //if(indxG>=0 )      
         nodesR.coord.push_back(nodes.coord[indxG]);
         nodesR.coordT.push_back(nodes.coordT[indxG]);
         nodesR.cost.push_back(nodes.cost[indxG]);
         nodesR.parent.push_back(nodes.parent[indxG]);
         nodesR.id.push_back(nodes.id[indxG]);
-        nodesR.N++;
-    }
+        nodesR.N++;    
     return;
 }
 
@@ -1178,9 +1173,8 @@ VectorDbl  RRT::Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2)/
     return angles;
 }
 double RRT::Distance(VectorDbl P0, VectorDbl P1)
-{
-    double Dst=sqrt((float)(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2]))));
-    return Dst;
+{   
+    return  sqrt((float)(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2]))));
 }
 
 void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad

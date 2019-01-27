@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include<mutex>
+#include <algorithm>
 #define PRINT
 #define OPENCV_DRAW
 
