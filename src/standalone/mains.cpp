@@ -44,7 +44,7 @@ int main(int argc, char** argv)
                 RRT_model.RRT_SequenceB();
                 sequence_loop_th = RRT_model.getLoopState();
             #ifdef OPENCV_DRAW
-                const cv::Mat image = RRT_model.getImage_Ptraj(); 
+                const cv::Mat image = RRT_model.getImage_Ptraj();
                 cv::imshow("Image1",image);
                 cv::waitKey(1);
             #endif
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(65));
+            std::this_thread::sleep_for(std::chrono::milliseconds(85));
             //Print("finish already paused");
             //Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

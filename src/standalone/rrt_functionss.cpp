@@ -226,7 +226,7 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
     acum_y[d_prv] = Marker_Abs_Pose.position.y;
 
 #ifdef OPENCV_DRAW
-    cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
+    //cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
 #endif
 
     if (acum_values != (d_pr_m+1))
@@ -466,7 +466,7 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
                  colorred=160;
              }
     #ifdef OPENCV_DRAW
-      cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, cv::Scalar( 0, 0, 150 ),  2, 8 );
+      cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, Colors[i],  2, 8 );
     #endif
      // Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
 
@@ -508,7 +508,6 @@ void RRT::Initialize_VicinityRRT()
             }
             vdr.angles[j]=angles;
             //  cout<<"Angulos: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<endl;
-
             if (j==prof_expl||j==1)
                 dm=1.5*(dnxt+dnprv);
             else
@@ -516,21 +515,17 @@ void RRT::Initialize_VicinityRRT()
 
             if (dm>=0.05) dm=0.05;
             //if (dm<=0.001) dm=0.001;
-
             //VD.R[j][2]=0.001;
             vdr.R[j][2]=0.002;//valor de z
             vdr.R[j][0]=2*dm;//0 es dm
             double acDist=1.0;
-
             for (int k=0;k<=j;k++)
             {
-                acDist +=1*vdr.R[k][0]/2;
+                acDist +=0.6*vdr.R[k][0];
             }
-
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
             vdr.R[j][1] =((acDist*acDist)-1.0)/6;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
-
         }
         vdr.L=prof_expl;
     return;
@@ -571,7 +566,7 @@ void RRT::Node_Filter()
             { 
                 //Save old nodes, which have passed check collision 
                 //if (cn_Old<MaxOldNodesReg*i)
-                 Push_Nodes_Elem_in_Nodes(OldNodes,i);
+                Push_Nodes_Elem_in_Nodes(OldNodes,i);
                 del_List.push_back(i);
             }
         }
@@ -753,11 +748,16 @@ void RRT::RRT_Generation()
     int count=0;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
+
+    #ifdef OPENCV_DRAW
+        cv::ellipse(image_Ptraj,cv::Point(vdr.TP[j][0],vdr.TP[j][1]),cv::Size( 0.2, 0.2 ),vdr.angles[j][2],0,360,Colors[j],1,8);
+    #endif
         if(abs(vdr.R[j][0])>=0.005)
         {
            //cout<< " radio: "<<vdr.R[j][0]<<endl;
             for (int k=0;k < Num_Added_Nodes ;k++)
             {
+
                 Add_Node(j);//agrega 1 nodo cada vez
                // Print("Node added, radio",j);
                 count++;
@@ -849,9 +849,9 @@ void RRT::Add_Node(int It)
 
    if (try_count<=max_tries)
    {
-
+       
         //auto temp_tic=Clock::now();
-       RRT_AddValidCoord(rnTemp1,rnTemp_T);
+       RRT_AddValidCoord(rnTemp1,rnTemp_T,It);
        //Print("ADD NODE TIME",toc(temp_tic).count());
     }
    else
@@ -866,42 +866,41 @@ void RRT::RRT_AddOldCoords()
     bool allowed;
     VectorDbl ON_B(3);
     double rx,ry,rz,ON_x,ON_y,ON_z;
+    int region;
     for (int on=0;on<OldNodes.N;on++)
-    { 
+    {
         tm=100;
-        allowed=false;        
+        allowed=false;
         ON_B[0] = OldNodes.coordT[on][0];
         ON_B[1] = OldNodes.coordT[on][1];
         ON_B[2] = OldNodes.coordT[on][2];
-        Print("OLD ALLOWED",ON_B[0],ON_B[1]);
         for (int It=0;It<prof_expl;It++)
         {
-            rx=vdr.R[It][0];//revisar
-            ry=vdr.R[It][1];
-            rz=vdr.R[It][2];
+            rx = vdr.R[It][0]; //revisar
+            ry = vdr.R[It][1];
+            rz = vdr.R[It][2];
             ON_x = ON_B[0]-vdr.TP[It][0];
             ON_y = ON_B[1]-vdr.TP[It][1];
             ON_z = ON_B[2]-vdr.TP[It][2];
 
             tm = ((ON_x/rx)*(ON_x/rx))+((ON_y/ry)*(ON_y/ry))+((ON_z/rz)*(ON_z/rz));
+            //Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
            // Print("OLD ALLOWED",tm);
             if(tm<=1)
             {
-               
-                allowed = true;
+                allowed = true;region=It;
                 break;
             }
         }
         if (allowed)
         {
-
-            RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on]);
+            RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],0);
         }
     }
   
  return;
 }
-void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
+void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
 {
     double r=0.009;   //Radio de nodos cercanos Revisar
     double EPS=0.005; //Maximo movimiento Revisar//Valor final del numero random ya transformado y chequeado
@@ -911,7 +910,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
     //Hallar el minimo
     std::vector<double>  temp_coords(3);
     
-     double min_ndist=1000000.0;
+    double min_ndist=1000000.0;
     int index_near;
     for (int k=0;k<nodes.N;k++)
     {        
@@ -922,8 +921,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
             index_near=k;
         }
     }
-     
-   
+    
     Node q_near,q_new;
     Extract_Node_from_Nodes( q_near,nodes,index_near); //almacenar en q_near el nodo mas cercano al punto q_new
     //Funcion steer
@@ -967,8 +965,8 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T)
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
  #ifdef OPENCV_DRAW
     mtxA.lock();
-    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, cv::Scalar( 00, 20, 10 ),CV_FILLED,  1, 8 );
+    //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
     mtxA.unlock();
 #endif
     return;

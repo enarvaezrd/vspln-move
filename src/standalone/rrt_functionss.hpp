@@ -6,6 +6,7 @@
 
 using namespace std;
 typedef vector<double> VectorDbl;
+typedef vector<int> VectorInt;
 typedef std::chrono::high_resolution_clock Clock;  
 namespace rrt_planif
 {
@@ -89,8 +90,21 @@ public:
         //vdr.RP.resize(pt);
         vdr.angles.resize(pt);
         vdr.N.resize(pt);
+        for (int i=0;i<pt/5;i++)
+        {
+        Colors.push_back(cv::Scalar(0,96,220));
+        Colors.push_back(cv::Scalar(125,196,245));
+        Colors.push_back(cv::Scalar(106,168,45));
+        Colors.push_back(cv::Scalar(40,52,171));
+        Colors.push_back(cv::Scalar(30,2,1));
+        Colors.push_back(cv::Scalar(165,142,59));
+        Colors.push_back(cv::Scalar(114,67,69));
+        
+         
+        }
         for(int i=0;i<pt;i++)
         {
+            
             vdr.TP[i].resize(7);//4 positions 4 orientations
             vdr.R[i].resize(3); //3 radius, each axis
             vdr.R[i][0] = 0.01;
@@ -138,7 +152,7 @@ public:
     void Add_Node(int It);
 
     void RRT_Generation();
-    void RRT_AddValidCoord(VectorDbl, VectorDbl);
+    void RRT_AddValidCoord(VectorDbl, VectorDbl,int);
     void RRT_AddOldCoords();
     void RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose);
 
@@ -225,6 +239,7 @@ private:
     mutex mtxA;
     bool OldNodesLoaded;
     int MaxOldNodesReg;
+    std::vector<cv::Scalar> Colors;
 };
 
 }

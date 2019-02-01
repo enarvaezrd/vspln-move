@@ -28,7 +28,7 @@ class Pose{
 class Printer{
 public:
     Printer(){}
-    void operator()(std::string str, double a = -11111, double b = -11111 , double c = -11111,double d = -11111,double e = -11111,double f = -11111)
+    void operator()(std::string str, double a = -11111, double b = -11111 , double c = -11111,double d = -11111,double e = -11111,double f = -11111,double g = -11111)
     {
         
         #ifndef PRINT 
@@ -41,6 +41,7 @@ public:
         input.push_back(d);
         input.push_back(e);
         input.push_back(f);
+        input.push_back(g);
         int strSize=0;
         std::cout<<"> "<<str<<": ";
         strSize += 4;
