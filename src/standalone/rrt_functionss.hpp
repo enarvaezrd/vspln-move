@@ -17,6 +17,7 @@ struct Nodes{
    VectorDbl cost;
    vector<int >   parent;
    vector<int >   id;  //No usado por ahora
+   vector<int >   region;
    int N;                   //Numero de nodos activos
 };
 
@@ -26,6 +27,7 @@ struct Node{
      double cost;
      int parent;
      int id;
+     int region;
 };
 struct Etraj { //Trajectory vector
      VectorDbl xval;
@@ -121,6 +123,7 @@ public:
         nodes.cost.resize(prof_expl); 
         nodes.parent.resize(prof_expl); 
         nodes.id.resize(prof_expl); 
+        nodes.region.resize(prof_expl); 
         nodes.N=0; 
         for(int i=0;i<prof_expl;i++)
         {
@@ -200,6 +203,8 @@ public:
         White_Imag.copyTo(image_Ptraj);
         #endif
         return;}
+    int Img(double point);
+    double rad_to_deg(double rad);
         
 private:
     Etraj Tr;

@@ -39,7 +39,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         {
             for(int i=0;i<prof_expl;i++)
             {
-               traj.xval[i]=CurrentPoint.xval ;
+               traj.xval[i]=CurrentPoint.xval ;   
                traj.yval[i]=CurrentPoint.yval ;   //asignar un solo punto xyz a toda la trayectoria, constante
                traj.zval[i]=zvalue;
             }
@@ -508,23 +508,23 @@ void RRT::Initialize_VicinityRRT()
             }
             vdr.angles[j]=angles;
             //  cout<<"Angulos: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<endl;
-            if (j==prof_expl||j==1)
-                dm=1.5*(dnxt+dnprv);
+            if (j==prof_expl-1||j==0)
+                dm=1.0*(dnxt+dnprv);
             else
-                dm=1.5*(dnxt+dnprv)/2;
+                dm=1.0*(dnxt+dnprv)/2;
 
             if (dm>=0.05) dm=0.05;
             //if (dm<=0.001) dm=0.001;
             //VD.R[j][2]=0.001;
             vdr.R[j][2]=0.002;//valor de z
-            vdr.R[j][0]=2*dm;//0 es dm
-            double acDist=1.0;
+            vdr.R[j][0]=3*dm;//0 es dm
+            double acDist=1.1;
             for (int k=0;k<=j;k++)
             {
-                acDist +=0.6*vdr.R[k][0];
+                acDist += 1.0*vdr.R[k][0];
             }
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
-            vdr.R[j][1] =((acDist*acDist)-1.0)/6;//+((j*j*1.0)/5000)
+            vdr.R[j][1] =((acDist*acDist)-1.1)/10;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
         }
         vdr.L=prof_expl;
@@ -566,7 +566,7 @@ void RRT::Node_Filter()
             { 
                 //Save old nodes, which have passed check collision 
                 //if (cn_Old<MaxOldNodesReg*i)
-                Push_Nodes_Elem_in_Nodes(OldNodes,i);
+                //Push_Nodes_Elem_in_Nodes(OldNodes,i);
                 del_List.push_back(i);
             }
         }
@@ -626,6 +626,7 @@ void RRT::delete_branch(int indx)
     Fin_Nodes.cost.resize(maxnodes);
     Fin_Nodes.parent.resize(maxnodes);
     Fin_Nodes.id.resize(maxnodes);
+    Fin_Nodes.region.resize(maxnodes);
     Fin_Nodes.N=0;
     
     int fcn=0;int badfound=0;
@@ -644,6 +645,7 @@ void RRT::delete_branch(int indx)
             Fin_Nodes.coordT[fcn]=nodes.coordT[i];
             Fin_Nodes.cost[fcn]=nodes.cost[i];
             Fin_Nodes.parent[fcn]=nodes.parent[i]; //nodos permitidos van ordenados en Fin_Nodes
+            Fin_Nodes.region[fcn]=nodes.region[i];
             Fin_Nodes.id[fcn]=fcn;
             Fin_Nodes.N=fcn+1;
             indxlist.push_back(i); //orden en la lista seria el indice nuevo y valor es el indice antiguo
@@ -656,7 +658,7 @@ void RRT::delete_branch(int indx)
     Fin_Nodes.cost.resize(fin_sz);
     Fin_Nodes.parent.resize(fin_sz);
     Fin_Nodes.id.resize(fin_sz);
-
+    Fin_Nodes.region.resize(fin_sz);
 //cout<<" ----DB 2---- "<<endl;
     //Ahora se corrige los parents de los nodos finales, para que apunten al nodo correcto
     //es decir, buscar si hay cambios en el indice de un nodo, y si los hay, buscar nodos hijos y corregirles el parent.
@@ -700,6 +702,7 @@ void RRT::Nodes_Reorder()
             nodes.cost[j] = Distance(vdr.TP[j-1], vdr.TP[j]) + nodes.cost[j-1]; //Aqui tiene que calcularse en funcion de la pose actual del eeff.tambien se puede calcular acumulando paso a paso
        
         }
+        nodes.region[j] = j;
     }
     //ANTIGUOS NODOS DE TRAYECTORIA, REQUIEREN SWEEP Y ACTUALIZACION DE PADRES
 
@@ -723,6 +726,7 @@ void RRT::Nodes_Reorder()
                 nodes.parent[j] = j-1;
                 nodes.cost[j]   = Distance(vdr.TP[j-1],vdr.TP[j]) + nodes.cost[j-1];
             }
+            nodes.region[j] = j;
         }
     }
 
@@ -744,13 +748,18 @@ void RRT::Nodes_Reorder()
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
-   Print("********//Nodes size Start", nodes.N);     
+    int oldSize = nodes.N;
+   //Print("********//Nodes size Start", nodes.N);
     int count=0;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
 
     #ifdef OPENCV_DRAW
-        cv::ellipse(image_Ptraj,cv::Point(vdr.TP[j][0],vdr.TP[j][1]),cv::Size( 0.2, 0.2 ),vdr.angles[j][2],0,360,Colors[j],1,8);
+    mtxA.lock();
+        //Print("AAAAAAAAAAAAAAAAAAAangles", vdr.angles[j][0],rad_to_deg(vdr.angles[j][0]));
+       // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
+        cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0]/2,  scale*vdr.R[j][1]/2),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
+    mtxA.unlock();
     #endif
         if(abs(vdr.R[j][0])>=0.005)
         {
@@ -767,9 +776,9 @@ void RRT::RRT_Generation()
             //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
        // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
-    Print("********//Nodes size Med", nodes.N);     
-    RRT_AddOldCoords();
-    Print("NodesOld size, new size",OldNodes.N,nodes.N );
+    Print("********Recycled nodes", oldSize-prof_expl);     
+    //RRT_AddOldCoords();
+   // Print("NodesOld size, new size",OldNodes.N,nodes.N );
 
 return;
 }
@@ -909,16 +918,19 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     double tmp_dist;
     //Hallar el minimo
     std::vector<double>  temp_coords(3);
-    
+    //Search 
     double min_ndist=1000000.0;
-    int index_near;
+    int index_near=It;
     for (int k=0;k<nodes.N;k++)
-    {        
+    {       
+        if (nodes.region[k]>=It-1&&nodes.region[k]<=It+1)
+        {
         tmp_dist = Distance(q_rand_TR,nodes.coord[k]);
         if(tmp_dist<=min_ndist)
         {
             min_ndist=tmp_dist;
             index_near=k;
+        }
         }
     }
     
@@ -932,9 +944,12 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     Node q_min=q_near;
     double C_min=q_new.cost;
     int q_min_Indx=index_near;
-   // auto ttic=Clock::now();
+auto ttic=Clock::now();
     for (int j=0;j<nodes.N;j++)
     {
+        
+        if (nodes.region[j]==It)//-1&&nodes.region[j]<=It+1)
+        {//Print("region",nodes.region[j]);
          double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
          if (Dist_node_to_qnew<=r) //Si esta dentro del circulo de radio r, entran los nearest
          {
@@ -943,11 +958,12 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
              {
                  Extract_Node_from_Nodes(q_min,nodes,j); //q_min seria el que tiene menor costo, es decir el nuevo padre de q_new
                  C_min=Cost_q_nearest;
-                 q_min_Indx=j;
+                 q_min_Indx=j;break;
              }
          }
+        }
     }
-    //Print("DIST TIME",toc(ttic).count(),nodes.N);
+    Print("DIST TIME",toc(ttic).count(),nodes.N,index_near,q_min_Indx);
     //Print("Point to add or not",q_rand[0],q_rand[1]);
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
     //Update parent to least cost-from node.
@@ -960,7 +976,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.cost   = Distance(q_new_f.coord,q_min.coord) + q_min.cost;
     q_new_f.parent = q_min_Indx;
     q_new_f.id     = nodes.N+1;
-
+    q_new_f.region = It;
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
  #ifdef OPENCV_DRAW
@@ -968,10 +984,9 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
     mtxA.unlock();
-#endif
+ #endif
     return;
 }
-
 
 void RRT::Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx)
 {
@@ -983,6 +998,7 @@ void RRT::Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx)
     node.cost=nodes.cost[nIndx];
     node.parent=nodes.parent[nIndx];
     node.id=nodes.id[nIndx];
+    node.region=nodes.region[nIndx];
     return;
 }
 void RRT::Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node)
@@ -995,6 +1011,7 @@ void RRT::Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node)
          nodes.cost.resize(nIndx);
          nodes.id.resize(nIndx);
          nodes.parent.resize(nIndx);
+         nodes.region.resize(nIndx);
          nodes.N=nodes.N+1;
      }
     nodes.coord[nIndx-1] = node.coord;
@@ -1002,6 +1019,7 @@ void RRT::Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node)
     nodes.cost[nIndx-1]  = node.cost;
     nodes.id[nIndx-1]    = node.id;
     nodes.parent[nIndx-1]= node.parent;
+    nodes.region[nIndx-1]= node.region;
     return;
 }
 void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
@@ -1012,6 +1030,7 @@ void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
         nodesR.cost.push_back(nodes.cost[indxG]);
         nodesR.parent.push_back(nodes.parent[indxG]);
         nodesR.id.push_back(nodes.id[indxG]);
+        nodesR.region.push_back(nodes.region[indxG]);
         nodesR.N++;    
     return;
 }
@@ -1221,24 +1240,24 @@ void RRT::RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
     return;    
 }
 void RRT::RRT_SequenceB()//extraer vecindad
-{  tic();
+{  //tic();
 finish=false;
     //Print("//-------RRt3 InitVicinity-----------");
     Initialize_VicinityRRT();
-    Print("BBtiempo InitVicinity",toc().count());
-    tic();
+    //Print("BBtiempo InitVicinity",toc().count());
+    //tic();
     //Print("//-------RRt4 NodelFilter------------");
     Node_Filter();
-    Print("BBBtiempo Node Filter",toc().count());
-    tic();
+    //Print("BBBtiempo Node Filter",toc().count());
+    //tic();
     //Print("//-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
-    Print("BBtiempo Nodes Reorder",toc().count());
-    tic();
+    //Print("BBtiempo Nodes Reorder",toc().count());
+    //tic();
     //Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
     //Print("//-------RRt7 Finish-----------------");
-    Print("BBtiempo RRT Gen",toc().count());
+    //Print("BBtiempo RRT Gen",toc().count());
     finish=true;
     return;
 }
@@ -1287,6 +1306,16 @@ std::chrono::microseconds RRT::toc(std::chrono::time_point<std::chrono::high_res
     auto elapsed_c = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - tic_clock);
     return elapsed_c;
 }
-
+int RRT::Img(double point)
+{
+    point +=maxsc;
+    point*=scale;
+    return int(point);
+}
+double RRT::rad_to_deg(double rad)
+{
+    double deg=rad*180/PI;
+    return deg;
+}
 
 #endif
