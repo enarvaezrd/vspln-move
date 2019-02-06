@@ -29,3 +29,8 @@ Thumbs.db
 
 *.user
 *.vscode
+simm
+githubkey
+githubkey.pub
+src/standalone/simm
+

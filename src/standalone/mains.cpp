@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(85));
+            std::this_thread::sleep_for(std::chrono::milliseconds(105));
             //Print("finish already paused");
             //Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

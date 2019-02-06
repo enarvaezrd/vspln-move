@@ -891,7 +891,8 @@ void RRT::RRT_AddOldCoords()
             ON_x = ON_B[0]-vdr.TP[It][0];
             ON_y = ON_B[1]-vdr.TP[It][1];
             ON_z = ON_B[2]-vdr.TP[It][2];
-
+            cv::circle( image_Ptraj, cv::Point( (ON_B[0] +maxsc)*scale,(ON_B[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
+   
             tm = ((ON_x/rx)*(ON_x/rx))+((ON_y/ry)*(ON_y/ry))+((ON_z/rz)*(ON_z/rz));
             //Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
            // Print("OLD ALLOWED",tm);
@@ -1279,7 +1280,7 @@ void RRT::loop_end()
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
 
-   std::this_thread::sleep_for(std::chrono::milliseconds(5));
+   std::this_thread::sleep_for(std::chrono::milliseconds(1));
    return true;
 }
 void RRT::tic()
