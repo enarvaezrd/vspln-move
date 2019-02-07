@@ -40,10 +40,11 @@ public:
     bool Check_Collision( std::vector<double> , int );
     void PrintCurrentPose(std::string);
     void PrintPose(std::string , geometry_msgs::Pose );
-    double getDelayTime(){return delay_time;}
-    void Sleep(long double);
+    std::chrono::microseconds getDelayTime(){return delay_time;}
+    void Sleep(std::chrono::microseconds);
     void tic();
-    long double toc(); //regresa el tiempo transcurrido
+    std::chrono::microseconds  toc(); //regresa el tiempo transcurrido
+    std::chrono::microseconds toc(std::chrono::time_point<std::chrono::high_resolution_clock> );
     bool SendInitialPose();
 
 
@@ -59,14 +60,14 @@ private:
     Printer Print;
     robot_model::RobotModelPtr kinematic_model;
     const robot_state::JointModelGroup* joint_model_group;
-    double delay_time;
+    std::chrono::microseconds delay_time;
     geometry_msgs::Pose currentPose;
     ros::Publisher joints_pub;
     ros::NodeHandle nh_;
 
     GroupPlan my_plan;
 
-    double tic_clock_time;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tic_clock_time;
 
 
 };

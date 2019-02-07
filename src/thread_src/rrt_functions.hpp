@@ -4,22 +4,27 @@
 
 using namespace std;
 typedef vector<double> VectorDbl;
+typedef vector<int> VectorInt;
 namespace rrt_planif
 {
 
 struct Nodes{
    vector<VectorDbl >  coord;
+   vector<VectorDbl >  coordT;
    VectorDbl cost;
    vector<int >   parent;
    vector<int >   id;  //No usado por ahora
+   vector<int >   region;
    int N;                   //Numero de nodos activos
 };
 
 struct Node{
      VectorDbl coord;
+     VectorDbl coordT;
      double cost;
      int parent;
      int id;
+     int region;
 };
 struct Etraj { //Trajectory vector
      VectorDbl xval;
@@ -65,9 +70,10 @@ public:
         image_size=800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 6;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 8;  // Profundidad de exploracion  Esz=prof_f
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
+        White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         acum_x.resize((d_prv+1));
         acum_y.resize((d_prv+1));
 
@@ -82,6 +88,16 @@ public:
         //vdr.RP.resize(pt);
         vdr.angles.resize(pt);
         vdr.N.resize(pt);
+         for (int i=0;i<pt/5;i++)
+        {
+        Colors.push_back(cv::Scalar(0,96,220));
+        Colors.push_back(cv::Scalar(125,196,245));
+        Colors.push_back(cv::Scalar(106,168,45));
+        Colors.push_back(cv::Scalar(40,52,171));
+        Colors.push_back(cv::Scalar(30,2,1));
+        Colors.push_back(cv::Scalar(165,142,59));
+        Colors.push_back(cv::Scalar(114,67,69));  
+        }
         for(int i=0;i<pt;i++)
         {
             vdr.TP[i].resize(7);//4 positions 4 orientations
@@ -96,9 +112,11 @@ public:
         }
 
         nodes.coord.resize(prof_expl);//longitud dinamica, empieza con el minimo
+        nodes.coordT.resize(prof_expl);
         nodes.cost.resize(prof_expl);
         nodes.parent.resize(prof_expl);
         nodes.id.resize(prof_expl);
+        nodes.region.resize(prof_expl);
         nodes.N=0;
         for(int i=0;i<prof_expl;i++)
         {
@@ -110,6 +128,11 @@ public:
         scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
         NumNodesToAdd=int(prof_expl/2);
+
+        finish =true;
+        EmptyNodes.N=0;
+        OldNodes=EmptyNodes;
+        OldNodesLoaded=false;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -125,13 +148,17 @@ public:
     void Add_Node(int It);
 
     void RRT_Generation();
-    void RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose);
+    void RRT_AddValidCoord(VectorDbl, VectorDbl,int);
+    void RRT_AddOldCoords();
+    void RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose);
+    void RRT_SequenceB();
 
     cv::Mat getImage(){ return image;}
     cv::Mat getImage_Ptraj(){ return image_Ptraj;}
 
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
     VectorDbl  Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw);
+    VectorDbl  Translation(VectorDbl , int );
     VectorDbl  Matrix_Vector_MultiplyA(vector<VectorDbl > Matrix, VectorDbl Vector );
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1);
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2);
@@ -140,24 +167,42 @@ public:
     void       Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
+    void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
 
+    void PrintNode(cv::Mat ,VectorDbl );
     void loop_start();
     void loop_end();
-
+    
+    void Load_TR(const Etraj traj){Tr=traj;return;}
+    const Etraj Get_TR(){return Tr;}
+    void Load_TRbr(const int trbr){tr_brk=trbr;return;}
+    const int Get_TRbr(){return tr_brk;}
+    void Load_NdsReord(const int nds){nodes_reordered=nds;return;}
+    const int Get_NdsReord(){return nodes_reordered;}
+    void Load_Img(const cv::Mat img){image_Ptraj=img;return;}
+    const bool get_finish(){return finish;}
+    void ResetImagePtraj(){
+        #ifdef OPENCV_DRAW 
+        White_Imag.copyTo(image_Ptraj);
+        #endif
+        return;}
+    int Img(double point);
+    double rad_to_deg(double rad);
 
 private:
-    std::mutex mtx;
-    std::condition_variable cv;
     Etraj Tr;
     Etraj Tr_old,Tr_temp;
     Vicinity vdr;
     Nodes nodes;
+    Nodes OldNodes;
+    Nodes EmptyNodes;
     struct MeanValues mean;
     VectorDbl acum_x;
     VectorDbl acum_y;
     cv::Mat image ,image_Ptraj;
+    cv::Mat White_Imag;
     int image_size;
 
     bool sequence_loop;
@@ -167,9 +212,9 @@ private:
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
     int nm;//numero maximo de muestras en cada region
     int pt;//Puntos de trayectoria Esz en matlab
+    float NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
-    int NumNodesToAdd;
     double  acum_values;
     double eeff_min_height;
     double r_exterior;
@@ -178,7 +223,13 @@ private:
     double scale;
     double f_dist;
     Printer Print;
-    mutex m_rrt;
+    std::chrono::time_point<std::chrono::high_resolution_clock>  tic_clock_time;
+    geometry_msgs::Pose CurrentRequest_Simm;
+    bool finish;
+    mutex mtxA;
+    bool OldNodesLoaded;
+    int MaxOldNodesReg;
+    std::vector<cv::Scalar> Colors;
 
 
 };

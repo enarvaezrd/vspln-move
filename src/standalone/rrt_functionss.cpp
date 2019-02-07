@@ -949,7 +949,7 @@ auto ttic=Clock::now();
     for (int j=0;j<nodes.N;j++)
     {
         
-        if (nodes.region[j]==It)//-1&&nodes.region[j]<=It+1)
+        if (nodes.region[j]>=It-1 && nodes.region[j]<=It+1)
         {//Print("region",nodes.region[j]);
          double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
          if (Dist_node_to_qnew<=r) //Si esta dentro del circulo de radio r, entran los nearest
@@ -1191,8 +1191,9 @@ VectorDbl  RRT::Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2)/
     return angles;
 }
 double RRT::Distance(VectorDbl P0, VectorDbl P1)
-{   
-    return  sqrt((float)(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2]))));
+{        
+    return  sqrt(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2])));
+    //return  sqrt(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1])));
 }
 
 void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
@@ -1280,7 +1281,7 @@ void RRT::loop_end()
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
 
-   std::this_thread::sleep_for(std::chrono::milliseconds(1));
+   std::this_thread::sleep_for(std::chrono::milliseconds(10));
    return true;
 }
 void RRT::tic()

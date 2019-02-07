@@ -84,7 +84,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req,int type)
 
         //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
         tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
-        delay_time = tiempo_traj.toSec();
+        delay_time =  std::chrono::microseconds(int(tiempo_traj.toSec()*1000000));
         //usleep(1000000*(delay_time));
         arm.startTrajectory(goale);//Inicio de trayectoria en GAZEBO
     }
@@ -117,14 +117,14 @@ bool Ed_Pmov::Check_Collision( std::vector<double> Position, int type)
     {
         CheckPose.orientation.w=  0.0;
         CheckPose.orientation.x=  0.0;
-        CheckPose.orientation.y= 1.0;
+        CheckPose.orientation.y=  1.0;
         CheckPose.orientation.z=  0.0;
     }
 //Print("check pose 4",CheckPose.orientation.w,CheckPose.orientation.x,CheckPose.orientation.y,CheckPose.orientation.z);
 //Print("check pose 4",CheckPose.position.x,CheckPose.position.y,CheckPose.position.z);
-
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 2, 0.01);
-Print("check pose",found_ik);
+tic();
+    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 2, 0.1);
+Print("check pose",found_ik,toc().count());
     return found_ik;
 }
 
@@ -152,22 +152,29 @@ void Ed_Pmov::PrintPose(std::string workspace,  geometry_msgs::Pose req_pose)
     return;
 }
 
-void Ed_Pmov::Sleep(long double elapsed_time)
+void Ed_Pmov::Sleep(std::chrono::microseconds elapsed_time)
 {
-    long double time_for_sleep = delay_time - elapsed_time;
-    if (time_for_sleep <= 0.0) time_for_sleep=0.0;
-    usleep(1000000*(time_for_sleep + 0.0001));
+    auto time_for_sleep = delay_time - elapsed_time;
+    int time_for_sleepD = time_for_sleep.count(); 
+    if (time_for_sleepD <= 0.0) time_for_sleepD = 0.0;
+    usleep(1*(time_for_sleepD + 100));
 }
 void Ed_Pmov::tic()
 {
-    tic_clock_time=0;
-    tic_clock_time = clock();
+    tic_clock_time = std::chrono::high_resolution_clock::now();
 }
-long double Ed_Pmov::toc()
+std::chrono::microseconds  Ed_Pmov::toc()
 {
-    double elapsed_time_clocks = clock() - tic_clock_time;
-    long double elapsed_time = elapsed_time_clocks*1.0/CLOCKS_PER_SEC;//tiempo transcurrido en el codigo
+    auto toc_clock = std::chrono::high_resolution_clock::now();
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - tic_clock_time);
     return elapsed_time;
 }
+std::chrono::microseconds RRT::toc(std::chrono::time_point<std::chrono::high_resolution_clock>  tic_clock) 
+{
+    auto toc_clock = std::chrono::high_resolution_clock::now();        
+    auto elapsed_c = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - tic_clock);
+    return elapsed_c;
+}
+
 
 #endif

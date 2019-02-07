@@ -32,6 +32,7 @@
 #include <mutex>
 #include <condition_variable>
 
+#define OPENCV_DRAW
 #define PI 3.141592654
 #define VERBOSE_
 class Printer{
@@ -67,7 +68,7 @@ public:
             }
 
         }
-        std::cout<<std::endl;
+        std::cout<<"\n";
         for (int i = 0; i < strSize; i++)
         {
             std::cout<<'\b';

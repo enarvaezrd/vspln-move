@@ -5,7 +5,7 @@
 #define PI 3.141592654
 #include <thread>
 #include <chrono>
-#include<mutex>
+#include <mutex>
 #include <algorithm>
 #define PRINT
 #define OPENCV_DRAW
@@ -60,7 +60,7 @@ public:
             }
 
         }
-        std::cout<<std::endl;
+        std::cout<<"\n";
        /* for (int i = 0; i < strSize; i++)
         {
             std::cout<<'\b';
