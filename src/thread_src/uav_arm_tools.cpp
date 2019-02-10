@@ -141,7 +141,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
     Angles IAngleMark =ConvPosetoAngles(marker_pose);
    // Positions2D opT=oldPos_ciFull;
     Quat quaternion=ArmOrientReq_toQuaternion(IAngleMark.yaw,CurrentArmPose);
-    Angles AnglesCurrent =ConvPosetoAngles(CurrentArmPose);
+    Angles AnglesCurrent =ConvPosetoAngles(CurrentArmPose); 
     AnglesCurrent.yaw-=PI/2; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
     float xc1 = (marker_pose.position.x) * sin(AnglesCurrent.yaw) +  (marker_pose.position.y) * cos(AnglesCurrent.yaw);
@@ -289,8 +289,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //Positions2D opT=oldPos_ci;
     Quat quaternion=ArmOrientReq_toQuaternion(IAngleMark.yaw,CurrentArmPose);
     Angles AnglesCurrent =ConvPosetoAngles(CurrentArmPose);
-    Print("MARK yaw, ArmYaw",IAngleMark.yaw, AnglesCurrent.yaw);
-
+    //Print("MARK yaw, ArmYaw",IAngleMark.yaw, AnglesCurrent.yaw);
 
     AnglesCurrent.yaw-=PI/2; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
@@ -304,8 +303,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         ArmPoseReq.orientation.y= quaternion.y;
         ArmPoseReq.orientation.z= quaternion.z;
         ArmPoseReq.orientation.w= quaternion.w;
-        Print("ORIENT REQ x,y,z,w",ArmPoseReq.orientation.x,ArmPoseReq.orientation.y,ArmPoseReq.orientation.z,ArmPoseReq.orientation.w);
-        Print("ANGLES REQ roll, pitch, yaw",IAngleMark.roll,IAngleMark.pitch,IAngleMark.yaw);
+        //Print("ORIENT REQ x,y,z,w",ArmPoseReq.orientation.x,ArmPoseReq.orientation.y,ArmPoseReq.orientation.z,ArmPoseReq.orientation.w);
+        //Print("ANGLES REQ roll, pitch, yaw",IAngleMark.roll,IAngleMark.pitch,IAngleMark.yaw);
     }
 
     float cx,cy,corg;
@@ -386,7 +385,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //-------------------------------------
 
 
-    Print("Before x, y, z ",ArmPoseReq.position.x,ArmPoseReq.position.y,ArmPoseReq.position.z);
+    //Print("Before x, y, z ",ArmPoseReq.position.x,ArmPoseReq.position.y,ArmPoseReq.position.z);
     if (rad>=rad_ext){//Circulo externo
         if(ArmPoseReq.position.x<0.0){
             theta=PI+atan(ArmPoseReq.position.y/ArmPoseReq.position.x);
@@ -397,7 +396,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
         ArmPoseReq.position.y=rad_ext*sin(theta);
         ArmPoseReq.position.x=rad_ext*cos(theta);
-        Print("After  x, y ",ArmPoseReq.position.x,ArmPoseReq.position.y);
+        //Print("After  x, y ",ArmPoseReq.position.x,ArmPoseReq.position.y);
 
 
     }
@@ -459,8 +458,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         double xf3=rad_int*cos(theta)+offx;//ideal
         double yf3=rad_int*sin(theta)+offy;
 
-        Print("Comparacion x",xf3,CurrentArmPose.position.x);
-        Print("Comparacion y",yf3,CurrentArmPose.position.y);
+        //Print("Comparacion x",xf3,CurrentArmPose.position.x);
+        //Print("Comparacion y",yf3,CurrentArmPose.position.y);
 
         double corrx=0.2*(xf3-CurrentArmPose.position.x);
         double corry=0.2*(yf3-CurrentArmPose.position.y);
@@ -492,7 +491,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         if (corry>corg)  corry= corg;
         if (corry<-corg) corry=-corg;
 
-        Print("Correccion x",corrx,corry);
+        //Print("Correccion x",corrx,corry);
         ArmPoseReq.position.x += corrx ;
         ArmPoseReq.position.y += corry ;
     }

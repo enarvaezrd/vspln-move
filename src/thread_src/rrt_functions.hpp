@@ -5,6 +5,7 @@
 using namespace std;
 typedef vector<double> VectorDbl;
 typedef vector<int> VectorInt;
+
 namespace rrt_planif
 {
 
@@ -58,7 +59,6 @@ struct Vicinity{
    int L;
 };
 
-
 class RRT
 {
 
@@ -67,10 +67,12 @@ public:
     Ed_Pmov ArmModel;
     RRT() : ArmModel(){ 
         sequence_loop=false;
-        image_size=800;
+        image_size = 600;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 8;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
+        NumNodesToAdd = (prof_expl*1.0); //number of nodes to add in each region
+        MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
@@ -79,7 +81,7 @@ public:
 
         for(int i=0;i<(d_prv);i++) {acum_x[i]=0.0;  acum_y[i]=0.0;} //inicializacion en ceros
         acum_values = 0;
-        nm = 70;
+        nm = 90;
         pt = prof_expl;
         nodes_reordered=0;
 
@@ -127,12 +129,13 @@ public:
         maxsc = 0.45;
         scale = floor(image_size/(2*maxsc));
         f_dist=0.1;
-        NumNodesToAdd=int(prof_expl/2);
 
         finish =true;
         EmptyNodes.N=0;
         OldNodes=EmptyNodes;
         OldNodesLoaded=false;
+        first_tr=false;
+        Stop_RRT_flag=true;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -170,13 +173,15 @@ public:
     void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
-
+    
     void PrintNode(cv::Mat ,VectorDbl );
     void loop_start();
     void loop_end();
-    
+
+    //void Load_ArmModel( Ed_Pmov *ArmMd){ArmModel=ArmMd;return;}
+    //Ed_Pmov Get_ArmModel(){return ArmModel;}
     void Load_TR(const Etraj traj){Tr=traj;return;}
-    const Etraj Get_TR(){return Tr;}
+    const Etraj Get_TR(){TP_Mtx.lock(); Etraj TrT=Tr;TP_Mtx.unlock(); return TrT;}
     void Load_TRbr(const int trbr){tr_brk=trbr;return;}
     const int Get_TRbr(){return tr_brk;}
     void Load_NdsReord(const int nds){nodes_reordered=nds;return;}
@@ -190,6 +195,8 @@ public:
         return;}
     int Img(double point);
     double rad_to_deg(double rad);
+
+    bool Stop_RRT_flag;
 
 private:
     Etraj Tr;
@@ -230,8 +237,8 @@ private:
     bool OldNodesLoaded;
     int MaxOldNodesReg;
     std::vector<cv::Scalar> Colors;
-
-
+    std::mutex TP_Mtx;
+    bool first_tr;
 };
 
 

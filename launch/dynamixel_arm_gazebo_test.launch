@@ -31,7 +31,7 @@
  	   <!-- ROBOT2   -->
   <group ns="robot2">
  	 <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch" >
-	 	 <arg name="z" default="6.0"/>
+	 	 <arg name="z" default="4.0"/>
 	 	 <arg name="x" default="0.2"/>
 	 	 <arg name="y" default="0.0"/>
   	</include>

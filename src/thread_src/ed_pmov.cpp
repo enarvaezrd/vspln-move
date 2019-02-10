@@ -123,8 +123,9 @@ bool Ed_Pmov::Check_Collision( std::vector<double> Position, int type)
 //Print("check pose 4",CheckPose.orientation.w,CheckPose.orientation.x,CheckPose.orientation.y,CheckPose.orientation.z);
 //Print("check pose 4",CheckPose.position.x,CheckPose.position.y,CheckPose.position.z);
 tic();
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 2, 0.1);
-Print("check pose",found_ik,toc().count());
+    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 1, 0.00055);    
+//Print("check pose",found_ik,toc().count());
+
     return found_ik;
 }
 
@@ -169,12 +170,11 @@ std::chrono::microseconds  Ed_Pmov::toc()
     auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - tic_clock_time);
     return elapsed_time;
 }
-std::chrono::microseconds RRT::toc(std::chrono::time_point<std::chrono::high_resolution_clock>  tic_clock) 
+std::chrono::microseconds Ed_Pmov::toc(std::chrono::time_point<std::chrono::high_resolution_clock>  tic_clock) 
 {
     auto toc_clock = std::chrono::high_resolution_clock::now();        
     auto elapsed_c = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - tic_clock);
     return elapsed_c;
 }
-
 
 #endif

@@ -26,10 +26,14 @@ public:
         kinematic_model = robot_model_loader.getModel();   //--
         robot_state::RobotStatePtr kinematic_statea(new robot_state::RobotState(kinematic_model));
 
-        kinematic_state = kinematic_statea;//A(new robot_state::RobotState(kinematic_model));
+        kinematic_state = kinematic_statea;
 
         joint_model_group = kinematic_model->getJointModelGroup("pro_arm");
-        joints_pub = nh_.advertise< control_msgs::FollowJointTrajectoryGoal>("/joints_data", 1);
+        Print("Created");
+       // joints_pub = nh_.advertise< control_msgs::FollowJointTrajectoryGoal>("/joints_data", 1);
+         Print("CreatedJPITNM");
+
+
 
     }
 
@@ -46,6 +50,18 @@ public:
     std::chrono::microseconds  toc(); //regresa el tiempo transcurrido
     std::chrono::microseconds toc(std::chrono::time_point<std::chrono::high_resolution_clock> );
     bool SendInitialPose();
+    void PrintModelInfo(){
+
+        Print("((((((((((((((((((((((((((((((((((((((((((((((((Model frame");Print( kinematic_model->getModelFrame().c_str());
+        Print("Joint Group Name");Print(joint_model_group->getName().c_str());
+        Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
+Eigen::MatrixXd jacobian;
+kinematic_state->getJacobian(joint_model_group,
+                             kinematic_state->getLinkModel(joint_model_group->getLinkModelNames().back()),
+                             reference_point_position, jacobian);
+ROS_INFO_STREAM("Jacobian: \n" << jacobian << "\n");
+
+    }
 
 
 
@@ -71,7 +87,5 @@ private:
 
 
 };
-
-
 
 #endif

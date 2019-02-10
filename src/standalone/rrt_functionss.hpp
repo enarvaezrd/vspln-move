@@ -140,6 +140,7 @@ public:
         EmptyNodes.N=0;
         OldNodes=EmptyNodes;
         OldNodesLoaded=false;
+    first_tr=true;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -245,6 +246,7 @@ private:
     bool OldNodesLoaded;
     int MaxOldNodesReg;
     std::vector<cv::Scalar> Colors;
+    int  first_tr;
 };
 
 }

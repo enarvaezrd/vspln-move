@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         int cnTh=0;
         auto clB=std::chrono::high_resolution_clock::now();
         while(Thread_Run){
-            while (sequence_loop_th && RRT_model.get_finish())
+            while (sequence_loop_th )
             {  
                 Print("=======Step=====",cnTh);
                 //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
                 
              
-                RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
+                //RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
                 RRT_modelB.RRT_SequenceA(CurrentRequest);              
             
               
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
             cv::imshow("Image11",imageA);
             cv::waitKey(1); 
         #endif
-            RRT_model.loop_start();
+            //RRT_model.loop_start();
             //Print("finish, now pause");
             std::this_thread::sleep_for(std::chrono::milliseconds(65));
             //Print("finish already paused");

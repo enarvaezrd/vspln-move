@@ -163,12 +163,13 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     traj.xval[i] += (coeffs[j]* (pow(traj.yval[i],j)));
             }
         }
+        Tr=traj;
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
        
        double maxsc1=0.4;
         double scale1=floor(400/(2*maxsc1));
-        if (nodes_reordered == 1)
+        if ( first_tr)
         {
             double dvxy=abs((mean.vx+mean.vy)/2);
             tr_brk = prof_expl-1; //Primero suponer que toda la trayectoria debe reemplazarse
@@ -202,6 +203,8 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
+
+    first_tr=true;
     //Print("step-Prediction -7 ",tr_brk);
     Tr_old = Tr;
 return;
@@ -1281,7 +1284,7 @@ void RRT::loop_end()
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
 
-   std::this_thread::sleep_for(std::chrono::milliseconds(10));
+   std::this_thread::sleep_for(std::chrono::milliseconds(1));
    return true;
 }
 void RRT::tic()

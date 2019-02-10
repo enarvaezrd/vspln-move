@@ -34,6 +34,9 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     
     double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
+
+
+        TP_Mtx.lock();
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
         {
@@ -56,6 +59,7 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         Tr=traj;
         tr_brk=prof_expl;
+        
     }
     else
     {  //Cuando ya se pueda calcular regresion, es decir cuando ya se hayan acumulado muchos valores para mean.vx mean.vy
@@ -80,10 +84,12 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         double Fixf_dist = 0.002;
         if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { 
             fixed_dist=0.003; 
+            Stop_RRT_flag=true;
             Print("fixed in 0.003");//antes era 0.1. Para cuando el UAV esta quieto
         }
         else {
             fixed_dist=f_dist; 
+            Stop_RRT_flag=false;
            // Print("fixed in ",fixed_dist);
             }
         //=======================================================================================================================================
@@ -163,12 +169,13 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     traj.xval[i] += (coeffs[j]* (pow(traj.yval[i],j)));
             }
         }
+        Tr=traj;
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
        
        double maxsc1=0.4;
         double scale1=floor(400/(2*maxsc1));
-        if (nodes_reordered == 1)
+        if (first_tr)
         {
             double dvxy=abs((mean.vx+mean.vy)/2);
             tr_brk = prof_expl-1; //Primero suponer que toda la trayectoria debe reemplazarse
@@ -202,6 +209,8 @@ void RRT::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
+    TP_Mtx.unlock();
+    first_tr=true;
     //Print("step-Prediction -7 ",tr_brk);
     Tr_old = Tr;
 return;
@@ -223,6 +232,7 @@ struct MeanValues RRT::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
     }
     acum_x[d_prv] = Marker_Abs_Pose.position.x;
     acum_y[d_prv] = Marker_Abs_Pose.position.y;
+    eeff_min_height = Marker_Abs_Pose.position.z; //this is the z value for the entire rrt, modify here to contact phase
 
 #ifdef OPENCV_DRAW
     //cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
@@ -465,7 +475,9 @@ void RRT::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<double>  &
                  colorred=160;
              }
     #ifdef OPENCV_DRAW
+    //mtxA.lock();
       cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, Colors[i],  2, 8 );
+    //mtxA.unlock();
     #endif
      // Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
 
@@ -478,7 +490,8 @@ void RRT::Initialize_VicinityRRT()
     std::vector<double> angles(3);
     double dnprv,dnxt,dm;
     for (int j=0;j<prof_expl;j++)
-    {
+    {  
+        //Print("tr",Tr.zval[j]);
         vdr.TP[j][0]=Tr.xval[j];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
         vdr.TP[j][1]=Tr.yval[j];
         vdr.TP[j][2]=Tr.zval[j];
@@ -746,18 +759,18 @@ void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
     int oldSize = nodes.N;
-   //Print("********//Nodes size Start", nodes.N);
+   Print("********//Nodes size Start", nodes.N);
     int count=0;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
 
-    #ifdef OPENCV_DRAW
-    mtxA.lock();
+  //  #ifdef OPENCV_DRAW
+   // mtxA.lock();
         //Print("AAAAAAAAAAAAAAAAAAAangles", vdr.angles[j][0],rad_to_deg(vdr.angles[j][0]));
        // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
         cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0]/2,  scale*vdr.R[j][1]/2),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
-    mtxA.unlock();
-    #endif
+    //mtxA.unlock();
+  //  #endif
         if(abs(vdr.R[j][0])>=0.005)
         {
            //cout<< " radio: "<<vdr.R[j][0]<<endl;
@@ -804,7 +817,7 @@ void RRT::Add_Node(int It)
 
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=5;
+    int max_tries=10;
     int max_rnd_tries=5;
     double rnx,rny,rnz;
     while (found_ik==0)
@@ -825,6 +838,7 @@ void RRT::Add_Node(int It)
         q_rand[1]=rny;
         q_rand[2]=rnz;
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
+        //Print("==TM",tm);
     }
     
    // if (tm<=1) 
@@ -975,12 +989,12 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.region = It;
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
- #ifdef OPENCV_DRAW
-    mtxA.lock();
+// #ifdef OPENCV_DRAW
+    //mtxA.lock();
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
-    mtxA.unlock();
- #endif
+    //mtxA.unlock();
+ //#endif
     return;
 }
 
@@ -1222,7 +1236,7 @@ finish=false;
     //tic();
     //Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
-    //Print("//-------RRt7 Finish-----------------");
+    Print("//-------RRt7 Finish-----------------");
     //Print("BBtiempo RRT Gen",toc().count());
     finish=true;
     return;
