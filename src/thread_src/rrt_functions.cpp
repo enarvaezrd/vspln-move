@@ -761,39 +761,39 @@ void RRT::RRT_Generation()
     int oldSize = nodes.N;
    Print("********//Nodes size Start", nodes.N);
     int count=0;
+    bool node_added=false;
     for (int j=prof_expl-1;j >= 0 ;j--)
     {
-
-  //  #ifdef OPENCV_DRAW
+    #ifdef OPENCV_DRAW
    // mtxA.lock();
-        //Print("AAAAAAAAAAAAAAAAAAAangles", vdr.angles[j][0],rad_to_deg(vdr.angles[j][0]));
-       // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
         cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0]/2,  scale*vdr.R[j][1]/2),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
     //mtxA.unlock();
-  //  #endif
-        if(abs(vdr.R[j][0])>=0.005)
-        {
+    #endif
+    
+
+        //if(abs(vdr.R[j][0])>=0.005)
+        //{
            //cout<< " radio: "<<vdr.R[j][0]<<endl;
             for (int k=0;k < Num_Added_Nodes ;k++)
             {
 
-                Add_Node(j);//agrega 1 nodo cada vez
-               // Print("Node added, radio",j);
-                count++;
+                node_added = Add_Node(j);//agrega 1 nodo cada vez
+                if(!node_added) count++;
             }
-        }
-        else{}
+       // }
             //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
        // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
-    Print("********Recycled nodes", oldSize-prof_expl);     
+
+    Print("===RRTGEN==== Recycled nodes", oldSize-prof_expl);     
+    Print("===RRTGEN==== Added nodes", nodes.N ,(NumNodesToAdd*prof_expl)-count,count );
     //RRT_AddOldCoords();
    // Print("NodesOld size, new size",OldNodes.N,nodes.N );
 
 return;
 }
 
-void RRT::Add_Node(int It)
+bool RRT::Add_Node(int It)
 {
 
     double rx=vdr.R[It][0];//revisar
@@ -817,13 +817,13 @@ void RRT::Add_Node(int It)
 
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=10;
+    int max_tries=1;
     int max_rnd_tries=5;
     double rnx,rny,rnz;
-    while (found_ik==0)
+    while (!found_ik)
     {
         try_count++;
-        if (try_count>max_tries) {Print("fail, too much tries");break;}
+        if (try_count>max_tries) {break;}
         tm=100;
         bool rnd_point_found=false;
         int rnd_point_counts=0;
@@ -854,13 +854,13 @@ void RRT::Add_Node(int It)
         rnTemp_T = Translation(q_rand,It);    //Only trtaslation
         allwd = Check_Boundaries(rnTemp1);
         
-        if (allwd==1)
+        if (allwd)
         {
             //======Chequeo de colisiones===========================================
-            std::vector<double> tempPosit(3);
-            tempPosit[0] = rnTemp1[0];
+            std::vector<double> tempPosit=rnTemp1;
+            /*tempPosit[0] = rnTemp1[0];
             tempPosit[1] = rnTemp1[1];
-            tempPosit[2] = rnTemp1[2];
+            tempPosit[2] = rnTemp1[2];*/
             found_ik_tmp = ArmModel.Check_Collision(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp
         }
    // }
@@ -872,13 +872,14 @@ void RRT::Add_Node(int It)
        
         //auto temp_tic=Clock::now();
        RRT_AddValidCoord(rnTemp1,rnTemp_T,It);
+       return true;
        //Print("ADD NODE TIME",toc(temp_tic).count());
     }
    else
    {
+       return false;
        Print("-------ERROR en demasiados valores buscados en el ciclo while-------",q_rand[0],q_rand[1]);
    }
-   return;
 }
 void RRT::RRT_AddOldCoords()
 {
@@ -989,12 +990,12 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.region = It;
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
-// #ifdef OPENCV_DRAW
+ #ifdef OPENCV_DRAW
     //mtxA.lock();
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
-    //mtxA.unlock();
- //#endif
+   // mtxA.unlock();
+ #endif
     return;
 }
 

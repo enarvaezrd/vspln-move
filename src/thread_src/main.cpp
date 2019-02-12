@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
-    ros::Rate loop_rate(20);
+    ros::Rate loop_rate(30);
     Printer Print;
     rrt_planif::RRT RRT_modelA, RRT_modelB;
     ua_ns::uav_arm_tools UavArm_tools;
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
 
    auto rrt_threadB = std::thread([&](){
-       ros::Rate loop_rate_thread(20);
+       ros::Rate loop_rate_thread(30);
        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
        bool sequence_loop_th=false;
        sleep(5.0);
@@ -78,23 +78,30 @@ int main(int argc, char** argv)
                 RRT_modelB.Stop_RRT_flag=RRT_modelA.Stop_RRT_flag;
                 rrt_planif::Etraj trajA=RRT_modelA.Get_TR();
                 RRT_modelB.Load_TR(trajA);
-                Print("b1",trajA.zval.size(),trajA.zval[0]);
+                //Print("b1",trajA.zval.size(),trajA.zval[0]);
                 int trb =RRT_modelA.Get_TRbr();
                 RRT_modelB.Load_TRbr(trb);
                 RRT_modelB.ResetImagePtraj();
                 if (trajA.xval.size()>0 && !RRT_modelB.Stop_RRT_flag)
                     RRT_modelB.RRT_SequenceB();
                 else 
+                {
                     Print("RRT not applied, Traj too short or RRT flag stop");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                }
                 sequence_loop_th = RRT_modelB.getLoopState();
-                Print("b33",sequence_loop_th);
+                //Print("b33",sequence_loop_th);
                 cv::Mat image = RRT_modelB.getImage_Ptraj();
                 cv::imshow("ImageSeqB",image);
                 cv::waitKey(1); 
+
+                Print("SEQUENCE B TIME ",RRT_modelB.ArmModel.toc(clB).count());
+                clB=std::chrono::high_resolution_clock::now();
                // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
                 
             //ros::spinOnce();
+            loop_rate_thread.sleep();
            }
            while(!sequence_loop_th && ros::ok())
            {
@@ -102,11 +109,13 @@ int main(int argc, char** argv)
                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                sequence_loop_th = RRT_modelB.getLoopState();
                //ros::spinOnce();
+               loop_rate_thread.sleep();
            }
         }
         });
  auto rrt_threadA = std::thread([&](){
         //std::unique_lock<std::mutex> lck(mtx_main);
+        auto clA=std::chrono::high_resolution_clock::now();
     while(ros::ok())
     {
         geometry_msgs::Pose CurrentArmPose;
@@ -159,7 +168,7 @@ int main(int argc, char** argv)
 
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
-       /* std::chrono::microseconds  elapsed_time =RRT_modelA.ArmModel.toc();
+        std::chrono::microseconds  elapsed_time =RRT_modelA.ArmModel.toc();
      
        // RRT_model.loop_end();
         RRT_modelA.ArmModel.Sleep(elapsed_time); //sleep the resulting time
@@ -172,11 +181,14 @@ int main(int argc, char** argv)
         UavArm_tools.PIDdata.time = RRT_modelA.ArmModel.getDelayTime().count()/1000000;       
         CurrentArmPose = RRT_modelA.ArmModel.getCurrentPose();
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);     
-*/
+
             cv::Mat imageA=RRT_modelA.getImage_Ptraj();
             //cv::imshow("Image11",imageA);
             //cv::waitKey(2); 
-            std::this_thread::sleep_for(std::chrono::milliseconds(35));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(35));
+            loop_rate.sleep();
+            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
+            clA=std::chrono::high_resolution_clock::now();
     }
     });
    // if (rrt_thread.joinable()) rrt_thread.join();

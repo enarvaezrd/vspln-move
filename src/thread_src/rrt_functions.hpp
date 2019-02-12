@@ -148,7 +148,7 @@ public:
     void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     struct MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     void delete_branch( int indx);
-    void Add_Node(int It);
+    bool Add_Node(int It);
 
     void RRT_Generation();
     void RRT_AddValidCoord(VectorDbl, VectorDbl,int);

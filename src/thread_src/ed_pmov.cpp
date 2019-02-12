@@ -105,7 +105,7 @@ bool Ed_Pmov::Check_Collision( std::vector<double> Position, int type)
     geometry_msgs::Pose CheckPose;
     CheckPose.position.x=Position[0];
     CheckPose.position.y=Position[1];
-    CheckPose.position.z=Position[2];
+    CheckPose.position.z=Position[2]-0.05;
     if (type==2) //cambiar a 3
     {
         CheckPose.orientation.w=Position[3];
@@ -115,17 +115,16 @@ bool Ed_Pmov::Check_Collision( std::vector<double> Position, int type)
     }
     else
     {
-        CheckPose.orientation.w=  0.0;
-        CheckPose.orientation.x=  0.0;
-        CheckPose.orientation.y=  1.0;
+        CheckPose.orientation.w=  0.707035;
+        CheckPose.orientation.x=  0.707035;
+        CheckPose.orientation.y=  0.0;
         CheckPose.orientation.z=  0.0;
     }
 //Print("check pose 4",CheckPose.orientation.w,CheckPose.orientation.x,CheckPose.orientation.y,CheckPose.orientation.z);
 //Print("check pose 4",CheckPose.position.x,CheckPose.position.y,CheckPose.position.z);
 tic();
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 1, 0.00055);    
-//Print("check pose",found_ik,toc().count());
-
+    bool found_ik = kinematic_state->setFromIK(joint_model_group_5dof, CheckPose, 1, 0.004);    
+Print("check pose",found_ik,toc().count());   
     return found_ik;
 }
 
