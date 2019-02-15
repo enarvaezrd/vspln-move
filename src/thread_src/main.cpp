@@ -13,21 +13,21 @@ int main(int argc, char** argv)
     Printer Print;
     rrt_planif::RRT RRT_modelA, RRT_modelB;
     ua_ns::uav_arm_tools UavArm_tools;
-    sleep(2.0);
+    sleep(1.0);
 
     RRT_modelA.ArmModel.PrintModelInfo();
     RRT_modelB.ArmModel.PrintModelInfo();
     std::vector<double> joint_valuesT(6);
     std::mutex m;
     joint_valuesT[0] = 0.0;
-    joint_valuesT[1] = -PI/1.8;
-    joint_valuesT[2] = -PI/1.8;
+    joint_valuesT[1] = -PI/2;
+    joint_valuesT[2] = -PI/2;
     joint_valuesT[3] = 0.0;// PI/2;
     joint_valuesT[4] = 0.0;
-    joint_valuesT[5] = PI/1.8;
+    joint_valuesT[5] = PI/2;
 
     RRT_modelA.ArmModel.SendMovement_byJointsValues(joint_valuesT);
-    sleep(4.0);
+    sleep(1.0);
     RRT_modelA.ArmModel.PrintCurrentPose("STARTING POSEAAAA");
     float alturap=0.43;//0.21
 
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     UavArm_tools.setArmPoseReq(target_pose);
     target_pose = UavArm_tools.getArmPoseReq();
     bool reqState=RRT_modelA.ArmModel.ReqMovement_byPose(target_pose,1);
-    sleep(3.0);
+    sleep(1.0);
     geometry_msgs::Pose target_posea = RRT_modelA.ArmModel.getCurrentPose();
 
 
@@ -65,14 +65,14 @@ int main(int argc, char** argv)
 
    auto rrt_threadB = std::thread([&](){
        ros::Rate loop_rate_thread(30);
-       std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+       std::this_thread::sleep_for(std::chrono::milliseconds(6000));
        bool sequence_loop_th=false;
-       sleep(5.0);
+       //sleep(6.0);
        auto clB=std::chrono::high_resolution_clock::now();
        while(ros::ok())
         {
            while (sequence_loop_th && ros::ok())
-           {    Print("=====Step=====");
+           {    //Print("=====Step=====");
                 //Ed_Pmov ARMMdl=RRT_modelA.Get_ArmModel();
                 //RRT_modelB.Load_ArmModel(ARMMdl);
                 RRT_modelB.Stop_RRT_flag=RRT_modelA.Stop_RRT_flag;
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
                 int trb =RRT_modelA.Get_TRbr();
                 RRT_modelB.Load_TRbr(trb);
                 RRT_modelB.ResetImagePtraj();
-                if (trajA.xval.size()>0 && !RRT_modelB.Stop_RRT_flag)
+                if (trajA.xval.size()>0 && !RRT_modelA.Stop_RRT_flag)
                     RRT_modelB.RRT_SequenceB();
                 else 
                 {
@@ -91,11 +91,13 @@ int main(int argc, char** argv)
                 }
                 sequence_loop_th = RRT_modelB.getLoopState();
                 //Print("b33",sequence_loop_th);
-                cv::Mat image = RRT_modelB.getImage_Ptraj();
-                cv::imshow("ImageSeqB",image);
-                cv::waitKey(1); 
-
-                Print("SEQUENCE B TIME ",RRT_modelB.ArmModel.toc(clB).count());
+                #ifdef OPENCV_DRAW
+                    cv::Mat image = RRT_modelB.getImage_Ptraj();
+                    cv::imshow("ImageSeqB",image);
+                    cv::waitKey(1); 
+                #endif
+                //std::cout<<"Seq B time: "<<RRT_modelB.ArmModel.toc(clB).count()<<std::endl;
+                Print("==SEQUENCE B TIME ",RRT_modelB.ArmModel.toc(clB).count());
                 clB=std::chrono::high_resolution_clock::now();
                // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
@@ -169,25 +171,23 @@ int main(int argc, char** argv)
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
         std::chrono::microseconds  elapsed_time =RRT_modelA.ArmModel.toc();
-     
+
        // RRT_model.loop_end();
         RRT_modelA.ArmModel.Sleep(elapsed_time); //sleep the resulting time
         //RRT_model.loop_start();
-        
-        RRT_modelA.ArmModel.Sleep(elapsed_time); //sleep the resulting time
-           
+                   
         RRT_modelA.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,2);//type 1 with normal execution, type 2 for last joint preference
         
         UavArm_tools.PIDdata.time = RRT_modelA.ArmModel.getDelayTime().count()/1000000;       
         CurrentArmPose = RRT_modelA.ArmModel.getCurrentPose();
-        UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);     
+        UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
 
             cv::Mat imageA=RRT_modelA.getImage_Ptraj();
             //cv::imshow("Image11",imageA);
             //cv::waitKey(2); 
             //std::this_thread::sleep_for(std::chrono::milliseconds(35));
             loop_rate.sleep();
-            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
+//            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();
     }
     });
@@ -196,8 +196,6 @@ int main(int argc, char** argv)
 rrt_threadB.detach();
 rrt_threadA.join();
 }
-
-
 #endif
 
 

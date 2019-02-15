@@ -34,13 +34,13 @@
 
 #define OPENCV_DRAW
 #define PI 3.141592654
-#define VERBOSE_
+#define PRINT
 class Printer{
 public:
     Printer(){}
     void operator()(std::string str, double a = -1111, double b = -1111 , double c = -1111,double d = -1111,double e = -1111,double f = -1111)
     {
-        #ifdef VERBOSE 
+        #ifndef PRINT 
             return;
         #endif 
         std::vector<double> input;

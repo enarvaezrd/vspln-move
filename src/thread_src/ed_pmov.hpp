@@ -11,25 +11,20 @@ class Ed_Pmov{
 
 public:
     edArm_trajectory::FollowTrajectoryClient arm;
-    moveit::planning_interface::MoveGroupInterface group,group5;
+    moveit::planning_interface::MoveGroupInterface group;
 
 
-    Ed_Pmov() : group("pro_arm") , group5("pro_arm_5dof") 
+    Ed_Pmov() : group("pro_arm") 
     {
         group.setPlannerId("RRTConnectkConfigDefault");//PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);//0.004
         group.setGoalOrientationTolerance(0.008);//0.008
         group.setPlanningTime(0.1);
-        group5.setPlannerId("RRTConnectkConfigDefault");//PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group5.setGoalTolerance(0.005);//0.004
-        group5.setGoalOrientationTolerance(0.008);//0.008
-        group5.setPlanningTime(0.1);
         RobotModelLoader robot_model_loader("robot1/robot_description");   //--
         kinematic_model = robot_model_loader.getModel();   //--
         robot_state::RobotStatePtr kinematic_statea(new robot_state::RobotState(kinematic_model));
         kinematic_state = kinematic_statea;
         joint_model_group = kinematic_model->getJointModelGroup("pro_arm");
-        joint_model_group_5dof = kinematic_model->getJointModelGroup("pro_arm_5dof");
        // joints_pub = nh_.advertise< control_msgs::FollowJointTrajectoryGoal>("/joints_data", 1);    //uncomment if necessary     
     }
 
@@ -70,7 +65,6 @@ private:
     Printer Print;
     robot_model::RobotModelPtr kinematic_model;
     const robot_state::JointModelGroup* joint_model_group;
-    const robot_state::JointModelGroup* joint_model_group_5dof;
     std::chrono::microseconds delay_time;
     geometry_msgs::Pose currentPose;
     ros::Publisher joints_pub;

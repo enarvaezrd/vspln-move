@@ -91,7 +91,7 @@ int main(int argc, char** argv)
         #ifdef OPENCV_DRAW
             imageA=RRT_modelB.getImage_Ptraj();
             cv::imshow("Image11",imageA);
-            cv::waitKey(1); 
+            cv::waitKey(1);
         #endif
             //RRT_model.loop_start();
             //Print("finish, now pause");
@@ -104,7 +104,5 @@ int main(int argc, char** argv)
 Print("finish main paused");
 rrt_thread.detach();
 rrt_threadA.join();
-
-
 }
 #endif

@@ -519,7 +519,6 @@ void RRT::Initialize_VicinityRRT()
                 dnprv=Distance(vdr.TP[j],vdr.TP[j-1]);
             }
             vdr.angles[j]=angles;
-            //  cout<<"Angulos: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<endl;
             if (j==prof_expl-1||j==0)
                 dm=1.0*(dnxt+dnprv);
             else
@@ -626,7 +625,6 @@ void RRT::delete_branch(int indx)
           {  k=-1; } //reinicio desde cero el bucle para revisar todos los nodos otra vez4
         k++;
     }
-
 
     //Ahora quitar los nodos invalidos, y dejar los nodos permitidos unicamente.
   
@@ -754,48 +752,47 @@ void RRT::Nodes_Reorder()
     return;
 }
 
-
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
     int oldSize = nodes.N;
-   Print("********//Nodes size Start", nodes.N);
-    int count=0;
+   //Print("********//Nodes size Start", nodes.N);
+    int count_bad=0, count_good=0;
     bool node_added=false;
-    for (int j=prof_expl-1;j >= 0 ;j--)
-    {
-    #ifdef OPENCV_DRAW
-   // mtxA.lock();
-        cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0]/2,  scale*vdr.R[j][1]/2),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
-    //mtxA.unlock();
-    #endif
-    
-
-        //if(abs(vdr.R[j][0])>=0.005)
-        //{
-           //cout<< " radio: "<<vdr.R[j][0]<<endl;
-            for (int k=0;k < Num_Added_Nodes ;k++)
+    auto start_time=std::chrono::high_resolution_clock::now();
+    auto current_time=std::chrono::high_resolution_clock::now();
+    auto interval = std::chrono::microseconds(250000);
+    for (int k=0;k < Num_Added_Nodes ;k++)
+        {    
+            for (int j=prof_expl-1;j >= 0 ;j--)
             {
-
-                node_added = Add_Node(j);//agrega 1 nodo cada vez
-                if(!node_added) count++;
+                node_added = Add_Node(j);//add 1 node in each iteration
+                if(!node_added) count_bad++;
+                else
+                {
+                    count_good++;
+                    #ifdef OPENCV_DRAW
+                    cv::circle( image_Ptraj, cv::Point( (nodes.coord[nodes.N-1][0] +maxsc)*scale,(nodes.coord[nodes.N-1][1]+maxsc)*scale ), 1, Colors[j], 1,  1, 8 );
+                    #endif
+                }
+                 #ifdef OPENCV_DRAW
+                // mtxA.lock();
+                    cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0]/2,  scale*vdr.R[j][1]/2),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
+                //mtxA.unlock();
+                #endif
+                current_time=std::chrono::high_resolution_clock::now();
+                auto elapsed_time = current_time - start_time;
+                if (elapsed_time>interval && k >= Num_Added_Nodes/2){break;}
             }
-       // }
-            //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
-       // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
-
-    Print("===RRTGEN==== Recycled nodes", oldSize-prof_expl);     
-    Print("===RRTGEN==== Added nodes", nodes.N ,(NumNodesToAdd*prof_expl)-count,count );
+    //Print("===RRTGEN==== Recycled nodes", oldSize-prof_expl);
+    Print("===RRTGEN==== Node size, Added nodes, Nodes not added ", nodes.N ,(NumNodesToAdd*prof_expl)-count_bad,count_bad );
     //RRT_AddOldCoords();
-   // Print("NodesOld size, new size",OldNodes.N,nodes.N );
-
 return;
 }
 
 bool RRT::Add_Node(int It)
 {
-
     double rx=vdr.R[It][0];//revisar
     double ry=vdr.R[It][1];
     double rz=vdr.R[It][2];
@@ -811,13 +808,13 @@ bool RRT::Add_Node(int It)
     std::mt19937 genz(rdz());
     int try_count=0;
     double tm=100;
-    std::uniform_real_distribution<> distxr(-rx,rx);
+    std::uniform_real_distribution<> distxr(-rx,rx);//uniform_real_distribution
     std::uniform_real_distribution<> distyr(-ry,ry);
     std::uniform_real_distribution<> distzr(-rz,rz);
 
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
-    int max_tries=1;
+    int max_tries=2;
     int max_rnd_tries=5;
     double rnx,rny,rnz;
     while (!found_ik)
@@ -840,7 +837,6 @@ bool RRT::Add_Node(int It)
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
         //Print("==TM",tm);
     }
-    
    // if (tm<=1) 
      //   rnd_point_found=true; 
     //Print("RANDOM POINT",toc(temp_tic).count(),try_count,q_rand[0],tm,rnd_point_found);    
@@ -851,7 +847,7 @@ bool RRT::Add_Node(int It)
         vector<std::vector<double> > Rpitch,Rroll,Ryaw;
         Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
         rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);  //First rotate then translate
-        rnTemp_T = Translation(q_rand,It);    //Only trtaslation
+        rnTemp_T = Translation(q_rand,It);    //Only translation
         allwd = Check_Boundaries(rnTemp1);
         
         if (allwd)
@@ -866,10 +862,8 @@ bool RRT::Add_Node(int It)
    // }
     found_ik=found_ik_tmp;
     }
-
    if (try_count<=max_tries)
    {
-       
         //auto temp_tic=Clock::now();
        RRT_AddValidCoord(rnTemp1,rnTemp_T,It);
        return true;
@@ -993,7 +987,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
  #ifdef OPENCV_DRAW
     //mtxA.lock();
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It], 1,  1, 8 );
    // mtxA.unlock();
  #endif
     return;

@@ -51,7 +51,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req,int type)
 //type 1 with normal execution, type 2 for last joint preference
 {
     ros::Duration tiempo_traj(0.0);
-    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 1, 0.1);
+    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 1, 0.05);
 
     if (fk)
     {
@@ -66,7 +66,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req,int type)
             TPoseTemp.orientation.x = 0.0;
             TPoseTemp.orientation.y = 1.0;
             TPoseTemp.orientation.z = 0.0;
-            bool found_ikO = kinematic_state->setFromIK(joint_model_group, TPoseTemp, 1, 0.1);
+            bool found_ikO = kinematic_state->setFromIK(joint_model_group, TPoseTemp, 1, 0.05);
             if (found_ikO)
             {
                 kinematic_state->copyJointGroupPositions(joint_model_group, jvT);  //de jv saco posicion de joints 0 a 5
@@ -115,16 +115,16 @@ bool Ed_Pmov::Check_Collision( std::vector<double> Position, int type)
     }
     else
     {
-        CheckPose.orientation.w=  0.707035;
-        CheckPose.orientation.x=  0.707035;
-        CheckPose.orientation.y=  0.0;
+        CheckPose.orientation.w=  0.0;
+        CheckPose.orientation.x=  0.0;
+        CheckPose.orientation.y=  1;
         CheckPose.orientation.z=  0.0;
     }
 //Print("check pose 4",CheckPose.orientation.w,CheckPose.orientation.x,CheckPose.orientation.y,CheckPose.orientation.z);
 //Print("check pose 4",CheckPose.position.x,CheckPose.position.y,CheckPose.position.z);
-tic();
-    bool found_ik = kinematic_state->setFromIK(joint_model_group_5dof, CheckPose, 1, 0.004);    
-Print("check pose",found_ik,toc().count());   
+//tic();
+    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 1, 0.0008);
+//Print("check pose",found_ik,toc().count());
     return found_ik;
 }
 
@@ -155,7 +155,7 @@ void Ed_Pmov::PrintPose(std::string workspace,  geometry_msgs::Pose req_pose)
 void Ed_Pmov::Sleep(std::chrono::microseconds elapsed_time)
 {
     auto time_for_sleep = delay_time - elapsed_time;
-    int time_for_sleepD = time_for_sleep.count(); 
+    int time_for_sleepD = time_for_sleep.count();
     if (time_for_sleepD <= 0.0) time_for_sleepD = 0.0;
     usleep(1*(time_for_sleepD + 100));
 }
