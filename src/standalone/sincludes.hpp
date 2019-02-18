@@ -10,6 +10,7 @@
 #define PRINT
 #define OPENCV_DRAW
 
+using namespace std;  
 struct Position_{
     double x,y,z;
 };
@@ -25,6 +26,63 @@ class Pose{
     Position_ position;
 };
 }
+
+typedef vector<double> VectorDbl;
+typedef vector<int> VectorInt;
+
+typedef std::chrono::high_resolution_clock Clock;
+struct Nodes{
+   vector<VectorDbl >  coord;
+   vector<VectorDbl >  coordT;
+   VectorDbl cost;
+   vector<int >   parent;
+   vector<int >   id;  //No usado por ahora
+   vector<int >   region;
+   int N;                   //Numero de nodos activos
+};
+
+struct Node{
+     VectorDbl coord;
+     VectorDbl coordT;
+     double cost;
+     int parent;
+     int id;
+     int region;
+};
+struct Etraj { //Trajectory vector
+     VectorDbl xval;
+     VectorDbl yval;
+     VectorDbl zval;
+     VectorDbl w;
+     VectorDbl x;
+     VectorDbl y;
+     VectorDbl z;
+};
+struct Position { //Only position
+     double xval;
+     double yval;
+     double zval;
+};
+struct Positions { //Only positions
+     VectorDbl xval;
+     VectorDbl yval;
+     VectorDbl zval;
+};
+namespace rrtns{
+struct MeanValues{
+    double vx,vy,vz;
+};
+}
+struct Vicinity{
+   vector<VectorDbl >  TP;
+   vector<vector<long double> >  R;
+   //std::vector<std::vector<VectorDbl > > RP;
+   vector<VectorDbl > angles;
+   VectorDbl N;
+   int L;
+};
+
+
 class Printer{
 public:
     Printer(){}

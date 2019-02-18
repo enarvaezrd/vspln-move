@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     cv::namedWindow("Image1", 0);
     cv::resizeWindow("Image1", 1500,1500);
     double count=0,b=1;
-    rrt_planif::RRT RRT_modelB;
+    PredNs::Prediction RRT_modelB;
     //cv::namedWindow("Image1",cv::WINDOW_NORMAL);
     bool RRT_Calc_state=false;
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
                 
              
                 //RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
-                RRT_modelB.RRT_SequenceA(CurrentRequest);              
+                RRT_modelB.Planif_SequenceA(CurrentRequest);              
             
               
             cv::Mat imageA;

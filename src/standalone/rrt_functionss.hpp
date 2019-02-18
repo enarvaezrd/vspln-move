@@ -1,65 +1,13 @@
 #ifndef RRT_PLANIF
 #define RRT_PLANIF
 
-#include "sincludes.hpp"
+#include "prediction.hpp"
 
 
-using namespace std;
-typedef vector<double> VectorDbl;
-typedef vector<int> VectorInt;
-typedef std::chrono::high_resolution_clock Clock;  
+using namespace std;  
 namespace rrt_planif
 {
 
-struct Nodes{
-   vector<VectorDbl >  coord;
-   vector<VectorDbl >  coordT;
-   VectorDbl cost;
-   vector<int >   parent;
-   vector<int >   id;  //No usado por ahora
-   vector<int >   region;
-   int N;                   //Numero de nodos activos
-};
-
-struct Node{
-     VectorDbl coord;
-     VectorDbl coordT;
-     double cost;
-     int parent;
-     int id;
-     int region;
-};
-struct Etraj { //Trajectory vector
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
-     VectorDbl w;
-     VectorDbl x;
-     VectorDbl y;
-     VectorDbl z;
-};
-struct Position { //Only position
-     double xval;
-     double yval;
-     double zval;
-};
-struct Positions { //Only positions
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
-};
-struct MeanValues{
-    double vx,vy,vz;
-};
-
-struct Vicinity{
-   vector<VectorDbl >  TP;
-   vector<vector<long double> >  R;
-   //std::vector<std::vector<VectorDbl > > RP;
-   vector<VectorDbl > angles;
-   VectorDbl N;
-   int L;
-};
 
 
 class RRT
@@ -78,11 +26,7 @@ public:
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
-        acum_x.resize((d_prv+1));
-        acum_y.resize((d_prv+1));
 
-        for(int i=0;i<(d_prv);i++) {acum_x[i]=0.0;  acum_y[i]=0.0;} //inicializacion en ceros
-        acum_values = 0;
         nm = 70;
         pt = prof_expl;
         nodes_reordered=0;
@@ -143,15 +87,11 @@ public:
     first_tr=true;
     }
 
-    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
     void Initialize_VicinityRRT();
     void Node_Filter();
     void Nodes_Reorder();
 
     void setEEFFMinHeight(double min_eef_alt) {eeff_min_height = min_eef_alt;}
-    void Regression(VectorDbl x,VectorDbl y,int ndatos,int it,int order, VectorDbl &coeffs);
-    void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
-    struct MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     void delete_branch( int indx);
     void Add_Node(int It);
 
@@ -163,6 +103,9 @@ public:
     cv::Mat getImage(){ return image;}
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
    
+   void Load_TR(const Etraj traj){Tr=traj;return;}
+
+    void Load_TRbr(const int trbr){tr_brk=trbr;return;}
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
     VectorDbl  Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw);
     VectorDbl  Translation(VectorDbl , int );
@@ -191,10 +134,7 @@ public:
     geometry_msgs::Pose GetArmPose(){return CurrentRequest_Simm;}
     void RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose);
     void RRT_SequenceB();
-    void Load_TR(const Etraj traj){Tr=traj;return;}
-    const Etraj Get_TR(){return Tr;}
-    void Load_TRbr(const int trbr){tr_brk=trbr;return;}
-    const int Get_TRbr(){return tr_brk;}
+   
     void Load_NdsReord(const int nds){nodes_reordered=nds;return;}
     const int Get_NdsReord(){return nodes_reordered;}
     void Load_Img(const cv::Mat img){image_Ptraj=img;return;}
@@ -208,15 +148,12 @@ public:
     double rad_to_deg(double rad);
         
 private:
+
     Etraj Tr;
-    Etraj Tr_old,Tr_temp;
     Vicinity vdr;
     Nodes nodes;
     Nodes OldNodes;
     Nodes EmptyNodes;
-    struct MeanValues mean;
-    VectorDbl acum_x;
-    VectorDbl acum_y;
     cv::Mat image ,image_Ptraj;
     cv::Mat White_Imag;
     int image_size;
@@ -231,7 +168,6 @@ private:
     float NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
-    double  acum_values;
     double eeff_min_height;
     double r_exterior;
     double r_interior;
