@@ -488,6 +488,18 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
     }
     return;
 }
+
+void Prediction::Selection()
+{
+    if( NodesAvailable)
+    {
+        Charge_Nodes(); //the nodes are now in nodes
+        
+    }
+
+return;
+}
+
 void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
     //tic();
