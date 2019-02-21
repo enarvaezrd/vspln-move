@@ -491,10 +491,23 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
 
 void Prediction::Selection()
 {
-    if( NodesAvailable)
+    if( NodesAvailable && !Stop_RRT_flag )
     {
-        Charge_Nodes(); //the nodes are now in nodes
-        
+        Charge_Nodes(); //the copied nodes are now in nodes
+        double DFactor=0.0;
+        double d_traj_adv=0.0;
+        double speed = sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
+        DFactor = nodes.cost[prof_expl-1] / (1.0 + speed)  ;
+        double D_traj_avd = Distance(nodes.coord[0],traj)
+        for(int i=0;i<nodes.N;i++)
+        {
+            double DistC = nodes.cost[i] - 
+        }
+
+
+
+
+
     }
 
 return;
@@ -513,6 +526,10 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer 
    
     return;    
 
+}
+double Prediction::Distance(VectorDbl P0, VectorDbl P1)
+{        
+    return  sqrt(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2])));
 }
 
 #endif //PREDICTION

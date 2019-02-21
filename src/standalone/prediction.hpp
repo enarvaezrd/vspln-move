@@ -52,10 +52,11 @@ class Prediction{
     void Charge_Nodes(){  NodesMtx.lock(); nodes = nodes_cpy ;NodesMtx.unlock();  return;}  //Called by A loop
     double eeff_min_height;
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
-    private:
-    struct rrtns::MeanValues mean;
-
+    double Distance(VectorDbl P0, VectorDbl P1);
     void Selection();
+
+    private:
+    struct rrtns::MeanValues mean;   
 
     VectorDbl acum_x;
     VectorDbl acum_y;
@@ -68,7 +69,7 @@ class Prediction{
     cv::Mat White_Imag ,image_Ptraj;
     Etraj Tr;
     Etraj Tr_old,Tr_temp;
-std::mutex TP_Mtx;
+    std::mutex TP_Mtx;
     int image_size;
     double maxsc;
     double scale;
