@@ -1094,7 +1094,35 @@ void RRT::Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl
     cout<<" Matriz "<<R[1][0]<<" "<<R[1][1]<<" "<<R[1][2]<<endl;
     cout<<" Matriz "<<R[2][0]<<" "<<R[2][1]<<" "<<R[2][2]<<endl;*/  
 }
+void RRT::Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It)
+{
+    Rpitch.resize(3); Rroll.resize(3); Ryaw.resize(3);
+    for (int i=0;i<3;i++)
+    {
+        Rpitch[i].resize(3);Rroll[i].resize(3); Ryaw[i].resize(3);
+        for (int j=0;j<3;j++)
+        {
+            Rpitch[i][j]=0; Rroll[i][j]=0; Ryaw[i][j]=0;
+        }
+    }
+    double InvPitch = 0.0-vdr.angles[It][1];
+    double InvRoll  = 0.0-vdr.angles[It][2];
+    double InvYaw   = 0.0-vdr.angles[It][0];
 
+    //yaw,pitch,roll, ordenados
+    Rpitch[0][0]=1.0; /*,  0                       ,            0                  */
+      /*0, */            Rpitch[1][1]=cos(InvPitch); Rpitch[1][2]=-sin(InvPitch);//X rotation
+      /*0, */            Rpitch[2][1]=sin(InvPitch); Rpitch[2][2]=cos(InvPitch);
+
+    Rroll[0][0]= cos(InvRoll);/*,         0            ,*/Rroll[0][2]=sin(InvRoll);  //Y rotation
+    /*    0                     ,*/Rroll[1][1]=1.0; /* ,                0         */
+    Rroll[2][0]=-sin(InvRoll);/*,           0          ,*/Rroll[2][2]=cos(InvRoll);
+
+    Ryaw[0][0]=cos(InvYaw);Ryaw[0][1]=-sin(InvYaw); /*,       0*/   //Z rotation
+    Ryaw[1][0]=sin(InvYaw); Ryaw[1][1]=cos(InvYaw); /*,       0*/
+    /* ,         0        ,           0           ,*/Ryaw[2][2]=1.0;
+    return;
+}
 
 VectorDbl RRT::Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw)
 {

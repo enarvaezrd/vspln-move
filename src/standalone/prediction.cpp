@@ -497,11 +497,27 @@ void Prediction::Selection()
         double DFactor=0.0;
         double d_traj_adv=0.0;
         double speed = sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
-        DFactor = nodes.cost[prof_expl-1] / (1.0 + speed)  ;
-        double D_traj_avd = Distance(nodes.coord[0],traj)
+        DFactor = nodes.cost[prof_expl-1] / (1.0 + speed) ;
+        VectorDbl TR{Tr.x[0],Tr.y[0],Tr.z[0]};  //VS position
+        double D_traj_avd = Distance(nodes.coord[0],TR);
+        double Min_RRTVS_Dist=100000.0,Min_VS_Node_Dist=10000.0;
+        int RRTVS_Indx, VS_Node_Indx;
         for(int i=0;i<nodes.N;i++)
         {
-            double DistC = nodes.cost[i] - 
+            double DistC = abs(nodes.cost[i] - D_traj_avd);//dist real of each node
+            double NodeDist = abs(DFactor-DistC); // difference with Dfactor
+            //Find node to a certain distance from VS position (indicated by DFactor)
+            if(NodeDist < Min_RRTVS_Dist)   
+            {
+                Min_RRTVS_Dist=NodeDist;
+                RRTVS_Indx=i;
+            }
+            //Find a the closest node to VS point
+            if(DistC < Min_VS_Node_Dist)   
+            {
+                Min_VS_Node_Dist=DistC;
+                VS_Node_Indx=i;
+            }
         }
 
 

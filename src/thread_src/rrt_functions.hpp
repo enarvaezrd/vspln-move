@@ -196,6 +196,7 @@ public:
     int Img(double point);
     double rad_to_deg(double rad);
 
+    void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It)
     bool Stop_RRT_flag;
 
 private:

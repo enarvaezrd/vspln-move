@@ -39,13 +39,15 @@ int main(int argc, char** argv)
                 //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
                 RRT_model.Load_TR(RRT_modelB.Get_TR());
                 RRT_model.Load_TRbr(RRT_modelB.Get_TRbr());
-            // RRT_model.Load_Img(RRT_modelB.getImage_Ptraj());
             RRT_model.ResetImagePtraj();
+
                 RRT_model.RRT_SequenceB();
                 sequence_loop_th = RRT_model.getLoopState();
             #ifdef OPENCV_DRAW
-                const cv::Mat image = RRT_model.getImage_Ptraj();
+                const cv::Mat image = RRT_model.getImage();
+                const cv::Mat imagePt = RRT_model.getImage_Ptraj();
                 cv::imshow("Image1",image);
+                //cv::imshow("ImagepTraj",imagePt);
                 cv::waitKey(1);
             #endif
                 

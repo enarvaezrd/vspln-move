@@ -141,12 +141,14 @@ public:
     const bool get_finish(){return finish;}
     void ResetImagePtraj(){
         #ifdef OPENCV_DRAW 
-        White_Imag.copyTo(image_Ptraj);
+        White_Imag.copyTo(image_Ptraj);White_Imag.copyTo(image);
         #endif
         return;}
     int Img(double point);
     double rad_to_deg(double rad);
         
+void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
+VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
 private:
 
     Etraj Tr;
