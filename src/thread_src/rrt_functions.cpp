@@ -811,7 +811,7 @@ bool RRT::Add_Node(int It)
     std::mt19937 genz(rdz());
     int try_count=0;
     double tm=100;
-    std::uniform_real_distribution<> distxr(-rx,rx);
+    std::uniform_real_distribution<> distxr(-rx,rx);//normal_distribution uniform_real_distribution
     std::uniform_real_distribution<> distyr(-ry,ry);
     std::uniform_real_distribution<> distzr(-rz,rz);
 

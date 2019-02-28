@@ -19,10 +19,9 @@ int main(int argc, char** argv)
     CurrentRequest.position.z =0;
      Printer Print;
      Print("=============================================Start Program======================================");
-    cv::namedWindow("Image1", 0);
-    cv::resizeWindow("Image1", 1500,1500);
+    
     double count=0,b=1;
-    PredNs::Prediction RRT_modelB;
+    PredNs::Prediction Predict_B;
     //cv::namedWindow("Image1",cv::WINDOW_NORMAL);
     bool RRT_Calc_state=false;
 
@@ -37,17 +36,20 @@ int main(int argc, char** argv)
             {  
                 Print("=======Step=====",cnTh);
                 //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
-                RRT_model.Load_TR(RRT_modelB.Get_TR());
-                RRT_model.Load_TRbr(RRT_modelB.Get_TRbr());
-            RRT_model.ResetImagePtraj();
+                RRT_model.Load_TR(Predict_B.Get_TR());
+                RRT_model.Load_TRbr(Predict_B.Get_TRbr());
+                RRT_model.ResetImagePtraj();
 
                 RRT_model.RRT_SequenceB();
+                Print("load");
+                Predict_B.Load_Nodes(RRT_model.GetNodes());
+                Print("loaded");
                 sequence_loop_th = RRT_model.getLoopState();
             #ifdef OPENCV_DRAW
                 const cv::Mat image = RRT_model.getImage();
                 const cv::Mat imagePt = RRT_model.getImage_Ptraj();
-                cv::imshow("Image1",image);
-                //cv::imshow("ImagepTraj",imagePt);
+                //cv::imshow("Image1",image);
+                cv::imshow("ImagepTraj",imagePt);
                 cv::waitKey(1);
             #endif
                 
@@ -66,6 +68,8 @@ int main(int argc, char** argv)
         }  
     });
  auto rrt_threadA = std::thread([&](){
+     cv::namedWindow("Image1", 0);
+    cv::resizeWindow("Image1", 1500,1500);
     double cnt1=0.0;
     bool sequence_loop=true;
     int steps=200;
@@ -79,27 +83,29 @@ int main(int argc, char** argv)
             //if (count<-100) b=1;
             CurrentRequest.position.x = 0.3*cos(PI*count/steps);
             CurrentRequest.position.y = 0.3*sin(PI*count/steps);
+            CurrentRequest.position.z = 0.5;
             //Print("Current point",CurrentRequest.position.x,count);
 
                 
              
                 //RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
-                RRT_modelB.Planif_SequenceA(CurrentRequest);              
-            
+                Predict_B.Planif_SequenceA(CurrentRequest);              
+            Predict_B.Charge_Nodes();
+            Predict_B.Selection();
               
             cv::Mat imageA;
 
             //mtx.lock();
         #ifdef OPENCV_DRAW
-            imageA=RRT_modelB.getImage_Ptraj();
-            cv::imshow("Image11",imageA);
+            imageA=Predict_B.getImage_Ptraj();
+            cv::imshow("Image1",imageA);
             cv::waitKey(1);
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
             std::this_thread::sleep_for(std::chrono::milliseconds(65));
             //Print("finish already paused");
-            //Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
+            Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();
         }
  });

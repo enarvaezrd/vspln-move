@@ -491,14 +491,17 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
 
 void Prediction::Selection()
 {
-    if( NodesAvailable && !Stop_RRT_flag )
-    {
-        Charge_Nodes(); //the copied nodes are now in nodes
+   
+    if( NodesCharged && !Stop_RRT_flag )
+    { int d=0;
+        NodesMtx.lock();
+       // Charge_Nodes(); //the copied nodes are now in nodes
         double DFactor=0.0;
         double d_traj_adv=0.0;
+
         double speed = sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
         DFactor = nodes.cost[prof_expl-1] / (1.0 + speed) ;
-        VectorDbl TR{Tr.x[0],Tr.y[0],Tr.z[0]};  //VS position
+        VectorDbl TR{Tr.xval[0],Tr.yval[0],Tr.zval[0]};  //VS position
         double D_traj_avd = Distance(nodes.coord[0],TR);
         double Min_RRTVS_Dist=100000.0,Min_VS_Node_Dist=10000.0;
         int RRTVS_Indx, VS_Node_Indx;
@@ -513,16 +516,19 @@ void Prediction::Selection()
                 RRTVS_Indx=i;
             }
             //Find a the closest node to VS point
-            if(DistC < Min_VS_Node_Dist)   
+            if(DistC < Min_VS_Node_Dist)
             {
                 Min_VS_Node_Dist=DistC;
                 VS_Node_Indx=i;
             }
         }
+        
+        cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
+        cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 4, Colors[1],CV_FILLED,  3, 8 );
+    
+        NodesMtx.unlock();
 
-
-
-
+        NodesAvailable = false;
 
     }
 

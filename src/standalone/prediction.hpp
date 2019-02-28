@@ -35,6 +35,7 @@ class Prediction{
             Colors.push_back(cv::Scalar(114,67,69));    
         }
         NodesAvailable=false;
+         NodesCharged=false;
         first_tr=true;
     }
     
@@ -48,8 +49,8 @@ class Prediction{
     const int Get_TRbr(){return tr_brk;}
     void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose);//extraer vecindad
     //const Nodes Get_Nodes(){return nodes;}
-    void Load_Nodes(Nodes nds){ NodesMtx.lock();nodes_cpy = nds;NodesMtx.unlock();NodesAvailable=true; return;} //Called by B loop
-    void Charge_Nodes(){  NodesMtx.lock(); nodes = nodes_cpy ;NodesMtx.unlock();  return;}  //Called by A loop
+    void Load_Nodes(Nodes nds){nodes_cpy = nds;NodesAvailable=true; return;} //Called by B loop
+    void Charge_Nodes(){ if(NodesAvailable){ NodesMtx.lock(); nodes = nodes_cpy ;NodesMtx.unlock();NodesAvailable=false;NodesCharged=true; } return;}  //Called by A loop
     double eeff_min_height;
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
     double Distance(VectorDbl P0, VectorDbl P1);
@@ -82,6 +83,7 @@ class Prediction{
     Nodes nodes_cpy, nodes;
     mutex NodesMtx;
     bool NodesAvailable;
+    bool NodesCharged;
     };
 }
 
