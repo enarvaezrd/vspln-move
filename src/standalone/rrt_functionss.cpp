@@ -342,18 +342,26 @@ void RRT::Add_Node(int It)
     int try_count=0;
     double tm=100;
     bool ran_int=true;
-    int prcsd=20,prcs=prcsd/2;
-   
+    int prcsd=20000000,prcs=(int)(prcsd/2);
    /*
-        std::uniform_int_distribution<> distxri(1,rx*prcsd);//uniform_real_distribution
-        std::uniform_int_distribution<> distyri(1,ry*prcsd);
-        std::uniform_int_distribution<> distzri(1,rz*prcsd);
+    int dnx=round(rx*prcsd);
+    int dny=round(ry*prcsd);
+    int dnz=round(rz*prcsd);
+        std::uniform_int_distribution<> distxr(1,dnx);//uniform_real_distribution
+        std::uniform_int_distribution<> distyr(1,dny);
+        std::uniform_int_distribution<> distzr(1,dnz);
+    
     */
-        std::normal_distribution<double> distxr(-rx*prcs,rx*prcs);//uniform_real_distribution   normal_distribution
-        std::normal_distribution<double> distyr(-ry*prcs,ry*prcs);
-        std::normal_distribution<double> distzr(-rz*prcs,rz*prcs);
-    
-    
+
+   /*
+        std::uniform_real_distribution<double> distxr(-rx*prcs,rx*prcs);//uniform_real_distribution
+        std::uniform_real_distribution<double> distyr(-ry*prcs,ry*prcs);
+        std::uniform_real_distribution<double> distzr(-rz*prcs,rz*prcs);
+         */
+        std::normal_distribution<double> distxr(-rx,rx);//uniform_real_distribution
+        std::normal_distribution<double> distyr(-ry,ry);
+        std::normal_distribution<double> distzr(-rz,rz);
+
 
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
@@ -372,14 +380,19 @@ void RRT::Add_Node(int It)
         //rnd_point_counts++;
         //if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too much rand tries");break;}
         /*
-            rnx = (distxri(genx)-rx*prcs)/prcs;
-            rny = (distyri(geny)-rx*prcs)/prcs;
-            rnz = (distzri(genz)-rx*prcs)/prcs;        
-        */
+            rnx = distxr(genx);
+            rny = distyr(geny);
+            rnz = distzr(genz);  
+            Print("rnx",rnx,rny,rnz);
+            rnx -= rx*prcs-1; rnx /= prcs;
+            rny -= ry*prcs-1; rny /= prcs;
+            rnz -= rz*prcs-1; rnz /= prcs;
+ */
         
-            rnx = distxr(genx)/prcs;
-            rny = distyr(geny)/prcs;
-            rnz = distzr(genz)/prcs;
+        
+            rnx = distxr(genx);
+            rny = distyr(geny);
+            rnz = distzr(genz);
        
         
         q_rand[0]=rnx;
@@ -388,8 +401,8 @@ void RRT::Add_Node(int It)
         tm = ((rnx/rx)*(rnx/rx))+((rny/ry)*(rny/ry))+((rnz/rz)*(rnz/rz));
     }
     
-   // if (tm<=1) 
-     //   rnd_point_found=true; 
+   // if (tm<=1)
+     //   rnd_point_found=true;
     //Print("RANDOM POINT",toc(temp_tic).count(),try_count,q_rand[0],tm,rnd_point_found);    
     //Print("RANDOM POINT",try_count,q_rand[0],q_rand[1],tm);    
     //======================================================================================================================================================
@@ -485,8 +498,10 @@ void RRT::RRT_AddOldCoords()
 }
 void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
 {
-    double r=0.01  ;   //Radio de nodos cercanos Revisar  0.009
-    double EPS=0.008; //Maximo movimiento Revisar  0.005
+
+    double r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+    double EPS=0.008; //Maximo movimiento Revisar  0.005  0.007
+
 
     //AQUI EMPIEZA RRT
     double tmp_dist;
@@ -556,9 +571,10 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     mtxA.lock();
     cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
-    cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/2)*2*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/2)*2*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/2)*2*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/2)*2*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+   int stw=3;
+    cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     
-    cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/2)*2*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/2)*2*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+    cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ), 2, Colors[It],CV_FILLED,  1,8 );
     mtxA.unlock();
  #endif
     return;
@@ -616,10 +632,15 @@ VectorDbl RRT::steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS)
 {
     VectorDbl A(3);
     if (min_ndist >= EPS||min_ndist<=EPS/5)
+
     {
         A[0]= qn[0] + (((qr[0]-qn[0])*EPS)/min_ndist);
         A[1]= qn[1] + (((qr[1]-qn[1])*EPS)/min_ndist);
         A[2]= qn[2] + (((qr[2]-qn[2])*EPS)/min_ndist);
+        //Print("nodes unsteered",qn[0],qn[1],qn[2]);
+        //Print("nodes old      ",qr[0],qr[1],qr[2]);
+        //Print("nodes steered  ",A[0],A[1],A[2]);
+
     }
     else
     {

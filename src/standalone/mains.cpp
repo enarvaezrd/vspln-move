@@ -22,7 +22,6 @@ int main(int argc, char** argv)
     
     double count=0,b=1;
     PredNs::Prediction Predict_B;
-    //cv::namedWindow("Image1",cv::WINDOW_NORMAL);
     bool RRT_Calc_state=false;
 
     auto rrt_thread = std::thread([&](){
@@ -48,7 +47,8 @@ int main(int argc, char** argv)
             #ifdef OPENCV_DRAW
                 const cv::Mat image = RRT_model.getImage();
                 const cv::Mat imagePt = RRT_model.getImage_Ptraj();
-                //cv::imshow("Image1",image);
+
+                cv::imshow("Image1",image);
                 cv::imshow("ImagepTraj",imagePt);
                 cv::waitKey(1);
             #endif
