@@ -45,13 +45,14 @@ void RRT::Initialize_VicinityRRT()
 
             if (dm>=0.05) dm=0.05;
             //if (dm<=0.001) dm=0.001;
-            //VD.R[j][2]=0.001;
-            vdr.R[j][2]=0.002;//valor de z
-            vdr.R[j][0]=3*dm;//0 es dm
+            //VD.R[j][1]  Es el radio de apertura creciente
+            vdr.R[j][2]=0.002;//valor de radio  z
+            vdr.R[j][0]=3*dm;//dm, distancia entre puntos 
+
             double acDist=1.1;
             for (int k=0;k<=j;k++)
             {
-                acDist += 1.0*vdr.R[k][0];
+                acDist += 0.8*vdr.R[k][0];
             }
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
             vdr.R[j][1] =((acDist*acDist)-1.1)/10;//+((j*j*1.0)/5000)
@@ -141,10 +142,13 @@ void RRT::delete_branch(int indx)
             if (parents[j] == nodestemp1.parent[k]&&parents[j]>tr_brk && nodestemp1.parent[k]>tr_brk)
             {
                 parents.push_back(nodestemp1.id[k]);
+                //Print("old nodes");
+                Push_Nodes_Elem_in_Nodes(OldNodes,nodes.id[k]);
+                //Print("old nodesV");
                 nodestemp1.parent[k]=-100; //borro el valor de parent para que no vuelva a caer aqui
                 found=true;
                 
-                Push_Nodes_Elem_in_Nodes(OldNodes,nodestemp1.id[k]);
+                
             }
         }
         
@@ -286,6 +290,8 @@ void RRT::RRT_Generation()
     int oldSize = nodes.N;
    //Print("********//Nodes size Start", nodes.N);
     int count=0;
+    Print("********Recycled nodes", oldSize-prof_expl);     
+    RRT_AddOldCoords();
     for (int j=0;j <prof_expl ;j++)//(int j=prof_expl-1;j >= 0 ;j--)
     {
 
@@ -311,8 +317,7 @@ void RRT::RRT_Generation()
             //Print("-----------RRT2--------j:, radio",j,vdr.R[j][0]);
        // Print("//prof  expl and count",prof_expl,count,j,nodes.N);
     }
-    Print("********Recycled nodes", oldSize-prof_expl);     
-    RRT_AddOldCoords();
+    
     Print("NodesOld size, new size",OldNodes.N,nodes.N );
 
 return;
@@ -347,6 +352,7 @@ void RRT::Add_Node(int It)
         std::uniform_int_distribution<> distzr(1,dnz);
     
     */
+
    /*
         std::uniform_real_distribution<double> distxr(-rx*prcs,rx*prcs);//uniform_real_distribution
         std::uniform_real_distribution<double> distyr(-ry*prcs,ry*prcs);
@@ -355,7 +361,7 @@ void RRT::Add_Node(int It)
         std::normal_distribution<double> distxr(-rx,rx);//uniform_real_distribution
         std::normal_distribution<double> distyr(-ry,ry);
         std::normal_distribution<double> distzr(-rz,rz);
-   
+
 
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
@@ -398,7 +404,7 @@ void RRT::Add_Node(int It)
    // if (tm<=1)
      //   rnd_point_found=true;
     //Print("RANDOM POINT",toc(temp_tic).count(),try_count,q_rand[0],tm,rnd_point_found);    
-    Print("RANDOM POINT",try_count,q_rand[0],q_rand[1],tm);    
+    //Print("RANDOM POINT",try_count,q_rand[0],q_rand[1],tm);    
     //======================================================================================================================================================
     //Transformaciones, rotacion y traslacion
     bool found_ik_tmp = false;
@@ -428,6 +434,7 @@ void RRT::Add_Node(int It)
         //auto temp_tic=Clock::now();
        RRT_AddValidCoord(rnTemp1,rnTemp_T,It);
        //Print("ADD NODE TIME",toc(temp_tic).count());
+
     }
    else
    {
@@ -442,52 +449,59 @@ void RRT::RRT_AddOldCoords()
     VectorDbl ON_B(3);
     double rx,ry,rz,ON_x,ON_y,ON_z;
     int region;
+    int old=0;
     for (int on=0;on<OldNodes.N;on++)
     {
-        tm=100.0;
-        allowed=false;
-        ON_B[0] = OldNodes.coord[on][0];
-        ON_B[1] = OldNodes.coord[on][1];
-        ON_B[2] = OldNodes.coord[on][2];
-        
-        for (int It=0;It<prof_expl;It++)
-        {   
-            vector<VectorDbl > Rpitch,Rroll,Ryaw;
-            Initialize_Inv_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
-            rx = vdr.R[It][0]; //revisar
-            ry = vdr.R[It][1];
-            rz = vdr.R[It][2];
-            ON_x = ON_B[0]-vdr.TP[It][0];
-            ON_y = ON_B[1]-vdr.TP[It][1];
-            ON_z = ON_B[2]-vdr.TP[It][2];
-            VectorDbl pointT{ON_x,ON_y,ON_z};
-            VectorDbl Temp1 = Rotation(pointT,Rpitch,Rroll,Ryaw);  
-   
-            tm = ((Temp1[0]/rx)*(Temp1[0]/rx))+((Temp1[1]/ry)*(Temp1[1]/ry))+((Temp1[2]/rz)*(Temp1[2]/rz));
-           // cv::circle( image_Ptraj, cv::Point( (Temp1[0] +maxsc)*scale,(Temp1[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
-                
-            //Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
-           // Print("OLD ALLOWED",tm);
-            if(tm<=1.0)
-            {
-                cv::circle( image_Ptraj, cv::Point( (ON_B[0] +maxsc)*scale,(ON_B[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
-                allowed = true;region=It;
-                break;
-            }
-        }
-        if (allowed)
+        if (OldNodes.id[on]>prof_expl)
         {
-            //Print("test2");
-            RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],region);
-        }
+            tm=100.0;
+            allowed=false;
+            ON_B[0] = OldNodes.coord[on][0];
+            ON_B[1] = OldNodes.coord[on][1];
+            ON_B[2] = OldNodes.coord[on][2];
+            
+            for (int It=2;It<prof_expl;It++)
+            {   
+                vector<VectorDbl > Rpitch,Rroll,Ryaw;
+                Initialize_Inv_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
+                rx = vdr.R[It][0]; //revisar
+                ry = vdr.R[It][1];
+                rz = vdr.R[It][2];
+                ON_x = ON_B[0]-vdr.TP[It][0];
+                ON_y = ON_B[1]-vdr.TP[It][1];
+                ON_z = ON_B[2]-vdr.TP[It][2];
+                VectorDbl pointT{ON_x,ON_y,ON_z};
+                VectorDbl Temp1 = Rotation(pointT,Rpitch,Rroll,Ryaw);
+    
+                tm = ((Temp1[0]/rx)*(Temp1[0]/rx))+((Temp1[1]/ry)*(Temp1[1]/ry))+((Temp1[2]/rz)*(Temp1[2]/rz));
+            // cv::circle( image_Ptraj, cv::Point( (Temp1[0] +maxsc)*scale,(Temp1[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
+                    
+                //Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
+            // Print("OLD ALLOWED",tm);
+                if(tm<=1.0)
+                {
+                    //cv::circle( image_Ptraj, cv::Point( (ON_B[0] +maxsc)*scale,(ON_B[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
+                    allowed = true;region=It;
+                    break;
+                }
+            }
+            if (allowed)
+            {
+                //Print("test2");
+                RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],region);
+                old++;
+            }
+        }        
     }
-  
+  Print("old nodes added",old);
  return;
 }
 void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
 {
-    double r=0.014;   //Radio de nodos cercanos Revisar  0.012
-    double EPS=0.007; //Maximo movimiento Revisar  0.005
+
+    double r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+    double EPS=0.008; //Maximo movimiento Revisar  0.005  0.007
+
 
     //AQUI EMPIEZA RRT
     double tmp_dist;
@@ -552,7 +566,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.id     = nodes.N+1;
     q_new_f.region = It;
     Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
-    //Print("Node added",q_new_f.coord[0],q_new_f.coord[1], rx, ry);
+    //Print("Node added",q_new_f.coord[0],q_new_f.coord[1],q_new_f.coord[2]);
  #ifdef OPENCV_DRAW
     mtxA.lock();
     cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
@@ -617,15 +631,16 @@ void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
 VectorDbl RRT::steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS)
 {
     VectorDbl A(3);
-    Print("min dist",min_ndist);
-    if (min_ndist >= EPS)
+    if (min_ndist >= EPS||min_ndist<=EPS/5)
+
     {
         A[0]= qn[0] + (((qr[0]-qn[0])*EPS)/min_ndist);
         A[1]= qn[1] + (((qr[1]-qn[1])*EPS)/min_ndist);
         A[2]= qn[2] + (((qr[2]-qn[2])*EPS)/min_ndist);
-        Print("nodes unsteered",qn[0],qn[1],qn[2]);
-        Print("nodes old      ",qr[0],qr[1],qr[2]);
-        Print("nodes steered  ",A[0],A[1],A[2]);
+        //Print("nodes unsteered",qn[0],qn[1],qn[2]);
+        //Print("nodes old      ",qr[0],qr[1],qr[2]);
+        //Print("nodes steered  ",A[0],A[1],A[2]);
+
     }
     else
     {

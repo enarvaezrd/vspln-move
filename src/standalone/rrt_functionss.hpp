@@ -146,6 +146,7 @@ public:
         return;}
     int Img(double point);
     double rad_to_deg(double rad);
+    Nodes GetNodes(){return nodes;} //use carefully, at the end of sequence B
         
 void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
 VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
