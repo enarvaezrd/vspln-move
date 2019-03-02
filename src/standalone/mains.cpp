@@ -26,6 +26,9 @@ int main(int argc, char** argv)
 
     auto rrt_thread = std::thread([&](){
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+     cv::namedWindow("ImagepTraj", 0);
+    cv::resizeWindow("ImagepTraj", 1500,1500);
         bool sequence_loop_th=false;
         bool Thread_Run=true;
         int cnTh=0;
@@ -48,7 +51,7 @@ int main(int argc, char** argv)
                 const cv::Mat image = RRT_model.getImage();
                 const cv::Mat imagePt = RRT_model.getImage_Ptraj();
 
-                cv::imshow("Image1",image);
+                //cv::imshow("Image1B",image);
                 cv::imshow("ImagepTraj",imagePt);
                 cv::waitKey(1);
             #endif
@@ -68,8 +71,8 @@ int main(int argc, char** argv)
         }  
     });
  auto rrt_threadA = std::thread([&](){
-     cv::namedWindow("Image1", 0);
-    cv::resizeWindow("Image1", 1500,1500);
+    /*cv::namedWindow("Image1", 0);
+    cv::resizeWindow("Image1", 1500,1500);*/
     double cnt1=0.0;
     bool sequence_loop=true;
     int steps=200;
@@ -97,9 +100,9 @@ int main(int argc, char** argv)
 
             //mtx.lock();
         #ifdef OPENCV_DRAW
-            imageA=Predict_B.getImage_Ptraj();
+            /*imageA=Predict_B.getImage_Ptraj();
             cv::imshow("Image1",imageA);
-            cv::waitKey(1);
+            cv::waitKey(1);*/
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");

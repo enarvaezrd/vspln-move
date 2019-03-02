@@ -17,7 +17,7 @@ public:
     
     RRT(){
         sequence_loop=false;
-        image_size=800;
+        image_size=1500;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
         prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
@@ -65,6 +65,7 @@ public:
         nodes.coord.resize(prof_expl); //longitud dinamica, empieza con el minimo
         nodes.coordT.resize(prof_expl);
         nodes.cost.resize(prof_expl); 
+        nodes.costParent.resize(prof_expl); 
         nodes.parent.resize(prof_expl); 
         nodes.id.resize(prof_expl); 
         nodes.region.resize(prof_expl); 
@@ -84,7 +85,11 @@ public:
         EmptyNodes.N=0;
         OldNodes=EmptyNodes;
         OldNodesLoaded=false;
-    first_tr=true;
+        first_tr=true;
+        Stretch_Extension=2;  //2 nodes 
+        r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+        EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
+
     }
 
     void Initialize_VicinityRRT();
@@ -147,7 +152,8 @@ public:
     int Img(double point);
     double rad_to_deg(double rad);
     Nodes GetNodes(){return nodes;} //use carefully, at the end of sequence B
-        
+    void Stretch_the_Cord();
+    void Draw_RRT();
 void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
 VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
 private:
@@ -186,6 +192,9 @@ private:
     int MaxOldNodesReg;
     std::vector<cv::Scalar> Colors;
     int  first_tr;
+    int Stretch_Extension;
+    double r  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+    double EPS; //Maximo movimiento Revisar  0.005  0.007
 };
 
 }
