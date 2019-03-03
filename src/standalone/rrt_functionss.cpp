@@ -47,12 +47,12 @@ void RRT::Initialize_VicinityRRT()
             //if (dm<=0.001) dm=0.001;
             //VD.R[j][1]  Es el radio de apertura creciente
             vdr.R[j][2]=0.001;//valor de radio  z
-            vdr.R[j][0]=3*dm;//dm, distancia entre puntos 
+            vdr.R[j][0]=2*dm;//dm, distancia entre puntos 
 
             double acDist=1.1;
             for (int k=0;k<=j;k++)
             {
-                acDist += 0.8*vdr.R[k][0];
+                acDist += 0.7*vdr.R[k][0];
             }
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
             vdr.R[j][1] =((acDist*acDist)-1.1)/10;//+((j*j*1.0)/5000)
@@ -88,7 +88,7 @@ void RRT::Node_Filter()
                  yo = nodes.coord[i][1]-vdr.TP[k][1];
                  zo = nodes.coord[i][2]-vdr.TP[k][2];
                  VectorDbl pointT{xo,yo,zo};
-                VectorDbl T1 = Rotation(pointT,Rpitch,Rroll,Ryaw); 
+                VectorDbl T1 = Rotation(pointT,Rpitch,Rroll,Ryaw);
                  rx = vdr.R[k][0];
                  ry = vdr.R[k][1];
                  rz = vdr.R[k][2];
@@ -333,7 +333,7 @@ void RRT::RRT_Generation()
     
     Print("NodesOld size, new size",OldNodes.N,nodes.N );
     //Stretch_the_Cord();
-    Draw_RRT();
+   // Draw_RRT();
 
 return;
 }
@@ -465,7 +465,7 @@ void RRT::RRT_AddOldCoords()
     double rx,ry,rz,ON_x,ON_y,ON_z;
     int region;
     int old=0;
-    for (int on=prof_expl+1;on<OldNodes.N;on++)
+    for (int on=0;on<OldNodes.N;on++)
     {
         //if (OldNodes.id[on]>prof_expl)
         //{
@@ -546,7 +546,6 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     int q_min_Indx=index_near;
     for (int j=0;j<nodes.N;j++)
     {
-        
         if (nodes.region[j]>=It-1 && nodes.region[j]<=It+1)
         {//Print("region",nodes.region[j]);
          double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
@@ -562,6 +561,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
          }
         }
     }
+
     //Print("DIST TIME",toc(ttic).count(),nodes.N,index_near,q_min_Indx);
     //Print("Point to add or not",q_rand[0],q_rand[1]);
     //Aqui q_min es el nodo mas optimo, que forma el camino mas corto
@@ -573,7 +573,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.coord  = q_new.coord;//steer(q_new.coord,q_min.coord,val,EPS);
     q_new_f.coordT = q_randA_T;
     q_new_f.costParent = Distance(q_new_f.coord,q_min.coord) ;
-    q_new_f.cost   =q_new_f.costParent + q_min.cost;
+    q_new_f.cost   = q_new_f.costParent + q_min.cost;
     q_new_f.parent = q_min_Indx;
     q_new_f.id     = nodes.N+1;
     q_new_f.region = It;
@@ -581,8 +581,8 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1],q_new_f.coord[2]);
  #ifdef OPENCV_DRAW
     mtxA.lock();
-    //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-   // cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
    int stw=3;
     cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     
@@ -647,7 +647,7 @@ void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
 VectorDbl RRT::steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS)
 {
     VectorDbl A(3);
-    if (min_ndist >= EPS||min_ndist<=EPS/5)
+    if (min_ndist >= EPS||min_ndist<=EPS/10)
     {
         A[0]= qn[0] + (((qr[0]-qn[0])*EPS)/min_ndist);
         A[1]= qn[1] + (((qr[1]-qn[1])*EPS)/min_ndist);
@@ -696,7 +696,7 @@ void RRT::Stretch_the_Cord()
 void RRT::Draw_RRT()
 {
  #ifdef OPENCV_DRAW
-    for(int i=0; i<nodes.N; i++)     
+    for(int i=prof_expl; i<nodes.N; i++)     
     {   
         const int parent=nodes.parent[i];
         mtxA.lock();
