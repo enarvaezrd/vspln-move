@@ -36,6 +36,7 @@ struct Nodes{
    vector<VectorDbl >  coord;
    vector<VectorDbl >  coordT;
    VectorDbl cost;
+   VectorDbl costParent;
    vector<int >   parent;
    vector<int >   id;  //No usado por ahora
    vector<int >   region;
@@ -46,6 +47,7 @@ struct Node{
      VectorDbl coord;
      VectorDbl coordT;
      double cost;
+     double costParent;
      int parent;
      int id;
      int region;
