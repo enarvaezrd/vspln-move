@@ -48,7 +48,7 @@ int main(int argc, char** argv)
                 const cv::Mat image = RRT_model.getImage();
                 const cv::Mat imagePt = RRT_model.getImage_Ptraj();
 
-                cv::imshow("Image1",image);
+                cv::imshow("Imagerrt",image);
                 cv::imshow("ImagepTraj",imagePt);
                 cv::waitKey(1);
             #endif
