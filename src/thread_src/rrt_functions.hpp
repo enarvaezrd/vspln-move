@@ -98,7 +98,7 @@ public:
         Colors.push_back(cv::Scalar(40,52,171));
         Colors.push_back(cv::Scalar(30,2,1));
         Colors.push_back(cv::Scalar(165,142,59));
-        Colors.push_back(cv::Scalar(114,67,69));  
+        Colors.push_back(cv::Scalar(114,67,69));
         }
         for(int i=0;i<pt;i++)
         {

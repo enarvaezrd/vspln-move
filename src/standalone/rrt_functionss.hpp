@@ -17,7 +17,7 @@ public:
     
     RRT(){
         sequence_loop=false;
-        image_size=1500;
+        image_size=1200;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
         prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
@@ -89,6 +89,7 @@ public:
         Stretch_Extension=2;  //2 nodes 
         r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
         EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
+        TrajNodesIncluded=0;
 
     }
 
@@ -195,6 +196,7 @@ private:
     int Stretch_Extension;
     double r  ;   //Radio de nodos cercanos Revisar  0.009 0.014
     double EPS; //Maximo movimiento Revisar  0.005  0.007
+    int TrajNodesIncluded;
 };
 
 }
