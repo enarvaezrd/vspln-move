@@ -407,7 +407,7 @@ void RRT::Add_Node(int It)
         std::uniform_real_distribution<double> distyr(-ry*prcs,ry*prcs);
         std::uniform_real_distribution<double> distzr(-rz*prcs,rz*prcs);
          */
-        std::normal_distribution<double> distxr(-rx,rx);//uniform_real_distribution
+        std::normal_distribution<double> distxr(-rx,rx); //uniform_real_distribution
         std::normal_distribution<double> distyr(-ry,ry);
         std::normal_distribution<double> distzr(-rz,rz);
 
@@ -436,13 +436,10 @@ void RRT::Add_Node(int It)
             rnx -= rx*prcs-1; rnx /= prcs;
             rny -= ry*prcs-1; rny /= prcs;
             rnz -= rz*prcs-1; rnz /= prcs;
- */
-        
-        
-            rnx = distxr(genx);
-            rny = distyr(geny);
-            rnz = distzr(genz);
-       
+        */
+        rnx = distxr(genx);
+        rny = distyr(geny);
+        rnz = distzr(genz);
         
         q_rand[0]=rnx;
         q_rand[1]=rny;
@@ -479,11 +476,9 @@ void RRT::Add_Node(int It)
 
    if (try_count<=max_tries)
    {
-       
-        //auto temp_tic=Clock::now();
+       //auto temp_tic=Clock::now();
        RRT_AddValidCoord(rnTemp1,rnTemp_T,It);
        //Print("ADD NODE TIME",toc(temp_tic).count());
-
     }
    else
    {
@@ -510,7 +505,7 @@ void RRT::RRT_AddOldCoords()
             ON_B[2] = OldNodes.coord[on][2];
             
             for (int It=0;It<prof_expl;It++)
-            {   
+            {
                 vector<VectorDbl > Rpitch,Rroll,Ryaw;
                 Initialize_Inv_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
                 rx = vdr.R[It][0]; //revisar
@@ -540,14 +535,14 @@ void RRT::RRT_AddOldCoords()
                 RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],region);
                 old++;
             }
-        //}        
+        //}
     }
   Print("old nodes added",old);
  return;
 }
 void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
 {
-    //AQUI EMPIEZA RRT
+    // AQUI EMPIEZA RRT
     double tmp_dist;
     //Hallar el minimo
     std::vector<double>  temp_coords(3);
@@ -556,10 +551,9 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     int index_near=It;
     for (int k=0;k<nodes.N;k++)
     {       
-        if (true||nodes.region[k]>=It)// && k<2 && k>=prof_expl)//&&nodes.region[k]<=It+1)
+        if (true||nodes.region[k]>=It)  // && k<2 && k>=prof_expl)//&&nodes.region[k]<=It+1)
         {
             tmp_dist = Distance(q_rand_TR,nodes.coord[k]);
-                
             if(tmp_dist<=min_ndist)
             {
                 min_ndist=tmp_dist;
@@ -569,7 +563,7 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     }
     
     Node q_near,q_new;
-    Extract_Node_from_Nodes( q_near,nodes,index_near); //almacenar en q_near el nodo mas cercano al punto q_new
+    Extract_Node_from_Nodes(q_near, nodes, index_near); //almacenar en q_near el nodo mas cercano al punto q_new
     //Funcion steer
 
     q_new.coord=steer(q_rand_TR,q_near.coord,min_ndist,EPS);
@@ -582,17 +576,17 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     {
         if (true||nodes.region[j]>=It-1 && nodes.region[j]<=It+1 )//&& j<2 && j>=prof_expl)
         {//Print("region",nodes.region[j]);
-         double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
-         if (Dist_node_to_qnew<=r) //Si esta dentro del circulo de radio r, se considera un nearest
-         {
-             double Cost_q_nearest=Dist_node_to_qnew + nodes.cost[j];
-             if ( Cost_q_nearest < C_min)
-             {
-                 Extract_Node_from_Nodes(q_min,nodes,j); //q_min seria el que tiene menor costo, es decir el nuevo padre de q_new
-                 C_min=Cost_q_nearest;
-                 q_min_Indx=j;break;
-             }
-         }
+            double Dist_node_to_qnew=Distance(nodes.coord[j],q_new.coord);
+            if (Dist_node_to_qnew<=r) //Si esta dentro del circulo de radio r, se considera un nearest
+            {
+                double Cost_q_nearest=Dist_node_to_qnew + nodes.cost[j];
+                if ( Cost_q_nearest < C_min)
+                {
+                    Extract_Node_from_Nodes(q_min,nodes,j); //q_min seria el que tiene menor costo, es decir el nuevo padre de q_new
+                    C_min=Cost_q_nearest;
+                    q_min_Indx=j;break;
+                }
+            }
         }
     }
 
@@ -606,24 +600,24 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     Node q_new_f;
     q_new_f.coord  = q_new.coord;//steer(q_new.coord,q_min.coord,val,EPS);
     q_new_f.coordT = q_randA_T;
-    q_new_f.costParent = Distance(q_new_f.coord,q_min.coord) ;
+    q_new_f.costParent = Distance(q_new_f.coord, q_min.coord);
     q_new_f.cost   = q_new_f.costParent + q_min.cost;
     q_new_f.parent = q_min_Indx;
-    q_new_f.id     = nodes.N+1;
+    q_new_f.id     = nodes.N;
     q_new_f.region = It;
-    Insert_Node_in_Nodes(nodes,nodes.N+1,q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
+    Insert_Node_in_Nodes(nodes, nodes.N+1, q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1],q_new_f.coord[2]);
  #ifdef OPENCV_DRAW
     mtxA.lock();
     cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
-   int stw=3;
+    int stw=3;
     cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     
     cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ), 2, Colors[It],CV_FILLED,  1,8 );
-     
-                // cv::imshow("ImagepTraj",image_Ptraj);
-               // cv::waitKey(1);
+    
+    // cv::imshow("ImagepTraj",image_Ptraj);
+    // cv::waitKey(1);
     mtxA.unlock();
  #endif
     return;
