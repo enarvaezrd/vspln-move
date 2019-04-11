@@ -13,8 +13,8 @@ class Prediction{
         image_size=800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
-
+        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
+        adv=3;
         acum_values = 0;
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
@@ -32,7 +32,7 @@ class Prediction{
             Colors.push_back(cv::Scalar(40,52,171));
             Colors.push_back(cv::Scalar(30,2,1));
             Colors.push_back(cv::Scalar(165,142,59));
-            Colors.push_back(cv::Scalar(114,67,69));    
+            Colors.push_back(cv::Scalar(114,67,69));
         }
         NodesAvailable=false;
          NodesCharged=false;
@@ -46,6 +46,7 @@ class Prediction{
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     
     const Etraj Get_TR(){return Tr;}
+    int Get_Adv(){return adv;}
     const int Get_TRbr(){return tr_brk;}
     void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose);//extraer vecindad
     //const Nodes Get_Nodes(){return nodes;}
@@ -65,6 +66,7 @@ class Prediction{
     int d_prv;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m;     // datos previos para el calculo de mean values
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
+    int adv;        //How many points we are advancing the rrt
 
     double  acum_values;
     cv::Mat White_Imag ,image_Ptraj;

@@ -3,13 +3,9 @@
 
 #include "prediction.hpp"
 
-
 using namespace std;  
 namespace rrt_planif
 {
-
-
-
 class RRT
 {
 
@@ -20,7 +16,7 @@ public:
         image_size=1200;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
         NumNodesToAdd = (prof_expl*1.5); //number of nodes to add in each region
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
@@ -38,19 +34,18 @@ public:
         vdr.N.resize(pt);
         for (int i=0;i<pt/5;i++)
         {
-        Colors.push_back(cv::Scalar(0,96,220));
-        Colors.push_back(cv::Scalar(125,196,245));
-        Colors.push_back(cv::Scalar(106,168,45));
-        Colors.push_back(cv::Scalar(40,52,171));
-        Colors.push_back(cv::Scalar(30,2,1));
-        Colors.push_back(cv::Scalar(165,142,59));
-        Colors.push_back(cv::Scalar(114,67,69));
-        
+            Colors.push_back(cv::Scalar(0,96,220));
+            Colors.push_back(cv::Scalar(125,196,245));
+            Colors.push_back(cv::Scalar(106,168,45));
+            Colors.push_back(cv::Scalar(40,52,171));
+            Colors.push_back(cv::Scalar(30,2,1));
+            Colors.push_back(cv::Scalar(165,142,59));
+            Colors.push_back(cv::Scalar(114,67,69));
          
         }
         for(int i=0;i<pt;i++)
         {
-            
+            Old_Nodes_Added_Reg.push_back(0);
             vdr.TP[i].resize(7);//4 positions 4 orientations
             vdr.R[i].resize(3); //3 radius, each axis
             vdr.R[i][0] = 0.01;
@@ -89,8 +84,7 @@ public:
         Stretch_Extension=2;  //2 nodes 
         r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
         EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
-        TrajNodesIncluded=0;
-
+        TrajNodesIncluded=2;
     }
 
     void Initialize_VicinityRRT();
@@ -109,7 +103,8 @@ public:
     cv::Mat getImage(){ return image;}
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
    
-   void Load_TR(const Etraj traj){Tr=traj;return;}
+    void Load_TR(const Etraj traj){Tr=traj;return;}
+    void Load_Adv(int Adv){adv=Adv;return;}
 
     void Load_TRbr(const int trbr){tr_brk=trbr;return;}
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
@@ -175,6 +170,7 @@ private:
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
     int nm;//numero maximo de muestras en cada region
     int pt;//Puntos de trayectoria Esz en matlab
+    int adv;
     float NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
@@ -197,6 +193,7 @@ private:
     double r  ;   //Radio de nodos cercanos Revisar  0.009 0.014
     double EPS; //Maximo movimiento Revisar  0.005  0.007
     int TrajNodesIncluded;
+    std::vector<int> Old_Nodes_Added_Reg;
 };
 
 }

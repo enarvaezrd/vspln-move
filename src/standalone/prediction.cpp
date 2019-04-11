@@ -29,22 +29,23 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     CurrentPoint.zval=Marker_Abs_Pose.position.z;
     int n=2;
     tr_brk=0;
-
+    int prof_expl_adv=prof_expl+adv;
     std::vector<double> coeffs(n+1);
     Etraj traj;
-    traj.xval.resize(prof_expl+1);
-    traj.yval.resize(prof_expl+1);
-    traj.zval.resize(prof_expl+1);
+    traj.xval.resize(prof_expl_adv+1);
+    traj.yval.resize(prof_expl_adv+1);
+    traj.zval.resize(prof_expl_adv+1);
+   
     
     double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
 
 
-        TP_Mtx.lock();
+    TP_Mtx.lock();
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
         {
-            for(int i=0;i<prof_expl;i++)
+            for(int i=0;i<prof_expl_adv;i++)
             {
                traj.xval[i]=CurrentPoint.xval ;   
                traj.yval[i]=CurrentPoint.yval ;   //asignar un solo punto xyz a toda la trayectoria, constante
@@ -54,7 +55,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
 
         else
         {
-            for(int i=0;i<prof_expl;i++)
+            for(int i=0;i<prof_expl_adv;i++)
             {
                traj.xval[i]=CurrentPoint.xval+(i*mean.vx/2) ;
                traj.yval[i]=CurrentPoint.yval+(i*mean.vy/2) ; //Prediccion totalmente lineal, no hay suficientes datos para calcular regresion
@@ -62,7 +63,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             }
         }
         Tr=traj;
-        tr_brk=prof_expl;
+        tr_brk=prof_expl_adv;
         
     }
     else
@@ -79,7 +80,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         if (vy<=-maxdm) vy=-maxdm; if (vx<=-maxdm) vx=-maxdm;
         if (vy>= maxdm) vy= maxdm; if (vy>= maxdm) vy= maxdm;
 
-        for(int i=0;i<prof_expl;i++)
+        for(int i=0;i<prof_expl_adv;i++)
         {
           //  traj.xval[i]=CurrentPoint.xvalc+(i*pnd*vx);  //creacion de estructuras basicas, para luego escoger que eje sera abcisa...
            // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
@@ -124,13 +125,13 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     break;
                 }
             }
-            double stepx=(vxtm*indxj/prof_expl);//paso resultante, para distancia fija
-            for(int i=0;i<prof_expl;i++)
+            double stepx=(vxtm*indxj/prof_expl_adv);//paso resultante, para distancia fija
+            for(int i=0;i<prof_expl_adv;i++)
             {   traj.xval[i]=CurrentPoint.xval+(i*stepx);
                 //cout<<"==XVAl "<<traj.xval[i]<<endl;
             }
 
-            for(int i=0;i<prof_expl;i++)  //Calculo, ahora si, de los datos de trayectoria
+            for(int i=0;i<prof_expl_adv;i++)  //Calculo, ahora si, de los datos de trayectoria
             {
                 traj.yval[i]=0.0;
                 for (int j=0;j<=n;j++)
@@ -162,11 +163,11 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     break;
                 }
             }
-            double stepy = (vytm*indyj/prof_expl);
-            for(int i=0;i<prof_expl;i++)
+            double stepy = (vytm*indyj/prof_expl_adv);
+            for(int i=0;i<prof_expl_adv;i++)
                 traj.yval[i]=CurrentPoint.yval + (i*stepy);
 
-            for(int i=0;i<prof_expl;i++)
+            for(int i=0;i<prof_expl_adv;i++)
             {
                 traj.xval[i]=0.0;
                 for (int j=0;j<=n;j++)
@@ -182,8 +183,8 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         if (first_tr)
         {
             double dvxy=abs((mean.vx+mean.vy)/2);
-            tr_brk = prof_expl-1; //Primero suponer que toda la trayectoria debe reemplazarse
-            for(int j=0;j<prof_expl-1;j++)
+            tr_brk = prof_expl_adv-1; //Primero suponer que toda la trayectoria debe reemplazarse
+            for(int j=0;j<prof_expl_adv-1;j++)
             {
                 //cv::circle( image, cv::Point( ( traj.xval[j]+maxsc1)*scale1,(traj.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
                 double d_tr=sqrt( (traj.xval[j]-Tr_old.xval[j+1])*(traj.xval[j]-Tr_old.xval[j+1]) + (traj.yval[j]-Tr_old.yval[j+1])*(traj.yval[j]-Tr_old.yval[j+1]) );
@@ -192,7 +193,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     tr_brk=j; break;
                 }
             }
-            for (int j=0;j<prof_expl;j++)
+            for (int j=0;j<prof_expl_adv;j++)
             {
                 if (j<tr_brk)
                 {
@@ -209,7 +210,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 //Print("trajvalues", Tr.xval[j],Tr.yval[j]);
                  //cv::circle( image1, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
-            CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl);
+            CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl_adv);
         }
         fixed_dist=f_dist;
     }
@@ -499,10 +500,22 @@ void Prediction::Selection()
         double DFactor=0.0;
         double d_traj_adv=0.0;
 
-        double speed = sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
-        DFactor = nodes.cost[prof_expl-1] / (1.0 + speed) ;
-        VectorDbl TR{Tr.xval[0],Tr.yval[0],Tr.zval[0]};  //VS position
-        double D_traj_avd = Distance(nodes.coord[0],TR);
+        double speed =1* sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
+        double max_cost=-100;
+        int max_cost_indx;
+        for(int i=0;i<nodes.N;i++)
+        {
+            if (max_cost<nodes.cost[i])
+            {
+                max_cost=nodes.cost[i];
+                max_cost_indx=i;
+            }
+        }
+
+        DFactor = max_cost / (1.0 + speed) ;  //look for a node with this cost
+        VectorDbl TR{Tr.xval[adv],Tr.yval[adv],Tr.zval[adv]};      //VS position
+        double D_traj_avd = Distance(nodes.coord[0],TR);     //as VS is faster than RRT, its needed to find a point near the current VS position
+        cout<<D_traj_avd;
         double Min_RRTVS_Dist=100000.0,Min_VS_Node_Dist=10000.0;
         int RRTVS_Indx, VS_Node_Indx;
         for(int i=0;i<nodes.N;i++)
@@ -510,24 +523,43 @@ void Prediction::Selection()
             double DistC = abs(nodes.cost[i] - D_traj_avd);//dist real of each node
             double NodeDist = abs(DFactor-DistC); // difference with Dfactor
             //Find node to a certain distance from VS position (indicated by DFactor)
-            if(NodeDist < Min_RRTVS_Dist)   
+            if(NodeDist < Min_RRTVS_Dist)  //store the one with a cost close to Dfactor
             {
-                Min_RRTVS_Dist=NodeDist;
-                RRTVS_Indx=i;
+                Min_RRTVS_Dist = NodeDist;
+                RRTVS_Indx = i;
             }
             //Find a the closest node to VS point
             if(DistC < Min_VS_Node_Dist)
             {
-                Min_VS_Node_Dist=DistC;
-                VS_Node_Indx=i;
+                Min_VS_Node_Dist = DistC;
+                VS_Node_Indx = i; //cause, vs point is progressing faster than rrt
             }
         }
-        
+        VS_Node_Indx=0;
+        bool goal_found=false;
+        vector<int> road_indexes;
+        road_indexes.push_back(RRTVS_Indx);
+        int road_index_T=road_indexes[0];
+        Print("indexes for tree generation",VS_Node_Indx,RRTVS_Indx);
+        while(!goal_found)
+        {
+            cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
+            cv::Point((nodes.coord[nodes.parent[road_index_T]][0]+maxsc)*scale,(nodes.coord[nodes.parent[road_index_T]][1]+maxsc)*scale ),  
+            cv::Scalar( 00, 230, 50 ),  2, 8 );
+            road_index_T=nodes.parent[road_index_T];
+            road_indexes.push_back(road_index_T);
+            if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1) goal_found=true;
+            if (nodes.cost[road_index_T]<=D_traj_avd)
+            {
+                VS_Node_Indx=road_index_T;
+                goal_found=true;
+            }
+            //Print("Tree",road_index_T,nodes.parent[road_index_T]);
+        }
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 4, Colors[1],CV_FILLED,  3, 8 );
-    
-        NodesMtx.unlock();
 
+        NodesMtx.unlock();
         NodesAvailable = false;
 
     }

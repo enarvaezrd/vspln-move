@@ -38,6 +38,7 @@ int main(int argc, char** argv)
             {  
                 Print("=======Step=====",cnTh);
                 //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
+                RRT_model.Load_Adv(Predict_B.Get_Adv());
                 RRT_model.Load_TR(Predict_B.Get_TR());
                 RRT_model.Load_TRbr(Predict_B.Get_TRbr());
                 RRT_model.ResetImagePtraj();
@@ -49,12 +50,12 @@ int main(int argc, char** argv)
                 sequence_loop_th = RRT_model.getLoopState();
             #ifdef OPENCV_DRAW
                 const cv::Mat image = RRT_model.getImage();
-                //const cv::Mat imagePt = RRT_model.getImage_Ptraj();
+                const cv::Mat imagePt = RRT_model.getImage_Ptraj();
 
                 //cv::imshow("Image1B",image);
 
-                //cv::imshow("ImagepTraj",imagePt);
-//                cv::waitKey(1);
+                cv::imshow("ImagepTraj",imagePt);
+                cv::waitKey(1);
             #endif
                 
                 cnTh++;
@@ -101,13 +102,13 @@ int main(int argc, char** argv)
 
             //mtx.lock();
         #ifdef OPENCV_DRAW
-            /*imageA=Predict_B.getImage_Ptraj();
+            imageA=Predict_B.getImage_Ptraj();
             cv::imshow("Image1",imageA);
-            cv::waitKey(1);*/
+            cv::waitKey(1);
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(165));
+            std::this_thread::sleep_for(std::chrono::milliseconds(80));
             //Print("finish already paused");
             Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

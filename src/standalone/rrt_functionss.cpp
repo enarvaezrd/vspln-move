@@ -10,9 +10,10 @@ void RRT::Initialize_VicinityRRT()
     double dnprv,dnxt,dm;
     for (int j=0;j<prof_expl;j++)
     {
-        vdr.TP[j][0]=Tr.xval[j];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
-        vdr.TP[j][1]=Tr.yval[j];
-        vdr.TP[j][2]=Tr.zval[j];
+        
+        vdr.TP[j][0]=Tr.xval[j+adv];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
+        vdr.TP[j][1]=Tr.yval[j+adv];
+        vdr.TP[j][2]=Tr.zval[j+adv];
     }
         for (int j=0;j<prof_expl;j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
         {
@@ -72,7 +73,7 @@ void RRT::Node_Filter()
         std::vector<int> del_List;
         double xo ,yo,zo,rx,ry,rz,tm;
        /* for(int i = 0; i < prof_expl; i++)
-        { 
+        {
             mtxA.lock();
             cv::circle( image_Ptraj, cv::Point( (nodes.coord[i][0] +maxsc)*scale,(nodes.coord[i][1]+maxsc)*scale ),3, Colors[nodes.region[i]],CV_FILLED,  1, 8 );
             mtxA.unlock();
@@ -82,13 +83,13 @@ void RRT::Node_Filter()
         for (int i = TrajNodesIncluded; i < nodes.N; i++)  //from prof_expl
         {
             cn_Old=0;
-            if (nodes.parent[i]<0 )
+            /*if (nodes.parent[i]<0 )
             {
                 allowed=0;
                 Print("node pointing  ", i,nodes.parent[i]);
-            }
-            else
-            {
+            }*/
+          //  else
+           // {
                 for (int k = 0;k < prof_expl; k++)
                 {
                     vector<VectorDbl > Rpitch,Rroll,Ryaw;
@@ -107,19 +108,18 @@ void RRT::Node_Filter()
                     {
                         allowed = 1;//Si es permitido, pasar a analizar otro punto
                         allowednodes++;
-                        mtxA.lock();
-                    cv::ellipse(image_Ptraj,cv::Point(image_size/2,image_size/2),cv::Size( scale*rx,  scale*ry),rad_to_deg(0),0,360,Colors[k],1,8);
-                    cv::circle( image_Ptraj, cv::Point( (T1[0] +maxsc)*scale,(T1[1]+maxsc)*scale ), 1, Colors[k],CV_FILLED,  1, 8 );
-                   // cv::circle( image_Ptraj, cv::Point( (nodes.coord[i][0] +maxsc)*scale,(nodes.coord[i][1]+maxsc)*scale ), 1, Colors[k],CV_FILLED,  1, 8 );
-                    mtxA.unlock();
-
+                       // mtxA.lock();
+                        //cv::ellipse(image_Ptraj,cv::Point(image_size/2,image_size/2),cv::Size( scale*rx,  scale*ry),rad_to_deg(0),0,360,Colors[k],1,8);
+                        //cv::circle( image_Ptraj, cv::Point( (T1[0] +maxsc)*scale,(T1[1]+maxsc)*scale ), 1, Colors[k],CV_FILLED,  1, 8 );
+                        // cv::circle( image_Ptraj, cv::Point( (nodes.coord[i][0] +maxsc)*scale,(nodes.coord[i][1]+maxsc)*scale ), 1, Colors[k],CV_FILLED,  1, 8 );
+                        //mtxA.unlock();
                         break;
                     }
                     else
                     {                   
                         allowed=0;
                     }
-                }
+               // }
             }
             if (allowed == 0)  //Si es un punto rechazado
             {                 
@@ -129,10 +129,10 @@ void RRT::Node_Filter()
         Print("allowed, existent",allowednodes,nodes.N,nodes.coord.size());
         //Print("Old Nodes Size First", OldNodes.N);
         //filtrado por trayectoria, puntos no necesarios de la antigua trayectoria
-        for (int i = tr_brk-1; i < prof_expl; i++)
+        /*for (int i = TrajNodesIncluded; i < prof_expl; i++)
         {
             del_List.push_back(i);  //se elimina puntos de trayectoria y sus branches
-        }
+        }*/
         //auto temp_tic = Clock::now();
         //Ahora eliminar los puntos en la lista y sus respectivas ramas        
         for (int i = 0; i < del_List.size(); i++)
@@ -194,7 +194,7 @@ void RRT::delete_branch(int indx)
     
     int fcn=0;int badfound=0;
 
-    for (int i=0; i<ln; i++) valid_parents.push_back(i);  
+    for (int i=0; i<ln; i++) valid_parents.push_back(i);
  
     //erase parents elements from valid parents vector
     for (int i=0; i<parents.size(); i++)
@@ -266,7 +266,6 @@ void RRT::Nodes_Reorder()
             //Print("nodes reorder cost",double(j), nodes.cost[j-1]);
             nodes.costParent[j] = Distance(vdr.TP[j-1], vdr.TP[j]);
             nodes.cost[j] = nodes.costParent[j] + nodes.cost[j-1]; //Aqui tiene que calcularse en funcion de la pose actual del eeff.tambien se puede calcular acumulando paso a paso
-       
         }
         nodes.region[j] = j;
     }
@@ -330,14 +329,14 @@ void RRT::RRT_Generation()
     int count=0;
     int countReg=0;
     Print("********Recycled nodes", oldSize-prof_expl);
-    //RRT_AddOldCoords();
+    RRT_AddOldCoords();
     for (int j=0;j <prof_expl ;j++)//(int j=prof_expl-1;j >= 0 ;j--)
     {
 
     #ifdef OPENCV_DRAW
     mtxA.lock();
         //Print("AAAAAAAAAAAAAAAAAAAangles", vdr.angles[j][0],rad_to_deg(vdr.angles[j][0]));
-       // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
+        // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
         cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0],  scale*vdr.R[j][1]),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
     mtxA.unlock();
     #endif
@@ -346,17 +345,13 @@ void RRT::RRT_Generation()
            //cout<< " radio: "<<vdr.R[j][0]<<endl;
             for (int k=0;k < Num_Added_Nodes ;k++)
             {
-
                 Add_Node(j);//agrega 1 nodo cada vez
                // Print("Node added, radio",j);
                 count++;
                 countReg++;
                  //std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                 Print("nodes added per region",countReg,j,nodes.N);
-                 mtxA.lock();
-                 cv::imshow("ImagepTraj",image_Ptraj);
-                cv::waitKey(1);
-                 mtxA.unlock();
+                // Print("nodes added per region",countReg,j,nodes.N);
+                
             }
         }
         else{}
@@ -367,14 +362,13 @@ void RRT::RRT_Generation()
     
     Print("NodesOld size, new size",OldNodes.N,nodes.N);
     //Stretch_the_Cord();
-    //Draw_RRT();
+    Draw_RRT();
 
 return;
 }
 
 void RRT::Add_Node(int It)
 {
-
     double rx=vdr.R[It][0];//revisar
     double ry=vdr.R[It][1];
     double rz=vdr.R[It][2];
@@ -486,6 +480,7 @@ void RRT::Add_Node(int It)
    }
    return;
 }
+
 void RRT::RRT_AddOldCoords()
 {
     double tm;
@@ -494,6 +489,8 @@ void RRT::RRT_AddOldCoords()
     double rx,ry,rz,ON_x,ON_y,ON_z;
     int region;
     int old=0;
+    for (int i=0;i<prof_expl;i++) Old_Nodes_Added_Reg[i]=0;
+
     for (int on=0;on<OldNodes.N;on++)
     {
         //if (OldNodes.id[on]>prof_expl)
@@ -504,7 +501,7 @@ void RRT::RRT_AddOldCoords()
             ON_B[1] = OldNodes.coord[on][1];
             ON_B[2] = OldNodes.coord[on][2];
             
-            for (int It=0;It<prof_expl;It++)
+            for (int It=1;It<prof_expl;It++)
             {
                 vector<VectorDbl > Rpitch,Rroll,Ryaw;
                 Initialize_Inv_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
@@ -516,14 +513,13 @@ void RRT::RRT_AddOldCoords()
                 ON_z = ON_B[2]-vdr.TP[It][2];
                 VectorDbl pointT{ON_x,ON_y,ON_z};
                 VectorDbl Temp1 = Rotation(pointT,Rpitch,Rroll,Ryaw);
-    
                 tm = ((Temp1[0]/rx)*(Temp1[0]/rx))+((Temp1[1]/ry)*(Temp1[1]/ry))+((Temp1[2]/rz)*(Temp1[2]/rz));
-            // cv::circle( image_Ptraj, cv::Point( (Temp1[0] +maxsc)*scale,(Temp1[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
-
-                //Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
-            // Print("OLD ALLOWED",tm);
+                // cv::circle( image_Ptraj, cv::Point( (Temp1[0] +maxsc)*scale,(Temp1[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
+                // Print("OLD ALLOWED",ON_B[0],ON_B[1],tm,vdr.TP[It][0],vdr.TP[It][1],ON_x,ON_y);
+                // Print("OLD ALLOWED",tm);
                 if(tm<=1)
                 {
+                    Old_Nodes_Added_Reg[It]++;
                     //cv::circle( image_Ptraj, cv::Point( (ON_B[0] +maxsc)*scale,(ON_B[1]+maxsc)*scale ), 1, Colors[0],CV_FILLED,  4, 8 );
                     allowed = true;region=It;
                     break;
@@ -532,8 +528,11 @@ void RRT::RRT_AddOldCoords()
             if (allowed)
             {
                 //Print("test2");
-                RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],region);
-                old++;
+                if (Old_Nodes_Added_Reg[region]<=MaxOldNodesReg*2)
+                {
+                    RRT_AddValidCoord(OldNodes.coord[on], OldNodes.coordT[on],region);
+                    old++;
+                }
             }
         //}
     }
@@ -609,12 +608,12 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1],q_new_f.coord[2]);
  #ifdef OPENCV_DRAW
     mtxA.lock();
-    cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+    //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+    //cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
     int stw=3;
-    cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
+    //cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     
-    cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ), 2, Colors[It],CV_FILLED,  1,8 );
+    //cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ), 2, Colors[It],CV_FILLED,  1,8 );
     
     // cv::imshow("ImagepTraj",image_Ptraj);
     // cv::waitKey(1);
@@ -678,7 +677,7 @@ void RRT::Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int indxG)
 VectorDbl RRT::steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS)
 {
     VectorDbl A(3);
-    if (min_ndist >= EPS)//||min_ndist<=EPS/10)
+    if (min_ndist >= EPS) //||min_ndist<=EPS/10)
     {
         A[0]= qn[0] + (((qr[0]-qn[0])*EPS)/min_ndist);
         A[1]= qn[1] + (((qr[1]-qn[1])*EPS)/min_ndist);
@@ -686,7 +685,6 @@ VectorDbl RRT::steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS)
         //Print("nodes unsteered",qn[0],qn[1],qn[2]);
         //Print("nodes old      ",qr[0],qr[1],qr[2]);
         //Print("nodes steered  ",A[0],A[1],A[2]);
-
     }
     else
     {
@@ -731,7 +729,7 @@ void RRT::Draw_RRT()
     for(int i=prof_expl; i<nodes.N; i++)     
     {   
         const int parent=nodes.parent[i];
-       Print("parent",parent, i);
+      // Print("parent",parent, i);
         mtxA.lock();
       if(parent != -1)
         cv::line( image_Ptraj, cv::Point((nodes.coord[i][0]+maxsc)*scale,(nodes.coord[i][1]+maxsc)*scale ),cv::Point((nodes.coord[parent][0]+maxsc)*scale,(nodes.coord[parent][1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
