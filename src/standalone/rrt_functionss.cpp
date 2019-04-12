@@ -14,6 +14,9 @@ void RRT::Initialize_VicinityRRT()
         vdr.TP[j][0]=Tr.xval[j+adv];//Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
         vdr.TP[j][1]=Tr.yval[j+adv];
         vdr.TP[j][2]=Tr.zval[j+adv];
+        mtxA.lock();
+        cv::circle( image_Ptraj, cv::Point( (Tr.xval[j+adv] +maxsc)*scale,(Tr.yval[j+adv]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
+        mtxA.unlock();
     }
         for (int j=0;j<prof_expl;j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
         {
@@ -183,13 +186,13 @@ void RRT::delete_branch(int indx)
     //Ahora quitar los nodos invalidos, y dejar los nodos permitidos unicamente.
   
     const int maxnodes=ln;
-    Fin_Nodes.coord.resize(maxnodes);
+    /*Fin_Nodes.coord.resize(maxnodes);
     Fin_Nodes.coordT.resize(maxnodes);
     Fin_Nodes.cost.resize(maxnodes);
     Fin_Nodes.costParent.resize(maxnodes);
     Fin_Nodes.parent.resize(maxnodes);
     Fin_Nodes.id.resize(maxnodes);
-    Fin_Nodes.region.resize(maxnodes);
+    Fin_Nodes.region.resize(maxnodes);*/
     Fin_Nodes.N=0;
     
     int fcn=0;int badfound=0;
@@ -203,26 +206,36 @@ void RRT::delete_branch(int indx)
     {
         int i = valid_parents[j];
        // if (i>=0 && i<ln){
-            Fin_Nodes.coord[fcn]      = nodes.coord[i];
+           /* Fin_Nodes.coord[fcn]      = nodes.coord[i];
             Fin_Nodes.coordT[fcn]     = nodes.coordT[i];
             Fin_Nodes.cost[fcn]       = nodes.cost[i];
             Fin_Nodes.costParent[fcn] = nodes.costParent[i];
             Fin_Nodes.parent[fcn]     = nodes.parent[i]; //nodos permitidos van ordenados en Fin_Nodes
             Fin_Nodes.region[fcn]     = nodes.region[i];
             Fin_Nodes.id[fcn]         = fcn;
-            Fin_Nodes.N               = fcn+1;
+            Fin_Nodes.N               = fcn+1;*/
+
+            Fin_Nodes.coord.push_back( nodes.coord[i]);
+            Fin_Nodes.coordT.push_back( nodes.coordT[i]);
+            Fin_Nodes.cost.push_back( nodes.cost[i]);
+            Fin_Nodes.costParent.push_back( nodes.costParent[i]);
+            Fin_Nodes.parent.push_back( nodes.parent[i]); //nodos permitidos van ordenados en Fin_Nodes
+            Fin_Nodes.region.push_back( nodes.region[i]);
+            Fin_Nodes.id.push_back(fcn);
+            Fin_Nodes.N  = fcn+1;
+
             indxlist.push_back(i); //orden en la lista seria el indice nuevo y valor es el indice antiguo
             fcn++;
        // }
     }
-    const int fin_sz= Fin_Nodes.N;
+   /* const int fin_sz= Fin_Nodes.N;
     Fin_Nodes.coord.resize(fin_sz);
     Fin_Nodes.coordT.resize(fin_sz);
     Fin_Nodes.cost.resize(fin_sz);
     Fin_Nodes.costParent.resize(fin_sz);
     Fin_Nodes.parent.resize(fin_sz);
     Fin_Nodes.id.resize(fin_sz);
-    Fin_Nodes.region.resize(fin_sz);
+    Fin_Nodes.region.resize(fin_sz);*/
     //cout<<" ----DB 2---- "<<endl;
     //Ahora se corrige los parents de los nodos finales, para que apunten al nodo correcto
     //es decir, buscar si hay cambios en el indice de un nodo, y si los hay, buscar nodos hijos y corregirles el parent.

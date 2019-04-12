@@ -500,7 +500,7 @@ void Prediction::Selection()
         double DFactor=0.0;
         double d_traj_adv=0.0;
 
-        double speed =1* sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
+        double speed =10* sqrt((mean.vx*mean.vx)+(mean.vy*mean.vy));
         double max_cost=-100;
         int max_cost_indx;
         for(int i=0;i<nodes.N;i++)
@@ -511,7 +511,7 @@ void Prediction::Selection()
                 max_cost_indx=i;
             }
         }
-
+        Print("speed",speed);
         DFactor = max_cost / (1.0 + speed) ;  //look for a node with this cost
         VectorDbl TR{Tr.xval[adv],Tr.yval[adv],Tr.zval[adv]};      //VS position
         double D_traj_avd = Distance(nodes.coord[0],TR);     //as VS is faster than RRT, its needed to find a point near the current VS position
@@ -543,25 +543,28 @@ void Prediction::Selection()
         Print("indexes for tree generation",VS_Node_Indx,RRTVS_Indx);
         while(!goal_found)
         {
+            int parent_T = nodes.parent[road_index_T];
+            if (parent_T>=0&&road_index_T>=0){
             cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
-            cv::Point((nodes.coord[nodes.parent[road_index_T]][0]+maxsc)*scale,(nodes.coord[nodes.parent[road_index_T]][1]+maxsc)*scale ),  
-            cv::Scalar( 00, 230, 50 ),  2, 8 );
-            road_index_T=nodes.parent[road_index_T];
+                    cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
+                    cv::Scalar( 00, 230, 50 ),  2, 8 );}
+            road_index_T=parent_T;
             road_indexes.push_back(road_index_T);
-            if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1) goal_found=true;
+            if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1||road_index_T<0) goal_found=true;
+
             if (nodes.cost[road_index_T]<=D_traj_avd)
             {
                 VS_Node_Indx=road_index_T;
                 goal_found=true;
             }
-            //Print("Tree",road_index_T,nodes.parent[road_index_T]);
+
+            Print("Tree",road_index_T,nodes.parent[road_index_T]);
         }
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 4, Colors[1],CV_FILLED,  3, 8 );
 
         NodesMtx.unlock();
         NodesAvailable = false;
-
     }
 
 return;
