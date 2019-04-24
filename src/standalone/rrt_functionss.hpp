@@ -16,10 +16,10 @@ public:
         image_size=1200;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
-        NumNodesToAdd = (prof_expl*1.5); //number of nodes to add in each region
+        prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
+        NumNodesToAdd = (prof_expl*1.0); //number of nodes to add in each region
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
-        image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
+        image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
 

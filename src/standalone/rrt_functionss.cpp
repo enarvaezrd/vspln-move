@@ -47,20 +47,27 @@ void RRT::Initialize_VicinityRRT()
             else
                 dm=1.0*(dnxt+dnprv)/2;
 
+            if (j==0)
+                dm/=2;
+
             if (dm>=0.05) dm=0.05;
             //if (dm<=0.001) dm=0.001;
             //VD.R[j][1]  Es el radio de apertura creciente
             vdr.R[j][2]=0.001;//valor de radio  z
-            vdr.R[j][0]=2*dm;//dm, distancia entre puntos 
+            vdr.R[j][0]=2*dm;//dm, distancia entre puntos
 
             double acDist=1.1;
             for (int k=0;k<=j;k++)
             {
-                acDist += 0.7*vdr.R[k][0];
+                acDist += 0.8*vdr.R[k][0];
             }
             if (acDist==0) acDist = 0.01;//Quitar o revisar valor
-            vdr.R[j][1] =((acDist*acDist)-1.1)/10;//+((j*j*1.0)/5000)
+            double factorA=((double(j)*double(j))/(40*double(prof_expl)*double(prof_expl)));
+            vdr.R[j][1] = factorA +((acDist*acDist)-1.14)/20;//+((j*j*1.0)/5000)
             if ( vdr.R[j][1] <= 0.0002) vdr.R[j][1]=0.0002;
+             mtxA.lock();
+        cv::circle( image_Ptraj, cv::Point( (vdr.TP[j][0] +maxsc)*scale,(vdr.TP[j][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
+        mtxA.unlock();
         }
         vdr.L=prof_expl;
     return;
@@ -83,7 +90,7 @@ void RRT::Node_Filter()
         }*/
         int allowednodes=0;
 
-        for (int i = TrajNodesIncluded; i < nodes.N; i++)  //from prof_expl
+        for (int i = 0; i < nodes.N; i++)  //from prof_expl
         {
             cn_Old=0;
             /*if (nodes.parent[i]<0 )
@@ -739,7 +746,7 @@ void RRT::Draw_RRT()
 {
     Print("size",nodes.coord.size(),nodes.N);
  #ifdef OPENCV_DRAW
-    for(int i=prof_expl; i<nodes.N; i++)     
+    for(int i=0; i<nodes.N; i++)     
     {   
         const int parent=nodes.parent[i];
       // Print("parent",parent, i);

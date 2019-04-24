@@ -505,20 +505,22 @@ void Prediction::Selection()
         int max_cost_indx;
         for(int i=0;i<nodes.N;i++)
         {
-            if (max_cost<nodes.cost[i])
+            VectorDbl coordT={Tr.xval[prof_expl],Tr.yval[prof_expl],Tr.zval[prof_expl]};
+            double cost = nodes.cost[i]-Distance(nodes.coord[i],coordT)/10.0;
+            if (max_cost<cost)
             {
-                max_cost=nodes.cost[i];
+                max_cost=cost;
                 max_cost_indx=i;
             }
         }
-        Print("speed",speed);
-        DFactor = max_cost / (1.0 + speed) ;  //look for a node with this cost
+
+        int RRTVS_Indx, VS_Node_Indx;
         VectorDbl TR{Tr.xval[adv],Tr.yval[adv],Tr.zval[adv]};      //VS position
         double D_traj_avd = Distance(nodes.coord[0],TR);     //as VS is faster than RRT, its needed to find a point near the current VS position
-        cout<<D_traj_avd;
-        double Min_RRTVS_Dist=100000.0,Min_VS_Node_Dist=10000.0;
-        int RRTVS_Indx, VS_Node_Indx;
-        for(int i=0;i<nodes.N;i++)
+        /* Print("speed",speed);
+        DFactor = max_cost;// / (1.0 + speed) ;  //look for a node with this cost
+        double Min_RRTVS_Dist=1000000.0,Min_VS_Node_Dist=10000.0;
+        for(int i=1;i<nodes.N;i++)
         {
             double DistC = abs(nodes.cost[i] - D_traj_avd);//dist real of each node
             double NodeDist = abs(DFactor-DistC); // difference with Dfactor
@@ -534,32 +536,55 @@ void Prediction::Selection()
                 Min_VS_Node_Dist = DistC;
                 VS_Node_Indx = i; //cause, vs point is progressing faster than rrt
             }
-        }
+        }*/
+        RRTVS_Indx=max_cost_indx;
         VS_Node_Indx=0;
         bool goal_found=false;
         vector<int> road_indexes;
         road_indexes.push_back(RRTVS_Indx);
-        int road_index_T=road_indexes[0];
-        Print("indexes for tree generation",VS_Node_Indx,RRTVS_Indx);
-        while(!goal_found)
+        int road_index_T=RRTVS_Indx;
+       // Print("indexes for tree generation",VS_Node_Indx,RRTVS_Indx,nodes.N);
+       vector<int> RoadIndexes;
+       RoadIndexes.push_back(RRTVS_Indx);
+        if(VS_Node_Indx!=RRTVS_Indx)
         {
-            int parent_T = nodes.parent[road_index_T];
-            if (parent_T>=0&&road_index_T>=0){
-            cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
-                    cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
-                    cv::Scalar( 00, 230, 50 ),  2, 8 );}
-            road_index_T=parent_T;
-            road_indexes.push_back(road_index_T);
-            if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1||road_index_T<0) goal_found=true;
-
-            if (nodes.cost[road_index_T]<=D_traj_avd)
+            while(!goal_found)
             {
-                VS_Node_Indx=road_index_T;
-                goal_found=true;
-            }
+                int parent_T = nodes.parent[road_index_T];
+                if (parent_T>=0&&road_index_T>=0&&false){
+                cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
+                        cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
+                        cv::Scalar( 00, 230, 50 ),  2, 8 );}
+                road_index_T=parent_T;
+                road_indexes.push_back(road_index_T);
+                if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1||road_index_T<0) goal_found=true;
 
-            Print("Tree",road_index_T,nodes.parent[road_index_T]);
+                if (nodes.cost[road_index_T]<=D_traj_avd)
+                {
+                    VS_Node_Indx=road_index_T;
+                    goal_found=true;
+                }
+ RoadIndexes.push_back(road_index_T);
+//                Print("Tree",road_index_T,nodes.parent[road_index_T]);
+            }
         }
+        else 
+        {
+            Print("fail finding nodes", nodes.N);
+        }
+
+        for (int i=0;i<RoadIndexes.size()-1;i++)
+        {
+               int iR=RoadIndexes[i];
+            int iRN=RoadIndexes[i+1];
+              if (i==RoadIndexes.size()-2) 
+                cv::circle( image_Ptraj, cv::Point( (nodes.coord[iR][0] +maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ), 5, Colors[5],CV_FILLED,  3, 8 );
+       
+            cv::line( image_Ptraj, cv::Point((nodes.coord[iR][0]+maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ),
+                cv::Point((nodes.coord[iRN][0]+maxsc)*scale,(nodes.coord[iRN][1]+maxsc)*scale ),
+                cv::Scalar( 00, 230, 50 ),  2, 8 );
+        }
+
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 4, Colors[1],CV_FILLED,  3, 8 );
 
