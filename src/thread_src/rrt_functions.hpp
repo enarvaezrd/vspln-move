@@ -1,63 +1,11 @@
 #ifndef RRT_PLANIF
 #define RRT_PLANIF
-#include "ed_pmov.hpp"
+#include "prediction.hpp"
 
 using namespace std;
-typedef vector<double> VectorDbl;
-typedef vector<int> VectorInt;
 
 namespace rrt_planif
 {
-
-struct Nodes{
-   vector<VectorDbl >  coord;
-   vector<VectorDbl >  coordT;
-   VectorDbl cost;
-   vector<int >   parent;
-   vector<int >   id;  //No usado por ahora
-   vector<int >   region;
-   int N;                   //Numero de nodos activos
-};
-
-struct Node{
-     VectorDbl coord;
-     VectorDbl coordT;
-     double cost;
-     int parent;
-     int id;
-     int region;
-};
-struct Etraj { //Trajectory vector
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
-     VectorDbl w;
-     VectorDbl x;
-     VectorDbl y;
-     VectorDbl z;
-};
-struct Position { //Only position
-     double xval;
-     double yval;
-     double zval;
-};
-struct Positions { //Only positions
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
-};
-struct MeanValues{
-    double vx,vy,vz;
-};
-
-struct Vicinity{
-   vector<VectorDbl >  TP;
-   vector<vector<long double> >  R;
-   //std::vector<std::vector<VectorDbl > > RP;
-   vector<VectorDbl > angles;
-   VectorDbl N;
-   int L;
-};
 
 class RRT
 {
@@ -67,21 +15,18 @@ public:
     Ed_Pmov ArmModel;
     RRT() : ArmModel(){ 
         sequence_loop=false;
-        image_size = 600;
+        image_size = 800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 11;  // Profundidad de exploracion  Esz=prof_f
-        NumNodesToAdd = (prof_expl*1.5); //number of nodes to add in each region
+        prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
+        NumNodesToAdd = (prof_expl*1.0); //number of nodes to add in each region
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
-        acum_x.resize((d_prv+1));
-        acum_y.resize((d_prv+1));
-
-        for(int i=0;i<(d_prv);i++) {acum_x[i]=0.0;  acum_y[i]=0.0;} //inicializacion en ceros
+      
         acum_values = 0;
-        nm = 90;
+        nm = 70;
         pt = prof_expl;
         nodes_reordered=0;
 
@@ -113,16 +58,18 @@ public:
             vdr.N[i]=0;
         }
 
-        nodes.coord.resize(prof_expl);//longitud dinamica, empieza con el minimo
+        nodes.coord.resize(prof_expl); //longitud dinamica, empieza con el minimo
         nodes.coordT.resize(prof_expl);
-        nodes.cost.resize(prof_expl);
-        nodes.parent.resize(prof_expl);
-        nodes.id.resize(prof_expl);
-        nodes.region.resize(prof_expl);
+        nodes.cost.resize(prof_expl); 
+        nodes.costParent.resize(prof_expl); 
+        nodes.parent.resize(prof_expl); 
+        nodes.id.resize(prof_expl); 
+        nodes.region.resize(prof_expl); 
         nodes.N=0;
         for(int i=0;i<prof_expl;i++)
         {
             nodes.coord[i].resize(3);
+            nodes.coordT[i].resize(3); 
         }
         r_exterior = 0.45;
         r_interior = 0.08;
@@ -136,6 +83,10 @@ public:
         OldNodesLoaded=false;
         first_tr=false;
         Stop_RRT_flag=true;
+        Stretch_Extension=2;  //2 nodes 
+        r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+        EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
+        TrajNodesIncluded=2;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -144,20 +95,23 @@ public:
     void Nodes_Reorder();
 
     void setEEFFMinHeight(double min_eef_alt) {eeff_min_height = min_eef_alt;}
-    void Regression(VectorDbl x,VectorDbl y,int ndatos,int it,int order, VectorDbl &coeffs);
-    void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
-    struct MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
+    //void Regression(VectorDbl x,VectorDbl y,int ndatos,int it,int order, VectorDbl &coeffs);
+    //void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
+    //struct MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     void delete_branch( int indx);
-    bool Add_Node(int It);
+    void Add_Node(int It);
 
     void RRT_Generation();
     void RRT_AddValidCoord(VectorDbl, VectorDbl,int);
     void RRT_AddOldCoords();
-    void RRT_SequenceA(geometry_msgs::Pose Marker_Abs_Pose);
     void RRT_SequenceB();
+    //void RRT_SequenceB();
 
     cv::Mat getImage(){ return image;}
     cv::Mat getImage_Ptraj(){ return image_Ptraj;}
+    void Load_TR(const Etraj traj){Tr=traj;return;}
+    void Load_Adv(int Adv){adv=Adv;return;}
+    void Load_TRbr(const int trbr){tr_brk=trbr;return;}
 
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
     VectorDbl  Transform(VectorDbl Point, int It,vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw);
@@ -180,9 +134,7 @@ public:
 
     //void Load_ArmModel( Ed_Pmov *ArmMd){ArmModel=ArmMd;return;}
     //Ed_Pmov Get_ArmModel(){return ArmModel;}
-    void Load_TR(const Etraj traj){Tr=traj;return;}
     const Etraj Get_TR(){TP_Mtx.lock(); Etraj TrT=Tr;TP_Mtx.unlock(); return TrT;}
-    void Load_TRbr(const int trbr){tr_brk=trbr;return;}
     const int Get_TRbr(){return tr_brk;}
     void Load_NdsReord(const int nds){nodes_reordered=nds;return;}
     const int Get_NdsReord(){return nodes_reordered;}
@@ -195,9 +147,12 @@ public:
         return;}
     int Img(double point);
     double rad_to_deg(double rad);
-
-    void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It)
+    Nodes GetNodes(){return nodes;} //use carefully, at the end of sequence B
+    void Draw_RRT();
+    void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
+    VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
     bool Stop_RRT_flag;
+    int get_TR_Size(){return Tr.xval.size(); }
 
 private:
     Etraj Tr;
@@ -206,9 +161,7 @@ private:
     Nodes nodes;
     Nodes OldNodes;
     Nodes EmptyNodes;
-    struct MeanValues mean;
-    VectorDbl acum_x;
-    VectorDbl acum_y;
+    //struct MeanValues mean;
     cv::Mat image ,image_Ptraj;
     cv::Mat White_Imag;
     int image_size;
@@ -223,6 +176,7 @@ private:
     float NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
+    int adv;
     double  acum_values;
     double eeff_min_height;
     double r_exterior;
@@ -240,6 +194,11 @@ private:
     std::vector<cv::Scalar> Colors;
     std::mutex TP_Mtx;
     bool first_tr;
+    int Stretch_Extension;
+    double r  ;   //Radio de nodos cercanos Revisar  0.009 0.014
+    double EPS; //Maximo movimiento Revisar  0.005  0.007
+    int TrajNodesIncluded;
+    std::vector<int> Old_Nodes_Added_Reg;
 };
 
 

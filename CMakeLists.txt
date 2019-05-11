@@ -58,8 +58,10 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/ed_pmov.cpp
 	src/thread_src/trajectory_client.cpp
 	src/thread_src/rrt_functions.cpp
+	src/thread_src/prediction.cpp
 	#include
 	src/thread_src/uav_arm_tools.hpp
+	src/thread_src/prediction.hpp
 	src/thread_src/ed_pmov.hpp
 	src/thread_src/trajectory_client.hpp
 	src/thread_src/includes.hpp

@@ -10,14 +10,14 @@ class RRT
 {
 
 public:
-    
+
     RRT(){
         sequence_loop=false;
-        image_size=1200;
+        image_size=800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
         prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
-        NumNodesToAdd = (prof_expl*1.0); //number of nodes to add in each region
+        NumNodesToAdd = (prof_expl*1.5); //number of nodes to add in each region
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
@@ -121,6 +121,7 @@ public:
     void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
+
     void PrintNode(cv::Mat ,VectorDbl );
     void loop_start();
     void loop_end();
@@ -150,8 +151,8 @@ public:
     Nodes GetNodes(){return nodes;} //use carefully, at the end of sequence B
     void Stretch_the_Cord();
     void Draw_RRT();
-void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
-VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
+    void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
+    VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
 private:
 
     Etraj Tr;

@@ -357,7 +357,7 @@ void RRT::RRT_Generation()
     mtxA.lock();
         //Print("AAAAAAAAAAAAAAAAAAAangles", vdr.angles[j][0],rad_to_deg(vdr.angles[j][0]));
         // Print("AAAAAAAAAAAAAAAAAAAangles", vdr.R[j][0],Img(vdr.R[j][0]), vdr.R[j][1],Img(vdr.R[j][1]));
-        cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0],  scale*vdr.R[j][1]),rad_to_deg(vdr.angles[j][0]),0,360,Colors[j],1,8);
+        cv::ellipse(image_Ptraj,cv::Point(Img(vdr.TP[j][0]) ,Img(vdr.TP[j][1])),cv::Size( scale*vdr.R[j][0],  scale*vdr.R[j][1]),rad_to_deg(vdr.angles[j][0]),0,360,cv::Scalar(255,153,0),1,8);
     mtxA.unlock();
     #endif
         if(abs(vdr.R[j][0])>=0.005)
@@ -371,7 +371,6 @@ void RRT::RRT_Generation()
                 countReg++;
                  //std::this_thread::sleep_for(std::chrono::milliseconds(5));
                 // Print("nodes added per region",countReg,j,nodes.N);
-                
             }
         }
         else{}
@@ -482,7 +481,7 @@ void RRT::Add_Node(int It)
             tempPosit[0] = rnTemp1[0];
             tempPosit[1] = rnTemp1[1];
             tempPosit[2] = rnTemp1[2];
-            found_ik_tmp = Check_CollisionA(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp
+            found_ik_tmp = Check_CollisionA(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp ArmModel.Check_Collision(tempPosit,1);
         }
    // }
     found_ik=found_ik_tmp;
@@ -980,22 +979,22 @@ void RRT::RRT_Sequence(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 
 void RRT::RRT_SequenceB()//extraer vecindad
 {  //tic();
-finish=false;
-    Print("//-------RRt3 InitVicinity-----------");
+    finish=false;
+    //Print("//-------RRt3 InitVicinity-----------");
     Initialize_VicinityRRT();
     //Print("BBtiempo InitVicinity",toc().count());
     //tic();
-    Print("//-------RRt4 NodelFilter------------");
+    //Print("//-------RRt4 NodelFilter------------");
     Node_Filter();
     //Print("BBBtiempo Node Filter",toc().count());
     //tic();
-Print("//-------RRt5 NodesReorder-----------");
+    //Print("//-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
     //Print("BBtiempo Nodes Reorder",toc().count());
     //tic();
-    Print("//-----RRt6 RRTGEN-----------------");
+   // Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
-    Print("//-------RRt7 Finish-----------------");
+    //Print("//-------RRt7 Finish-----------------");
     //Print("BBtiempo RRT Gen",toc().count());
     finish=true;
     return;
@@ -1018,7 +1017,7 @@ void RRT::loop_end()
 bool RRT::Check_CollisionA(std::vector<double> posit, int i)
 {
 
-   std::this_thread::sleep_for(std::chrono::milliseconds(1));
+   //std::this_thread::sleep_for(std::chrono::milliseconds(1));
    return true;
 }
 void RRT::tic()

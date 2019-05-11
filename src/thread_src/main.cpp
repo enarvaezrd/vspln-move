@@ -11,12 +11,12 @@ int main(int argc, char** argv)
     ros::NodeHandle nodle_handle;
     ros::Rate loop_rate(30);
     Printer Print;
-    rrt_planif::RRT RRT_modelA, RRT_modelB;
+    rrt_planif::RRT RRT_model;
+    PredNs::Prediction Predict_B;
     ua_ns::uav_arm_tools UavArm_tools;
     sleep(1.0);
 
-    RRT_modelA.ArmModel.PrintModelInfo();
-    RRT_modelB.ArmModel.PrintModelInfo();
+    RRT_model.ArmModel.PrintModelInfo();
     std::vector<double> joint_valuesT(6);
     std::mutex m;
     joint_valuesT[0] = 0.0;
@@ -26,12 +26,12 @@ int main(int argc, char** argv)
     joint_valuesT[4] = 0.0;
     joint_valuesT[5] = PI/2;
 
-    RRT_modelA.ArmModel.SendMovement_byJointsValues(joint_valuesT);
+    RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
     sleep(1.0);
-    RRT_modelA.ArmModel.PrintCurrentPose("STARTING POSEAAAA");
+    RRT_model.ArmModel.PrintCurrentPose("STARTING POSEAAAA");
     float alturap=0.43;//0.21
 
-    geometry_msgs::Pose target_pose = RRT_modelA.ArmModel.getCurrentPose();
+    geometry_msgs::Pose target_pose = RRT_model.ArmModel.getCurrentPose();
 
 
    ua_ns::Angles IAngleMark =UavArm_tools.ConvPosetoAngles(target_pose);
@@ -48,16 +48,16 @@ int main(int argc, char** argv)
 
     UavArm_tools.setArmPoseReq(target_pose);
     target_pose = UavArm_tools.getArmPoseReq();
-    bool reqState=RRT_modelA.ArmModel.ReqMovement_byPose(target_pose,1);
+    bool reqState=RRT_model.ArmModel.ReqMovement_byPose(target_pose,1);
     sleep(1.0);
-    geometry_msgs::Pose target_posea = RRT_modelA.ArmModel.getCurrentPose();
+    geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
 
     IAngleMark =UavArm_tools.ConvPosetoAngles(target_posea);
     Print("PETA ANGLES yaw,roll,pitch", IAngleMark.yaw,IAngleMark.roll,IAngleMark.pitch);
 
     //if (reqState==true)
-        UavArm_tools.UpdateArmCurrentPose(RRT_modelA.ArmModel.getCurrentPose());
+        UavArm_tools.UpdateArmCurrentPose(RRT_model.ArmModel.getCurrentPose());
 
     int TrackingState=0;
     int ThreadStep=0;
@@ -75,29 +75,29 @@ int main(int argc, char** argv)
            {    //Print("=====Step=====");
                 //Ed_Pmov ARMMdl=RRT_modelA.Get_ArmModel();
                 //RRT_modelB.Load_ArmModel(ARMMdl);
-                RRT_modelB.Stop_RRT_flag=RRT_modelA.Stop_RRT_flag;
-                rrt_planif::Etraj trajA=RRT_modelA.Get_TR();
-                RRT_modelB.Load_TR(trajA);
-                //Print("b1",trajA.zval.size(),trajA.zval[0]);
-                int trb =RRT_modelA.Get_TRbr();
-                RRT_modelB.Load_TRbr(trb);
-                RRT_modelB.ResetImagePtraj();
-                if (trajA.xval.size()>0 && !RRT_modelA.Stop_RRT_flag)
-                    RRT_modelB.RRT_SequenceB();
-                else 
+                RRT_model.Load_Adv(Predict_B.Get_Adv());
+                RRT_model.Load_TR(Predict_B.Get_TR());
+                RRT_model.Load_TRbr(Predict_B.Get_TRbr());
+                RRT_model.ResetImagePtraj();
+                Print("stop flag",Predict_B.get_Stop_RRT_Flag(),RRT_model.get_TR_Size());
+                if (RRT_model.get_TR_Size()>0 &&!Predict_B.get_Stop_RRT_Flag())   //trajA.xval.size()>0 &&
+                   { Print("entering");RRT_model.RRT_SequenceB(); 
+                Predict_B.Load_Nodes(RRT_model.GetNodes());}
+
+               /* else 
                 {
                     Print("RRT not applied, Traj too short or RRT flag stop");
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                }
-                sequence_loop_th = RRT_modelB.getLoopState();
+                }*/
+                sequence_loop_th = RRT_model.getLoopState();
                 //Print("b33",sequence_loop_th);
                 #ifdef OPENCV_DRAW
-                    cv::Mat image = RRT_modelB.getImage_Ptraj();
-                    cv::imshow("ImageSeqB",image);
-                    cv::waitKey(1); 
+                    cv::Mat image = RRT_model.getImage_Ptraj();
+                    //cv::imshow("ImageSeqB",image);
+                    //cv::waitKey(1); 
                 #endif
                 //std::cout<<"Seq B time: "<<RRT_modelB.ArmModel.toc(clB).count()<<std::endl;
-                Print("==SEQUENCE B TIME ",RRT_modelB.ArmModel.toc(clB).count());
+                Print("==SEQUENCE B TIME ",RRT_model.ArmModel.toc(clB).count());
                 clB=std::chrono::high_resolution_clock::now();
                // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
            {
                Print("RRT paused ");
                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-               sequence_loop_th = RRT_modelB.getLoopState();
+               sequence_loop_th = RRT_model.getLoopState();
                //ros::spinOnce();
                loop_rate_thread.sleep();
            }
@@ -121,10 +121,10 @@ int main(int argc, char** argv)
     while(ros::ok())
     {
         geometry_msgs::Pose CurrentArmPose;
-        CurrentArmPose = RRT_modelA.ArmModel.getCurrentPose();//desde el brazo
+        CurrentArmPose = RRT_model.ArmModel.getCurrentPose();//desde el brazo
 
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
-        RRT_modelA.ArmModel.tic();
+        RRT_model.ArmModel.tic();
         //cout<<"Estado de marker: "<<UavArm_tools.getTrackingState() <<endl;
         if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
         {//Tracking OK
@@ -138,9 +138,9 @@ int main(int argc, char** argv)
         else
         {
             Print("ENTER IN RESET of B");
-            RRT_modelB.loop_end();
+            RRT_model.loop_end();
             
-            RRT_modelA.reset_nodes_reordered();
+            RRT_model.reset_nodes_reordered();
             UavArm_tools.PIDReset(); //reset, set zeros to errors and integrals
             TrackingState=0;
             UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
@@ -149,42 +149,41 @@ int main(int argc, char** argv)
 
         if (TrackingState > 1)
         {
-            RRT_modelB.loop_start();
             UavArm_tools.counter_addOne(); //para envio espaciado de orientaciones
             m.lock();
-            //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process           
+            //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process
             UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
             m.unlock();
 
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
             
-            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex  
+            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
 
-            //RRT_modelA.ArmModel.PrintPose("req th pose ",CurrentRequest_Thread);        
+            //RRT_modelA.ArmModel.PrintPose("req th pose ",CurrentRequest_Thread);
             //RRT_modelA.Load_NdsReord(RRT_modelB.Get_NdsReord());
-            RRT_modelA.RRT_SequenceA(CurrentRequest_Thread);
-            
-            
-
+            Predict_B.Planif_SequenceA(CurrentRequest_Thread);
+            Predict_B.Charge_Nodes();
+            Predict_B.Selection();
+            RRT_model.loop_start();
         }
 
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
-        std::chrono::microseconds  elapsed_time =RRT_modelA.ArmModel.toc();
+        std::chrono::microseconds  elapsed_time =RRT_model.ArmModel.toc();
 
        // RRT_model.loop_end();
-        RRT_modelA.ArmModel.Sleep(elapsed_time); //sleep the resulting time
+        RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
         //RRT_model.loop_start();
-                   
-        RRT_modelA.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,2);//type 1 with normal execution, type 2 for last joint preference
+       
+        RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,2); //type 1 with normal execution, type 2 for last joint preference
         
-        UavArm_tools.PIDdata.time = RRT_modelA.ArmModel.getDelayTime().count()/1000000;       
-        CurrentArmPose = RRT_modelA.ArmModel.getCurrentPose();
+        UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count()/1000000;
+        CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
 
-            cv::Mat imageA=RRT_modelA.getImage_Ptraj();
-            //cv::imshow("Image11",imageA);
-            //cv::waitKey(2); 
+            cv::Mat imageA=Predict_B.getImage_Ptraj();
+            cv::imshow("Image11",imageA);
+         cv::waitKey(1); 
             //std::this_thread::sleep_for(std::chrono::milliseconds(35));
             loop_rate.sleep();
 //            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());

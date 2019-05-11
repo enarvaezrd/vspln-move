@@ -1,7 +1,7 @@
 #ifndef PREDICITON
 #define PREDICTION
 
-#include "sincludes.hpp"
+#include "ed_pmov.hpp"
 
 using namespace std;  
 namespace PredNs{
@@ -37,7 +37,6 @@ class Prediction{
         NodesAvailable=false;
          NodesCharged=false;
         first_tr=true;
-        advance_f=0;
     }
     
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -56,7 +55,7 @@ class Prediction{
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
     double Distance(VectorDbl P0, VectorDbl P1);
     void Selection();
-
+    bool get_Stop_RRT_Flag(){flagMtx.lock();bool flag=Stop_RRT_flag;flagMtx.unlock();return flag; }
     private:
     struct rrtns::MeanValues mean;
 
@@ -68,7 +67,7 @@ class Prediction{
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
     int adv;        //How many points we are advancing the rrt
 
-    double  acum_values;
+
     cv::Mat White_Imag ,image_Ptraj;
     Etraj Tr;
     Etraj Tr_old,Tr_temp;
@@ -77,16 +76,15 @@ class Prediction{
     double maxsc;
     double scale;
     double f_dist;
-
+    double  acum_values;
     std::vector<cv::Scalar> Colors;
-    bool Stop_RRT_flag;
+     bool Stop_RRT_flag;
     Printer Print;
     int  first_tr;
     Nodes nodes_cpy, nodes;
-    mutex NodesMtx;
+    mutex NodesMtx, flagMtx;
     bool NodesAvailable;
     bool NodesCharged;
-    int advance_f;
     };
 }
 
