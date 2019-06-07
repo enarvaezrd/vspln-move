@@ -25,27 +25,26 @@ int main(int argc, char** argv)
     bool RRT_Calc_state=false;
 
     auto rrt_thread = std::thread([&](){
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-     cv::namedWindow("ImagepTraj", 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    cv::namedWindow("ImagepTraj", 0);
     cv::resizeWindow("ImagepTraj", 1500,1500);
         bool sequence_loop_th=false;
         bool Thread_Run=true;
         int cnTh=0;
         auto clB=std::chrono::high_resolution_clock::now();
         while(Thread_Run){
-            while (sequence_loop_th )
-            {  
+            while ( sequence_loop_th )
+            {
                 Print("=======Step=====",cnTh);
                 //const rrt_planif::Etraj etr=RRT_modelB.Get_TR();
+                RRT_model.Load_Adv(Predict_B.Get_Adv());
                 RRT_model.Load_TR(Predict_B.Get_TR());
                 RRT_model.Load_TRbr(Predict_B.Get_TRbr());
                 RRT_model.ResetImagePtraj();
 
                 RRT_model.RRT_SequenceB();
-                Print("load");
+                
                 Predict_B.Load_Nodes(RRT_model.GetNodes());
-                Print("loaded");
                 sequence_loop_th = RRT_model.getLoopState();
             #ifdef OPENCV_DRAW
                 const cv::Mat image = RRT_model.getImage();
@@ -63,14 +62,16 @@ int main(int argc, char** argv)
                 Print("SEQUENCE B TIME ",RRT_model.toc(clB).count());
                 clB=std::chrono::high_resolution_clock::now();
             }
-            while(!sequence_loop_th){
+            while(!sequence_loop_th)
+            {
                 Print("RRT paused ");
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 sequence_loop_th = RRT_model.getLoopState();
                 Print("RRT paused ",sequence_loop_th);
             }
-        }  
+        }
     });
+
  auto rrt_threadA = std::thread([&](){
     /*cv::namedWindow("Image1", 0);
     cv::resizeWindow("Image1", 1500,1500);*/
@@ -89,25 +90,22 @@ int main(int argc, char** argv)
             CurrentRequest.position.y = 0.3*sin(PI*count/steps);
             CurrentRequest.position.z = 0.5;
             //Print("Current point",CurrentRequest.position.x,count);
-
-                
-             
-                //RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
-                Predict_B.Planif_SequenceA(CurrentRequest);              
+            //RRT_modelB.Load_NdsReord(RRT_model.Get_NdsReord());
+            Predict_B.Planif_SequenceA(CurrentRequest);
             Predict_B.Charge_Nodes();
             Predict_B.Selection();
-              
             cv::Mat imageA;
-
             //mtx.lock();
         #ifdef OPENCV_DRAW
-            /*imageA=Predict_B.getImage_Ptraj();
+            imageA=Predict_B.getImage_Ptraj();
             cv::imshow("Image1",imageA);
-            cv::waitKey(1);*/
+            cv::waitKey(1);
         #endif
-            RRT_model.loop_start();
+
+        
+           // RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(65));
+            std::this_thread::sleep_for(std::chrono::milliseconds(60));
             //Print("finish already paused");
             Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

@@ -3,29 +3,25 @@
 
 #include "prediction.hpp"
 
-
 using namespace std;  
 namespace rrt_planif
 {
-
-
-
 class RRT
 {
 
 public:
-    
+
     RRT(){
         sequence_loop=false;
-        image_size=1500;
+        image_size=800;
         d_prv = 5;      // profundidad de datos previos disponibles para prediccion
         d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 10;  // Profundidad de exploracion  Esz=prof_f
+        prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
         NumNodesToAdd = (prof_expl*1.5); //number of nodes to add in each region
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
-        image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255) );
+        image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
-        White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
+        White_Imag  = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
 
         nm = 70;
         pt = prof_expl;
@@ -38,19 +34,18 @@ public:
         vdr.N.resize(pt);
         for (int i=0;i<pt/5;i++)
         {
-        Colors.push_back(cv::Scalar(0,96,220));
-        Colors.push_back(cv::Scalar(125,196,245));
-        Colors.push_back(cv::Scalar(106,168,45));
-        Colors.push_back(cv::Scalar(40,52,171));
-        Colors.push_back(cv::Scalar(30,2,1));
-        Colors.push_back(cv::Scalar(165,142,59));
-        Colors.push_back(cv::Scalar(114,67,69));
-        
+            Colors.push_back(cv::Scalar(0,96,220));
+            Colors.push_back(cv::Scalar(125,196,245));
+            Colors.push_back(cv::Scalar(106,168,45));
+            Colors.push_back(cv::Scalar(40,52,171));
+            Colors.push_back(cv::Scalar(30,2,1));
+            Colors.push_back(cv::Scalar(165,142,59));
+            Colors.push_back(cv::Scalar(114,67,69));
          
         }
         for(int i=0;i<pt;i++)
         {
-            
+            Old_Nodes_Added_Reg.push_back(0);
             vdr.TP[i].resize(7);//4 positions 4 orientations
             vdr.R[i].resize(3); //3 radius, each axis
             vdr.R[i][0] = 0.01;
@@ -89,7 +84,7 @@ public:
         Stretch_Extension=2;  //2 nodes 
         r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
         EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
-
+        TrajNodesIncluded=2;
     }
 
     void Initialize_VicinityRRT();
@@ -108,7 +103,8 @@ public:
     cv::Mat getImage(){ return image;}
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
    
-   void Load_TR(const Etraj traj){Tr=traj;return;}
+    void Load_TR(const Etraj traj){Tr=traj;return;}
+    void Load_Adv(int Adv){adv=Adv;return;}
 
     void Load_TRbr(const int trbr){tr_brk=trbr;return;}
     void       Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
@@ -118,13 +114,14 @@ public:
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1);
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2);
     double     Distance(VectorDbl P0, VectorDbl P1);
-    bool       Check_Boundaries(VectorDbl Point);    
+    bool       Check_Boundaries(VectorDbl Point);
     void       Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
     void       Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
+
     void PrintNode(cv::Mat ,VectorDbl );
     void loop_start();
     void loop_end();
@@ -145,7 +142,7 @@ public:
     void Load_Img(const cv::Mat img){image_Ptraj=img;return;}
     const bool get_finish(){return finish;}
     void ResetImagePtraj(){
-        #ifdef OPENCV_DRAW 
+        #ifdef OPENCV_DRAW
         White_Imag.copyTo(image_Ptraj);White_Imag.copyTo(image);
         #endif
         return;}
@@ -154,8 +151,8 @@ public:
     Nodes GetNodes(){return nodes;} //use carefully, at the end of sequence B
     void Stretch_the_Cord();
     void Draw_RRT();
-void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
-VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
+    void Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It);
+    VectorDbl Rotation(VectorDbl ,vector<VectorDbl > ,vector<VectorDbl > ,vector<VectorDbl > );
 private:
 
     Etraj Tr;
@@ -174,6 +171,7 @@ private:
     int prof_expl;  // Profundidad de exploracion  Esz=prof_f
     int nm;//numero maximo de muestras en cada region
     int pt;//Puntos de trayectoria Esz en matlab
+    int adv;
     float NumNodesToAdd;
     int nodes_reordered;
     int tr_brk;
@@ -195,6 +193,8 @@ private:
     int Stretch_Extension;
     double r  ;   //Radio de nodos cercanos Revisar  0.009 0.014
     double EPS; //Maximo movimiento Revisar  0.005  0.007
+    int TrajNodesIncluded;
+    std::vector<int> Old_Nodes_Added_Reg;
 };
 
 }

@@ -19,13 +19,13 @@ struct Orientation_{
     double w,x,y,z;
 };
 namespace geometry_msgs{
-class Pose{
-    
-    public:
-    Pose(){};
-    Orientation_ orientation;
-    Position_ position;
-};
+    class Pose{
+        
+        public:
+        Pose(){};
+        Orientation_ orientation;
+        Position_ position;
+    };
 }
 
 typedef vector<double> VectorDbl;
@@ -72,9 +72,9 @@ struct Positions { //Only positions
      VectorDbl zval;
 };
 namespace rrtns{
-struct MeanValues{
-    double vx,vy,vz;
-};
+    struct MeanValues{
+        double vx,vy,vz;
+    };
 }
 struct Vicinity{
    vector<VectorDbl >  TP;
@@ -104,8 +104,8 @@ public:
         input.push_back(f);
         input.push_back(g);
         int strSize=0;
-        std::cout<<"> "<<str<<": ";
-        strSize += 4;
+        std::cout<<"-> "<<str<<": ";
+        strSize += 5;
         strSize += str.size();
         for(auto i : input )
         {

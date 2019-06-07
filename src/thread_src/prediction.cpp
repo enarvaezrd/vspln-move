@@ -49,10 +49,9 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             {
                traj.xval[i]=CurrentPoint.xval ;   
                traj.yval[i]=CurrentPoint.yval ;   //asignar un solo punto xyz a toda la trayectoria, constante
-               traj.zval[i]=zvalue;
+               traj.zval[i]=zvalue;  
             }
         }
-
         else
         {
             for(int i=0;i<prof_expl_adv;i++)
@@ -87,6 +86,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             traj.zval[i]=zvalue;
         }
         double Fixf_dist = 0.002;
+        flagMtx.lock();
         if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { 
             fixed_dist=0.003; 
             Stop_RRT_flag=true;
@@ -97,6 +97,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             Stop_RRT_flag=false;
            // Print("fixed in ",fixed_dist);
             }
+            flagMtx.unlock();
         //=======================================================================================================================================
         if (abs(mean.vx) >= abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
         {
@@ -198,7 +199,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 if (j<tr_brk)
                 {
                     Tr.xval[j]=Tr_old.xval[j+1];  //Asignar trayectoria antigua antes del punto de quiebre
-                    Tr.yval[j]=Tr_old.yval[j+1];  
+                    Tr.yval[j]=Tr_old.yval[j+1];
                     Tr.zval[j]=zvalue;
                 }
                 else
@@ -208,7 +209,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     Tr.zval[j]=zvalue;
                 }
                 //Print("trajvalues", Tr.xval[j],Tr.yval[j]);
-                 //cv::circle( image_Ptraj, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
+//                 cv::circle( image_Ptraj, cv::Point( ( Tr.xval[j]+maxsc1)*scale1, (Tr.yval[j]+maxsc1)*scale1 ), 1, cv::Scalar( 240, 0, 0 ),  2, 8 );
             }
             CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl_adv);
         }
@@ -221,20 +222,10 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
 return;
 }
 
-void Prediction::CreateMap()
+void Check_TR()
 {
-    for (int w = 0; w < MapSize; w++)
-    {
-        for (int h = 0; h < MapSize; h++)
-        {
-            ObstacleMap[w][h]=0;
-            if (w>10 && w<20 &&h>30&&h<50)
-                ObstacleMap[w][h]=1;
-        }
-    }
+
 }
-
-
 
 struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {
@@ -255,7 +246,7 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
     eeff_min_height = Marker_Abs_Pose.position.z; //this is the z value for the entire rrt, modify here to contact phase
 
 #ifdef OPENCV_DRAW
-    //cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
+    cv::circle( image_Ptraj, cv::Point(( Marker_Abs_Pose.position.x+maxsc)*scale,( Marker_Abs_Pose.position.y+maxsc)*scale), 1, cv::Scalar( 220, 0, 0 ),  2, 8 );
 #endif
 
     if (acum_values != (d_pr_m+1))
@@ -507,7 +498,6 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
 
 void Prediction::Selection()
 {
-   
     if( NodesCharged && !Stop_RRT_flag )
     { int d=0;
         NodesMtx.lock();
@@ -531,7 +521,7 @@ void Prediction::Selection()
 
         int RRTVS_Indx, VS_Node_Indx;
         VectorDbl TR{Tr.xval[adv],Tr.yval[adv],Tr.zval[adv]};      //VS position
-        double D_traj_avd = Distance(nodes.coord[0],TR);     //as VS is faster than RRT, its needed to find a point near the current VS position
+        double D_traj_avd = Distance(nodes.coord[0],TR);           //as VS is faster than RRT, its needed to find a point near the current VS position
         /* Print("speed",speed);
         DFactor = max_cost;// / (1.0 + speed) ;  //look for a node with this cost
         double Min_RRTVS_Dist=1000000.0,Min_VS_Node_Dist=10000.0;
@@ -566,60 +556,73 @@ void Prediction::Selection()
             while(!goal_found)
             {
                 int parent_T = nodes.parent[road_index_T];
-                if (parent_T>=0&&road_index_T>=0&&false){
-                cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
-                        cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
-                        cv::Scalar( 00, 230, 50 ),  2, 8 );}
+               // if (parent_T>=0&&road_index_T>=0&&false){
+               // cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
+                        //cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
+                     //   cv::Scalar( 00, 230, 50 ),  2, 8 );}
                 road_index_T=parent_T;
                 road_indexes.push_back(road_index_T);
                 if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1||road_index_T<0) goal_found=true;
 
                 if (nodes.cost[road_index_T]<=D_traj_avd)
                 {
-                    VS_Node_Indx=road_index_T; //to draw last point
+                    VS_Node_Indx=road_index_T;
                     goal_found=true;
                 }
- RoadIndexes.push_back(road_index_T);
-//                Print("Tree",road_index_T,nodes.parent[road_index_T]);
+            RoadIndexes.push_back(road_index_T);
+              //  Print("Tree",road_index_T,nodes.parent[road_index_T]);
             }
         }
         else 
         {
             Print("fail finding nodes", nodes.N);
         }
-         advance_f+=1;
-         int adv = int( 0.01*advance_f);
+
+
+        Text_Stream_Path->write_TimeStamp();
+        Text_Stream_Path->write_Data(nodes.coord[RoadIndexes[0]]);
+        Text_Stream_Path->jump_line();
         for (int i=0;i<RoadIndexes.size()-1;i++)
         {
                int iR=RoadIndexes[i];
             int iRN=RoadIndexes[i+1];
-           
-              if (i==RoadIndexes.size()-2-adv) 
+              if (i==RoadIndexes.size()-2) 
                 cv::circle( image_Ptraj, cv::Point( (nodes.coord[iR][0] +maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ), 5, Colors[5],CV_FILLED,  3, 8 );
        
             cv::line( image_Ptraj, cv::Point((nodes.coord[iR][0]+maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ),
                 cv::Point((nodes.coord[iRN][0]+maxsc)*scale,(nodes.coord[iRN][1]+maxsc)*scale ),
                 cv::Scalar( 00, 230, 50 ),  2, 8 );
+        Text_Stream_Path->write_Data(nodes.coord[iRN]);
+        Text_Stream_Path->jump_line();
         }
-
-        cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 4, Colors[0],CV_FILLED,  3, 8 );
-        cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 4, Colors[1],CV_FILLED,  3, 8 );
-
+        cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 6, Colors[0],CV_FILLED,  3, 8 );
+        cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 6, Colors[1],CV_FILLED,  3, 8 );
+        //Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
         NodesMtx.unlock();
         NodesAvailable = false;
-    }
-
+       
+         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 6, Colors[0],CV_FILLED,  3, 8 );
+       
+        Text_Stream_TR->write_TimeStamp();
+        for (int i=0 ; i<Tr.xval.size();i++)
+        {
+            Text_Stream_TR->write_Data(Tr.xval[i]);
+            Text_Stream_TR->write_Data(Tr.yval[i]);
+            Text_Stream_TR->write_Data(Tr.zval[i]);
+            Text_Stream_TR->jump_line();
+        }
+     }
 return;
 }
 
 void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
     //tic();
-    //Print("-------RRt Sequence A-------------");
+   // Print("-------RRt Sequence A-------------");
     XYMean_Calculation(Marker_Abs_Pose);
     //Print("tiempo RRT XY Mean Calc",toc());
     //tic();
-    //Print("-------RRt2 TrajPredict------------");
+   // Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
    // Print("AAA tiempo Traj Predict",toc());
    

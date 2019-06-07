@@ -54,7 +54,6 @@ namespace edArm_trajectory
       ROS_INFO_ONCE("Got joint state!");
       current_joint_state_ = ordered_js;
       got_joint_state_ = true;
-
     }
 
     //! Sends the command to start a given trajectory
@@ -77,10 +76,11 @@ namespace edArm_trajectory
     {
         const size_t NUM_TRAJ_POINTS = 2;
         std::vector<double> req_positions(NUM_JOINTS);
+        std::vector<double> mid_positions(NUM_JOINTS);
         double maxval=2.35619449;
-        boundValue(joints_obj[1],maxval,-maxval );
+        /*boundValue(joints_obj[1],maxval,-maxval );
         boundValue(joints_obj[2],maxval,-maxval );
-        boundValue(joints_obj[4],maxval,-maxval );
+        boundValue(joints_obj[4],maxval,-maxval );*/
 
         req_positions[0] = joints_obj[0];
         req_positions[1] = joints_obj[1];
@@ -89,10 +89,16 @@ namespace edArm_trajectory
         req_positions[4] = joints_obj[4];
         req_positions[5] = joints_obj[5];
 
+        /*mid_positions[0] = (joints_obj[0]+current_joint_state_[0])/2;
+        mid_positions[1] = (joints_obj[1]+current_joint_state_[1])/2;
+        mid_positions[2] = (joints_obj[2]+current_joint_state_[2])/2;
+        mid_positions[3] = (joints_obj[3]+current_joint_state_[3])/2;
+        mid_positions[4] = (joints_obj[4]+current_joint_state_[4])/2;
+        mid_positions[5] = (joints_obj[5]+current_joint_state_[5])/2;*/
+
         for (ros::Rate r = ros::Rate(20); !got_joint_state_; r.sleep())
         {
           ROS_DEBUG("waiting for joint state...");
-
           if (!ros::ok())
             exit(-1);
         }
@@ -102,17 +108,22 @@ namespace edArm_trajectory
         trajectory.joint_names = joint_names_;
         trajectory.points.resize(NUM_TRAJ_POINTS);
         // trajectory point:0
-        trajectory.points[0].time_from_start = ros::Duration(0.01);
+        trajectory.points[0].time_from_start = ros::Duration(0.003);
+        trajectory.points[0].positions.resize(NUM_JOINTS);
         trajectory.points[0].positions = current_joint_state_;
         // trajectory point:1
-        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.04); //Ttimer quitar el 0.02
+        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.003); //Ttimer quitar el 0.005
         trajectory.points[1].positions.resize(NUM_JOINTS);
         trajectory.points[1].positions = req_positions;
+
+       /* trajectory.points[2].time_from_start = ros::Duration(Wait_Time+0.04+0.001); //Ttimer quitar el 0.02
+        trajectory.points[2].positions.resize(NUM_JOINTS);
+        trajectory.points[2].positions = req_positions;*/
+
+
         control_msgs::FollowJointTrajectoryGoal goal;
         goal.trajectory = trajectory;
-
         return goal;
-
     }
 
     double FollowTrajectoryClient::wait_time_calc(std::vector<double> joints)

@@ -43,7 +43,7 @@ struct Quat uav_arm_tools::ArmOrientReq_toQuaternion(double yaw_Mark, geometry_m
     else{
         if ( yaw_Mark < 0.0 )    yaw_Mark =  (PI + yaw_Mark);
     }*/
-    diffyaw =(yaw_Mark)*0.25;
+    diffyaw =(yaw_Mark)*0.15;
     yaw_eeff+=diffyaw;
 
     }
@@ -159,7 +159,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
     }
 
     float cx,cy,corg;
-    corg = 0.3;//0.0065
+    corg = 0.007;//0.0065
 
     cx = xc1;
     cy = yc1;
@@ -374,12 +374,12 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (rad>=(rad_ext-0.03) )
     {
         minArmAltitude-=0.005;
-        if(  minArmAltitude<=0.37) { minArmAltitude = 0.37;  }
+        if(  minArmAltitude<=0.67) { minArmAltitude = 0.67;  }
     }
     else
     {
         minArmAltitude +=0.005;
-        if(  minArmAltitude>=0.42) { minArmAltitude = 0.42;  }
+        if(  minArmAltitude>=0.72) { minArmAltitude = 0.72;  }
     }
 
     //-------------------------------------
@@ -404,12 +404,9 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
 
     if (rad<=rad_int){  //Circulo interno
-
         float sx=0,sy=0;
-
         float xf=ArmPoseReq.position.x, yf=ArmPoseReq.position.y;
         float xo=OldArmPoseReq.position.x, yo=OldArmPoseReq.position.y;
-
         float dx=1.5*(xf-xo);
         float dy=1.5*(yf-yo), maxC=1.0;
 
@@ -440,7 +437,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         oldPos_ci.y[5]=dy;
         double dxa=(oldPos_ci.x[0]+oldPos_ci.x[1]+oldPos_ci.x[2]+oldPos_ci.x[3]+oldPos_ci.x[4]+oldPos_ci.x[5])/6;
         double dya=(oldPos_ci.y[0]+oldPos_ci.y[1]+oldPos_ci.y[2]+oldPos_ci.y[3]+oldPos_ci.y[4]+oldPos_ci.y[5])/6;
-        Print("RADIO",rad);
+       // Print("RADIO",rad);
         dx=dxa;
         dy=dya;
 
@@ -463,7 +460,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
         double corrx=0.2*(xf3-CurrentArmPose.position.x);
         double corry=0.2*(yf3-CurrentArmPose.position.y);
-        Print("dx dy",dx,dy);
+//        Print("dx dy",dx,dy);
         float corr_factor=4.0;
         if(abs(dx)>3*abs(dy))
         {

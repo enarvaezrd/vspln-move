@@ -51,7 +51,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req,int type)
 //type 1 with normal execution, type 2 for last joint preference
 {
     ros::Duration tiempo_traj(0.0);
-    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 1, 0.05);
+    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 2, 0.025);
 
     if (fk)
     {
