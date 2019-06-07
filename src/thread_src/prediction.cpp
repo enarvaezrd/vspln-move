@@ -42,7 +42,6 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
 
 
     TP_Mtx.lock();
-    Print("pred");
     if (acum_values<d_pr_m)   //acum_values come from XYMean_Calculation
     {   if (acum_values==1)
         {
@@ -216,12 +215,16 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
-    Print("finish pred");
     TP_Mtx.unlock();
     first_tr=true;
     //Print("step-Prediction -7 ",tr_brk);
     Tr_old = Tr;
 return;
+}
+
+void Check_TR()
+{
+
 }
 
 struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
@@ -495,7 +498,6 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
 
 void Prediction::Selection()
 {
-   
     if( NodesCharged && !Stop_RRT_flag )
     { int d=0;
         NodesMtx.lock();
@@ -519,7 +521,7 @@ void Prediction::Selection()
 
         int RRTVS_Indx, VS_Node_Indx;
         VectorDbl TR{Tr.xval[adv],Tr.yval[adv],Tr.zval[adv]};      //VS position
-        double D_traj_avd = Distance(nodes.coord[0],TR);     //as VS is faster than RRT, its needed to find a point near the current VS position
+        double D_traj_avd = Distance(nodes.coord[0],TR);           //as VS is faster than RRT, its needed to find a point near the current VS position
         /* Print("speed",speed);
         DFactor = max_cost;// / (1.0 + speed) ;  //look for a node with this cost
         double Min_RRTVS_Dist=1000000.0,Min_VS_Node_Dist=10000.0;
@@ -554,10 +556,10 @@ void Prediction::Selection()
             while(!goal_found)
             {
                 int parent_T = nodes.parent[road_index_T];
-                if (parent_T>=0&&road_index_T>=0&&false){
-                cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
-                        cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
-                        cv::Scalar( 00, 230, 50 ),  2, 8 );}
+               // if (parent_T>=0&&road_index_T>=0&&false){
+               // cv::line( image_Ptraj, cv::Point((nodes.coord[road_index_T][0]+maxsc)*scale,(nodes.coord[road_index_T][1]+maxsc)*scale ),
+                        //cv::Point((nodes.coord[parent_T][0]+maxsc)*scale,(nodes.coord[parent_T][1]+maxsc)*scale ),
+                     //   cv::Scalar( 00, 230, 50 ),  2, 8 );}
                 road_index_T=parent_T;
                 road_indexes.push_back(road_index_T);
                 if (road_index_T==VS_Node_Indx||nodes.parent[road_index_T] ==-1||road_index_T<0) goal_found=true;
@@ -567,7 +569,7 @@ void Prediction::Selection()
                     VS_Node_Indx=road_index_T;
                     goal_found=true;
                 }
- RoadIndexes.push_back(road_index_T);
+            RoadIndexes.push_back(road_index_T);
               //  Print("Tree",road_index_T,nodes.parent[road_index_T]);
             }
         }
@@ -576,6 +578,10 @@ void Prediction::Selection()
             Print("fail finding nodes", nodes.N);
         }
 
+
+        Text_Stream_Path->write_TimeStamp();
+        Text_Stream_Path->write_Data(nodes.coord[RoadIndexes[0]]);
+        Text_Stream_Path->jump_line();
         for (int i=0;i<RoadIndexes.size()-1;i++)
         {
                int iR=RoadIndexes[i];
@@ -586,15 +592,26 @@ void Prediction::Selection()
             cv::line( image_Ptraj, cv::Point((nodes.coord[iR][0]+maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ),
                 cv::Point((nodes.coord[iRN][0]+maxsc)*scale,(nodes.coord[iRN][1]+maxsc)*scale ),
                 cv::Scalar( 00, 230, 50 ),  2, 8 );
+        Text_Stream_Path->write_Data(nodes.coord[iRN]);
+        Text_Stream_Path->jump_line();
         }
-
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 6, Colors[0],CV_FILLED,  3, 8 );
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 6, Colors[1],CV_FILLED,  3, 8 );
-Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
+        //Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
         NodesMtx.unlock();
         NodesAvailable = false;
-    }
-
+       
+         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 6, Colors[0],CV_FILLED,  3, 8 );
+       
+        Text_Stream_TR->write_TimeStamp();
+        for (int i=0 ; i<Tr.xval.size();i++)
+        {
+            Text_Stream_TR->write_Data(Tr.xval[i]);
+            Text_Stream_TR->write_Data(Tr.yval[i]);
+            Text_Stream_TR->write_Data(Tr.zval[i]);
+            Text_Stream_TR->jump_line();
+        }
+     }
 return;
 }
 

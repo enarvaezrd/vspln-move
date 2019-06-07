@@ -58,7 +58,7 @@ public:
         }
         oldPos_ciFull = oldPos_ci;//initialize in zeros
         armDelay = 0.45;
-        minArmAltitude = 0.42;
+        minArmAltitude = 1.1;
         state=0;
     }
 

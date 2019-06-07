@@ -101,7 +101,9 @@ int main(int argc, char** argv)
             cv::imshow("Image1",imageA);
             cv::waitKey(1);
         #endif
-            RRT_model.loop_start();
+
+        
+           // RRT_model.loop_start();
             //Print("finish, now pause");
             std::this_thread::sleep_for(std::chrono::milliseconds(60));
             //Print("finish already paused");

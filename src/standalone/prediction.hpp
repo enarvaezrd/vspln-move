@@ -38,6 +38,8 @@ class Prediction{
          NodesCharged=false;
         first_tr=true;
         advance_f=0;
+        MapSize=100;
+        MapResolution=0.01;
     }
     
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -56,7 +58,7 @@ class Prediction{
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
     double Distance(VectorDbl P0, VectorDbl P1);
     void Selection();
-
+    void Prediction::CreateMap();
     private:
     struct rrtns::MeanValues mean;
 
@@ -87,6 +89,9 @@ class Prediction{
     bool NodesAvailable;
     bool NodesCharged;
     int advance_f;
+    int MapSize;
+    int MapResolution;
+    std::vector<std::vector<int> > ObstacleMap;
     };
 }
 

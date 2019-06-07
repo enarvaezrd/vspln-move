@@ -8,39 +8,42 @@
       <arg name="debug" default="false"/>
 
    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-	    <arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit_xl.world"/>
+	    <arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit.world"/>
 	    <arg name="paused" value="$(arg paused)"/>
 	    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
 	    <arg name="gui" value="$(arg gui)"/>
 	    <arg name="headless" value="$(arg headless)"/>
 	    <arg name="debug" value="$(arg debug)"/>            
   </include>
- <node name="control" pkg="ed_control" type="acontrol_arm" output="screen" required="true"/>  
+
+<arg name="altitude" default="1.5"/>
+ <node name="control" pkg="ed_control" type="acontrol_arm" output="screen" args="$(arg altitude)"/> 
+	
+ 
 <node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
 <!--  ROBOT1 -->
  <group ns="robot1">
-  	
   	<!--hsdb--> <node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" />
-	 <include file="$(find dynmxl_pro_moveit_arm)/launch/demo.launch" >
+	 <include file="$(find summit_pro_arm_moveit)/launch/demo.launch" >
 		 <arg name="z" default="0.05"/>
 	 	 <arg name="x" default="0.0"/> <!-- -1.5-->
 	 	 <arg name="y" default="0.0"/>
  	 </include>	
-	   <rosparam command="load" file="$(find summit_xl_robot_control)/config/summit_xl_robot_control.yaml" />
+	   <!--<rosparam command="load" file="$(find summit_xl_robot_control)/config/summit_xl_robot_control.yaml" />
 
  	 <rosparam command="load" file="$(find summit_xl_robot_control)/config/summit_xl.yaml"/>
 
-  	<node name="summit_xl_robot_control" pkg="summit_xl_robot_control" type="summit_xl_robot_control" output="screen"/>
+  	<node name="summit_xl_robot_control" pkg="summit_xl_robot_control" type="summit_xl_robot_control" output="screen"/>-->
  </group>
  	
- 	   <!-- ROBOT2  
+ 	   <!-- ROBOT2  -->
   <group ns="robot2">
  	 <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch" >
-	 	 <arg name="z" default="4.0"/>
-	 	 <arg name="x" default="0.2"/>
+	 	 <arg name="z" default="5.0"/>
+	 	 <arg name="x" default="0.3"/>
 	 	 <arg name="y" default="0.0"/>
   	</include>
-  </group> -->
+  </group> 
  	
 <!--sd -->
 

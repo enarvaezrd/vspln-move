@@ -19,20 +19,20 @@ int main(int argc, char** argv)
     RRT_model.ArmModel.PrintModelInfo();
     std::vector<double> joint_valuesT(6);
     std::mutex m;
+    cout<<"start"<<endl;
     joint_valuesT[0] = 0.0;
-    joint_valuesT[1] = -PI/2;
-    joint_valuesT[2] = -PI/2;
+    joint_valuesT[1] = -2.0;//PI/2;
+    joint_valuesT[2] = -2.0;//PI/2;
     joint_valuesT[3] = 0.0;// PI/2;
     joint_valuesT[4] = 0.0;
-    joint_valuesT[5] = PI/2;
+    joint_valuesT[5] = 0.0;// PI/2;
 
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
     sleep(1.0);
     RRT_model.ArmModel.PrintCurrentPose("STARTING POSEAAAA");
-    float alturap=0.43;//0.21
+    float alturap=0.72;//0.21
 
     geometry_msgs::Pose target_pose = RRT_model.ArmModel.getCurrentPose();
-
 
    ua_ns::Angles IAngleMark =UavArm_tools.ConvPosetoAngles(target_pose);
    Print("PET ANGLES yaw,roll,pitch", IAngleMark.yaw,IAngleMark.roll,IAngleMark.pitch);
@@ -155,6 +155,7 @@ int main(int argc, char** argv)
             UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
             m.unlock();
 
+           
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
             
             CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex

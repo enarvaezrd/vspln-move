@@ -198,7 +198,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                 if (j<tr_brk)
                 {
                     Tr.xval[j]=Tr_old.xval[j+1];  //Asignar trayectoria antigua antes del punto de quiebre
-                    Tr.yval[j]=Tr_old.yval[j+1];
+                    Tr.yval[j]=Tr_old.yval[j+1];  
                     Tr.zval[j]=zvalue;
                 }
                 else
@@ -220,6 +220,21 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     Tr_old = Tr;
 return;
 }
+
+void Prediction::CreateMap()
+{
+    for (int w = 0; w < MapSize; w++)
+    {
+        for (int h = 0; h < MapSize; h++)
+        {
+            ObstacleMap[w][h]=0;
+            if (w>10 && w<20 &&h>30&&h<50)
+                ObstacleMap[w][h]=1;
+        }
+    }
+}
+
+
 
 struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {

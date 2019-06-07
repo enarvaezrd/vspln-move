@@ -87,6 +87,7 @@ public:
         r=0.01  ;   //Radio de nodos cercanos Revisar  0.009 0.014
         EPS=0.004; //Maximo movimiento Revisar  0.005  0.007
         TrajNodesIncluded=2;
+        Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -199,6 +200,7 @@ private:
     double EPS; //Maximo movimiento Revisar  0.005  0.007
     int TrajNodesIncluded;
     std::vector<int> Old_Nodes_Added_Reg;
+    TextStream *Text_Stream;
 };
 
 

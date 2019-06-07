@@ -37,6 +37,8 @@ class Prediction{
         NodesAvailable=false;
          NodesCharged=false;
         first_tr=true;
+        Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
+        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
     }
     
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -85,6 +87,8 @@ class Prediction{
     mutex NodesMtx, flagMtx;
     bool NodesAvailable;
     bool NodesCharged;
+    TextStream *Text_Stream_TR;
+    TextStream *Text_Stream_Path;
     };
 }
 

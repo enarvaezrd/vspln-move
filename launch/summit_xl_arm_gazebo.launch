@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Show in Gazebo  -->
+ <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+<arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit_xl.world"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find summit_xl_description)/robots/summit_xl_pro_arm.urdf.xacro'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+
+  <!-- send fake joint values -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="TRUE"/>
+  </node>
+
+  <!-- Combine joint values -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+        args="-urdf -model summit_xl -param robot_description"/>
+
+
+    
+</launch>
+

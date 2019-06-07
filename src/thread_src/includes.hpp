@@ -147,6 +147,56 @@ public:
     }
 
 };
+class TextStream{
+    public:
+    TextStream(string text_file){
+        outputfile.open(text_file);
+        limiter = -110;
+    }
+   /* ~TextStream(){
+        outputfile.close();
+    }*/
+
+    void write_Data(double data)
+    {
+            outputfile << data << ";";
+    }
+     void write_Data(string data)
+    {
+            outputfile << data << ";";
+    }
+    void write_Data(VectorDbl data)
+    {
+        for(int i=0;i<data.size();i++)
+            outputfile << data[i] << ";";
+    }
+    void write_TimeStamp()
+    {
+        auto time_point = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+        std::stringstream ss;
+        ss << now_c;
+         outputfile << to_string(now_c) << ";";
+
+        auto tse = time_point.time_since_epoch();
+        auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+        auto now_s = std::chrono::duration_cast<std::chrono::seconds>(tse);
+        auto jst_ms = now_ms - now_s;
+        
+        outputfile << jst_ms.count() << ";"<<limiter<<";\n";
+    }
+   
+
+     void jump_line()
+    {
+            outputfile << "\n";
+    }
+    ofstream outputfile;
+    int limiter;
+};
+
+
+
 
 
 #endif

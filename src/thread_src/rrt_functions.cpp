@@ -90,7 +90,7 @@ void RRT::Node_Filter()
         }*/
         int allowednodes=0;
 
-        for (int i = 0; i < nodes.N; i++)  //from prof_expl
+        for (int i = 2; i < nodes.N; i++)  //from prof_expl
         {
             cn_Old=0;
             /*if (nodes.parent[i]<0 )
@@ -100,7 +100,7 @@ void RRT::Node_Filter()
             }*/
           //  else
            // {
-                for (int k = 0;k < prof_expl; k++)
+                for (int k = 1;k < prof_expl; k++)
                 {
                     vector<VectorDbl > Rpitch,Rroll,Ryaw;
                     Initialize_Inv_Transf_Matrices(Rpitch,Rroll,Ryaw,k);
@@ -126,7 +126,7 @@ void RRT::Node_Filter()
                         break;
                     }
                     else
-                    {                   
+                    {
                         allowed=0;
                     }
                // }
@@ -144,7 +144,7 @@ void RRT::Node_Filter()
             del_List.push_back(i);  //se elimina puntos de trayectoria y sus branches
         }*/
         //auto temp_tic = Clock::now();
-        //Ahora eliminar los puntos en la lista y sus respectivas ramas        
+        //Ahora eliminar los puntos en la lista y sus respectivas ramas
         for (int i = 0; i < del_List.size(); i++)
         {
             delete_branch(del_List[i]);
@@ -350,7 +350,8 @@ void RRT::RRT_Generation()
    //Print("********//Nodes size Start", nodes.N);
     int count=0;
     int countReg=0;
-   
+    Text_Stream->write_TimeStamp();
+     
     //RRT_AddOldCoords();
      Print("********Recycled nodes",nodes.N-oldSize);
     for (int j=0;j <prof_expl ;j++)//(int j=prof_expl-1;j >= 0 ;j--)
@@ -435,14 +436,14 @@ void RRT::Add_Node(int It)
     while (found_ik==0)
     {
         try_count++;
-        if (try_count>max_tries) {Print("fail, too much tries");break;}
+        if (try_count>max_tries) {break;}
         tm=100;
         bool rnd_point_found=false;
         int rnd_point_counts=0;
     while (tm>1)
     {
         //rnd_point_counts++;
-        //if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too much rand tries");break;}
+        if (rnd_point_counts > max_rnd_tries) {rnd_point_found=false; Print("fail, too many rand tries");break;}
         /*
             rnx = distxr(genx);
             rny = distyr(geny);
@@ -472,9 +473,9 @@ void RRT::Add_Node(int It)
     //if (rnd_point_found){
         vector<std::vector<double> > Rpitch,Rroll,Ryaw;
         Initialize_Transf_Matrices(Rpitch,Rroll,Ryaw,It);
-        rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw);  //First rotate then translate
-        rnTemp_T = Translation(q_rand,It);    //Only trtaslation
-        allwd = Check_Boundaries(rnTemp1);
+        rnTemp1 = Transform(q_rand,It,Rpitch,Rroll,Ryaw); //First rotate then translate
+        rnTemp_T = Translation(q_rand,It); //Only trtaslation
+        allwd = Check_Boundaries(rnTemp1); 
         
         if (allwd==1)
         {
@@ -497,7 +498,7 @@ void RRT::Add_Node(int It)
     }
    else
    {
-       Print("-------ERROR en demasiados valores buscados en el ciclo while-------",q_rand[0],q_rand[1]);
+       Print("---ERROR en demasiados valores buscados en el ciclo while----",q_rand[0],q_rand[1]);
    }
    return;
 }
@@ -625,6 +626,8 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
     q_new_f.parent = q_min_Indx;
     q_new_f.id     = nodes.N;
     q_new_f.region = It;
+    Text_Stream->write_Data(q_new_f.coord);
+     Text_Stream->jump_line();
     Insert_Node_in_Nodes(nodes, nodes.N+1, q_new_f); //Insertar nodo al final de la lista nodes, internamente se aumenta el valor de nodes.N
     //Print("Node added",q_new_f.coord[0],q_new_f.coord[1],q_new_f.coord[2]);
  #ifdef OPENCV_DRAW
@@ -769,7 +772,7 @@ void RRT::Initialize_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl
     /*vector<std::vector<double> > R=Rroll;
     cout<<" Matriz "<<R[0][0]<<" "<<R[0][1]<<" "<<R[0][2]<<endl;
     cout<<" Matriz "<<R[1][0]<<" "<<R[1][1]<<" "<<R[1][2]<<endl;
-    cout<<" Matriz "<<R[2][0]<<" "<<R[2][1]<<" "<<R[2][2]<<endl;*/  
+    cout<<" Matriz "<<R[2][0]<<" "<<R[2][1]<<" "<<R[2][2]<<endl;*/
 }
 void RRT::Initialize_Inv_Transf_Matrices(vector<VectorDbl > &Rpitch,vector<VectorDbl > &Rroll,vector<VectorDbl > &Ryaw, int &It)
 {

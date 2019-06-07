@@ -21,7 +21,7 @@ public:
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image  = cv::Mat( image_size, image_size, CV_8UC3,cv::Scalar(255,255,255));
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
-        White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
+        White_Imag  = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
 
         nm = 70;
         pt = prof_expl;
@@ -114,7 +114,7 @@ public:
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1);
     VectorDbl  Angles_Calculation( VectorDbl P0,  VectorDbl P1,  VectorDbl P2);
     double     Distance(VectorDbl P0, VectorDbl P1);
-    bool       Check_Boundaries(VectorDbl Point);    
+    bool       Check_Boundaries(VectorDbl Point);
     void       Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
     VectorDbl  steer(VectorDbl qr,VectorDbl qn,double min_ndist,double EPS);
     void       Insert_Node_in_Nodes(Nodes &nodes,int nIndx, Node node);
@@ -142,7 +142,7 @@ public:
     void Load_Img(const cv::Mat img){image_Ptraj=img;return;}
     const bool get_finish(){return finish;}
     void ResetImagePtraj(){
-        #ifdef OPENCV_DRAW 
+        #ifdef OPENCV_DRAW
         White_Imag.copyTo(image_Ptraj);White_Imag.copyTo(image);
         #endif
         return;}
