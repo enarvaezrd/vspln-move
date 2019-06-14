@@ -1,7 +1,6 @@
 #ifndef TRAJECTORY_CLIENT
 #define TRAJECTORY_CLIENT
-#include"includes.hpp"
-
+#include"map_gen.hpp"
 
 
 #define NUM_JOINTS 6

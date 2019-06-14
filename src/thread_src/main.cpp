@@ -7,12 +7,24 @@
 using namespace std;
 int main(int argc, char** argv)
 {
+    //===========VARIABLES===================
+
+    int image_size=800;
+     
+    int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
+    int d_pr_m = 3;     // datos previos a usar para calculo de mean values
+    int prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
+    int Map_size = 4000;
+    float scale = 1.0;
+    //=======================================
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
     ros::Rate loop_rate(30);
     Printer Print;
     rrt_planif::RRT RRT_model;
-    PredNs::Prediction Predict_B;
+    PredNs::Prediction Predict_B(image_size,d_prv, d_pr_m, prof_expl,Map_size,scale);
+    ObstacleMapGen ObstacleMap(Map_size,scale);
+
     ua_ns::uav_arm_tools UavArm_tools;
     sleep(1.0);
 
@@ -120,6 +132,9 @@ int main(int argc, char** argv)
         auto clA=std::chrono::high_resolution_clock::now();
     while(ros::ok())
     {
+
+        Predict_B.Load_Map(ObstacleMap.get_Map());//Load Obstacle Map
+        Predict_B.Draw_Map();
         geometry_msgs::Pose CurrentArmPose;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();//desde el brazo
 
@@ -154,7 +169,6 @@ int main(int argc, char** argv)
             //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process
             UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
             m.unlock();
-
            
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
             
@@ -167,6 +181,7 @@ int main(int argc, char** argv)
             Predict_B.Selection();
             RRT_model.loop_start();
         }
+
 
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
@@ -190,7 +205,16 @@ int main(int argc, char** argv)
 //            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();
     }
-    });
+});
+auto laser_thread = std::thread([&](){
+    ros::Rate loop_rate_map(30);
+    while (ros::ok())
+    {
+        ObstacleMap.CreateMap();
+        loop_rate_map.sleep();
+    }
+});
+
    // if (rrt_thread.joinable()) rrt_thread.join();
 //if (main_thread.joinable()) main_thread.join();
 rrt_threadB.detach();

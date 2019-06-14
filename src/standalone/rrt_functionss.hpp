@@ -122,10 +122,10 @@ public:
     bool getLoopState(){return sequence_loop;}
     void reset_nodes_reordered(){nodes_reordered=0;}
 
-    void PrintNode(cv::Mat ,VectorDbl );
+    void PrintNode(cv::Mat ,VectorDbl);
     void loop_start();
     void loop_end();
-    //For Simulator=====================
+    //===================For Simulator=====================
     void tic();
     std::chrono::microseconds toc();
     std::chrono::time_point<std::chrono::high_resolution_clock>  tic_o();

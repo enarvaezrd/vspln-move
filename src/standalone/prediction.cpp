@@ -214,6 +214,9 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
+
+    Check_Recover_Trajectory();
+    SmoothTrajectory();
     TP_Mtx.unlock();
     first_tr=true;
     //Print("step-Prediction -7 ",tr_brk);
@@ -223,24 +226,206 @@ return;
 
 void Prediction::CreateMap()
 {
-    for (int w = 0; w < MapSize; w++)
+    cout<<"Creating MAP "<<endl;
+    for (int x = 0; x < MapSize; x++)
     {
-        for (int h = 0; h < MapSize; h++)
+        //cout<<w<<": ";
+        for (int y = 0; y < MapSize; y++)
         {
-            ObstacleMap[w][h]=0;
-            if (w>10 && w<20 &&h>30&&h<50)
-                ObstacleMap[w][h]=1;
+            ObstacleMap[x][y]=0;
+            //cout<<h<<": "<<ObstacleMap[w][h]<<", ";
+           // if (x>1900 && x<2100 && y>3450 && y<3580)// down
+           //if (x>3400 && x<3600 && y>1900 && y<2100)// right
+            if (x>400 && x<600 && y>1900 && y<2100)//left
+                {
+                    ObstacleMap[x][y]=1;
+                    cv::circle( image_Ptraj, cv::Point( round((((x-(MapSize-1)/2)/MapResolution)+maxsc)*scale),round((((y-(MapSize-1)/2)/MapResolution)+maxsc)*scale) ), 0.1, Colors[0],  2, 8 );
+                }
         }
+       // cout<<endl;
     }
+    return;
 }
 
+void Prediction::Check_Recover_Trajectory()//should be executed in sequence
+{
+    //CHECK transformations cells <-> Real word xy coords
+    cout<<"size "<<Tr.xval.size()<<endl;
+    Etraj Tr_Cells=Tr_to_Cells(Tr);  //convert to cell coords
+    Etraj Final_Tr=Tr;
+    cout<<"converted\n";
+    int max_iter=200;
+    std::string tendency_v("none");
+    std::string tendency_h("none");
+    for (int i=Tr_Cells.xval.size()-1; i >=0; i--)
+    {
+        bool horiz=false;
+        if (i>0)
+        {
+            double diffx =  abs(Tr_Cells.xval[i]- Tr_Cells.xval[i-1]);
+            double diffy =  abs(Tr_Cells.yval[i]- Tr_Cells.yval[i-1]);
+            if(diffx>diffy) horiz=true;
+        }
+            
 
+        int x = Tr_Cells.xval[i];
+        int y = Tr_Cells.yval[i];
+        if (ObstacleMap[x][y]>0)
+        {
+            cout<<"CHECK ATTEMPT\n";
+             int inc=0;
+             float ch=1;
+             bool found_better=false;
+             int xchk,ychk;
+            for(int j=0; j < max_iter ;j++ )
+            {
+                if(!horiz)
+                {
+                    xchk=x+inc; ychk=y;  //right
+                    if (Check_Map_Coord(xchk,ychk) && tendency_h!="left")
+                    {
+                        tendency_h="right";
+                        found_better=true; break;
+                    }
+                    xchk=x-inc; ychk=y;  //left
+                    if (Check_Map_Coord(xchk,ychk) && tendency_h!="right")
+                    {
+                        tendency_h="left";
+                        found_better=true; break;
+                    }
+                }
+                else
+                {
+                     xchk=x; ychk=y+inc;  //top
+                    if (Check_Map_Coord(xchk,ychk) && tendency_v!="bottom")
+                    {
+                        tendency_v="top";
+                        found_better=true; break;
+                    }
+                    xchk=x; ychk=y-inc;  //bottom
+                    if (Check_Map_Coord(xchk,ychk) && tendency_v!="top")
+                    {
+                        tendency_v="bottom";
+                        found_better=true; break;
+                    }
+                }
+                xchk=x+inc; ychk=y+inc;  //top-right
+                if (Check_Map_Coord(xchk,ychk) && tendency_v!="bottom" && tendency_h!="left")
+                {
+                    tendency_h="right";
+                    tendency_v="top";
+
+                    found_better=true; break;
+                }
+                xchk=x-inc; ychk=y-inc;  //top-left
+                if (Check_Map_Coord(xchk,ychk) && tendency_v!="bottom" && tendency_h!="right")
+                {
+                    tendency_h="left";
+                    tendency_v="top";
+                    found_better=true; break;
+                }
+                xchk=x+inc; ychk=y-inc;  //bottom-right
+                if (Check_Map_Coord(xchk,ychk) && tendency_v!="top" && tendency_h!="left")
+                {
+                    tendency_h="right";
+                    tendency_v="bottom";
+                    found_better=true; break;
+                }
+                xchk=x-inc; ychk=y-inc;  //bottom-left
+                if (Check_Map_Coord(xchk,ychk) && tendency_v!="top" && tendency_h!="right")
+                {
+                    tendency_h="left";
+                    tendency_v="bottom";
+                    found_better=true; break;
+                }
+                inc++;
+            }
+            if (found_better)
+            {
+                cout<<"Prev, x: "<<Tr.xval[i]<<"y: "<<Tr.yval[i]<<endl;
+                Tr.xval[i]=(xchk-((MapSize-1)/2))/MapResolution;
+                Tr.yval[i]=(ychk-((MapSize-1)/2))/MapResolution;
+                cout<<"Post, x: "<<Tr.xval[i]<<"y: "<<Tr.yval[i]<<endl;
+            }
+        }
+    }
+    Tr_old = Tr;
+    cout<<"cont\n";
+    for (int i=0; i < Tr_Cells.xval.size(); i++)
+    {
+        cv::circle( image_Ptraj, cv::Point( round(( Tr.xval[i]+maxsc)*scale),round(( Tr.yval[i]+maxsc)*scale) ), 1, Colors[i],  2, 8 );
+    }
+    return;
+}
+
+void Prediction::SmoothTrajectory()
+{
+    for (int j=0; j <2; j++)
+    {
+        for (int i=0; i<Tr.xval.size()-1 ; i++)
+        {
+            if (i!=0 && i!=Tr.xval.size()-1)
+            {
+                double diffx =  abs(Tr.xval[i]- Tr.xval[i-1]);
+                double diffy =  abs(Tr.yval[i]- Tr.yval[i-1]);
+                if (diffx>0.004 && diffy>0.004)
+                {
+                    double meanx, meany;
+                    if (i==Tr.xval.size()-2)
+                    {
+                        meanx = (Tr.xval[i] +  Tr.xval[i-1])/2;
+                        meany = (Tr.yval[i] +  Tr.yval[i-1])/2;
+                    }
+                    else
+                    {
+                        meanx = (Tr.xval[i] + Tr.xval[i+1] + Tr.xval[i-1])/3;
+                        meany = (Tr.yval[i] + Tr.yval[i+1] + Tr.yval[i-1])/3;
+                    }
+                    Tr.xval[i] = meanx;
+                    Tr.yval[i] = meany;
+                }
+            }
+        }
+    }
+    
+}
+
+Etraj Prediction::Tr_to_Cells(Etraj tr)
+{
+    Etraj Traj_Cells=tr;
+    int HalfMapSize = (MapSize-1)/2;
+    for (int i=0;i<tr.xval.size();i++)
+    {
+        if (tr.xval[i]>=max_dimm) tr.xval[i]=max_dimm;
+        if (tr.yval[i]>=max_dimm) tr.yval[i]=max_dimm;
+        if (tr.xval[i]<=-max_dimm) tr.xval[i]=-max_dimm;
+        if (tr.yval[i]<=-max_dimm) tr.yval[i]=-max_dimm;
+       // cout<<Traj_Cells.xval[i] <<", "<<tr.xval[i] <<", "<<MapResolution<<", "<<HalfMapSize +  round(tr.xval[i]*MapResolution)<<endl;
+        Traj_Cells.xval[i] = HalfMapSize + round(tr.xval[i]*MapResolution); //now between 0 and MapSize
+        Traj_Cells.yval[i] = HalfMapSize + round(tr.yval[i]*MapResolution);
+        Traj_Cells.zval[i] = HalfMapSize + round(tr.zval[i]*MapResolution);
+
+    }
+    return Traj_Cells;
+}
+
+bool Prediction::Check_Map_Coord(int x, int y)
+{
+
+    if (x>=0&&x<MapSize&&y>=0&&y<MapSize)
+    {
+        if (ObstacleMap[x][y]==0)
+            return true;
+        else
+            return false;
+    }
+    else    
+        return false;
+}
 
 struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose)
 {
-#ifdef OPENCV_DRAW
-    White_Imag.copyTo(image_Ptraj);
-#endif
+
     //  image_Ptraj = White_Imag.clone();//.setTo(cv::Scalar(255,255,255));
     //Print("tiempo GEN MATRIZ",toc());
     mean.vx = 0.0;
@@ -496,7 +681,7 @@ void Prediction::CheckandFix_Boundaries(std::vector<double>  &x, std::vector<dou
              }
     #ifdef OPENCV_DRAW
     //mtxA.lock();
-      cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, Colors[i],  2, 8 );
+     // cv::circle( image_Ptraj, cv::Point( round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale) ), 1, Colors[i],  2, 8 );
     //mtxA.unlock();
     #endif
      // Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
@@ -591,10 +776,10 @@ void Prediction::Selection()
          int adv = int( 0.01*advance_f);
         for (int i=0;i<RoadIndexes.size()-1;i++)
         {
-               int iR=RoadIndexes[i];
+            int iR=RoadIndexes[i];
             int iRN=RoadIndexes[i+1];
            
-              if (i==RoadIndexes.size()-2-adv) 
+            if (i==RoadIndexes.size()-2-adv) 
                 cv::circle( image_Ptraj, cv::Point( (nodes.coord[iR][0] +maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ), 5, Colors[5],CV_FILLED,  3, 8 );
        
             cv::line( image_Ptraj, cv::Point((nodes.coord[iR][0]+maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ),
@@ -614,6 +799,10 @@ return;
 
 void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
+    #ifdef OPENCV_DRAW
+    White_Imag.copyTo(image_Ptraj);
+#endif
+    CreateMap();
     //tic();
     //Print("-------RRt Sequence A-------------");
     XYMean_Calculation(Marker_Abs_Pose);
@@ -622,6 +811,7 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer 
     //Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
    // Print("AAA tiempo Traj Predict",toc());
+   
    
     return;    
 

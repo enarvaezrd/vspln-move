@@ -38,8 +38,15 @@ class Prediction{
          NodesCharged=false;
         first_tr=true;
         advance_f=0;
-        MapSize=100;
-        MapResolution=0.01;
+        max_dimm = 0.4;
+        MapSize = 4001;
+        MapResolution = (MapSize-1)/(max_dimm*2.0);
+         ObstacleMap.resize(MapSize);
+
+        for (int i=0;i<MapSize;i++) 
+                ObstacleMap[i].resize(MapSize);
+            
+
     }
     
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -47,6 +54,13 @@ class Prediction{
     void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     
+    //new 
+    void CreateMap();
+    void Check_Recover_Trajectory();
+    Etraj Tr_to_Cells(Etraj tr);
+    bool Check_Map_Coord(int x, int y);
+    void SmoothTrajectory();
+
     const Etraj Get_TR(){return Tr;}
     int Get_Adv(){return adv;}
     const int Get_TRbr(){return tr_brk;}
@@ -58,7 +72,7 @@ class Prediction{
     const cv::Mat getImage_Ptraj(){ return image_Ptraj;}
     double Distance(VectorDbl P0, VectorDbl P1);
     void Selection();
-    void Prediction::CreateMap();
+   
     private:
     struct rrtns::MeanValues mean;
 
@@ -89,9 +103,11 @@ class Prediction{
     bool NodesAvailable;
     bool NodesCharged;
     int advance_f;
+    
     int MapSize;
-    int MapResolution;
+    double MapResolution;
     std::vector<std::vector<int> > ObstacleMap;
+    float max_dimm;
     };
 }
 

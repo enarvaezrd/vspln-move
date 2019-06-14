@@ -342,7 +342,6 @@ void RRT::Nodes_Reorder()
     return;
 }
 
-
 void RRT::RRT_Generation()
 {
     int Num_Added_Nodes=NumNodesToAdd;
@@ -351,7 +350,6 @@ void RRT::RRT_Generation()
     int count=0;
     int countReg=0;
     Text_Stream->write_TimeStamp();
-     
     //RRT_AddOldCoords();
      Print("********Recycled nodes",nodes.N-oldSize);
     for (int j=0;j <prof_expl ;j++)//(int j=prof_expl-1;j >= 0 ;j--)

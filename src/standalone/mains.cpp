@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     auto rrt_thread = std::thread([&](){
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     cv::namedWindow("ImagepTraj", 0);
-    cv::resizeWindow("ImagepTraj", 1500,1500);
+    cv::resizeWindow("ImagepTraj", 800,800);
         bool sequence_loop_th=false;
         bool Thread_Run=true;
         int cnTh=0;
@@ -101,11 +101,9 @@ int main(int argc, char** argv)
             cv::imshow("Image1",imageA);
             cv::waitKey(1);
         #endif
-
-        
-           // RRT_model.loop_start();
+            RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(60));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             //Print("finish already paused");
             Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

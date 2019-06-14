@@ -59,6 +59,7 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/trajectory_client.cpp
 	src/thread_src/rrt_functions.cpp
 	src/thread_src/prediction.cpp
+	src/thread_src/map_gen.cpp
 	#include
 	src/thread_src/uav_arm_tools.hpp
 	src/thread_src/prediction.hpp
@@ -66,6 +67,7 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/trajectory_client.hpp
 	src/thread_src/includes.hpp
 	src/thread_src/rrt_functions.hpp
+	src/thread_src/map_gen.hpp
 	)
 
 target_link_libraries(ed_pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})

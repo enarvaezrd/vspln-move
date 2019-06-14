@@ -28,6 +28,9 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseArray.h>
 
+//Prediction
+#include<sensor_msgs/LaserScan.h>
+
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -101,14 +104,24 @@ struct Vicinity{
    VectorDbl N;
    int L;
 };
-
+struct LaserDataS{
+    VectorDbl ranges;
+    VectorDbl intensities;
+    float range_min;
+    float range_max;
+    float min_angle;
+    float max_angle;
+    float angle_increment;
+    int size;
+    bool state;
+};
 
 
 
 class Printer{
 public:
     Printer(){}
-    void operator()(std::string str, double a = -1111, double b = -1111 , double c = -1111,double d = -1111,double e = -1111,double f = -1111)
+    void operator()(std::string str, double a = -1111, double b = -1111 , double c = -1111,double d = -1111,double e = -1111,double f = -1111, double g = -1111)
     {
         #ifndef PRINT 
             return;
@@ -120,6 +133,7 @@ public:
         input.push_back(d);
         input.push_back(e);
         input.push_back(f);
+        input.push_back(g);
         int strSize=0;
         std::cout<<"> "<<str<<": ";
         strSize += 4;
@@ -138,6 +152,8 @@ public:
             }
 
         }
+        std::cout<<'\b';
+        std::cout<<' ';
         std::cout<<"\n";
         for (int i = 0; i < strSize; i++)
         {

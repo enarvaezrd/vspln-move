@@ -8,17 +8,19 @@ namespace PredNs{
 class Prediction{
 
     public:
-    Prediction(){
-        
-        image_size=800;
-        d_prv = 5;      // profundidad de datos previos disponibles para prediccion
-        d_pr_m = 3;     // datos previos a usar para calculo de mean values
-        prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
+    Prediction(int img_size_,int d_prv_, int d_pr_m_,int prof_expl_,int map_size_, float scale_) :
+    image_size(img_size_),
+    d_prv(d_prv_),
+    d_pr_m(d_pr_m_),
+    prof_expl(prof_expl_),
+    MapSize(map_size_+1),
+    max_dimm(scale_)
+    {
         adv=1;
         acum_values = 0;
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
-        maxsc = 0.45;
+        maxsc = max_dimm;
         scale = floor(image_size/(2*maxsc));
         acum_x.resize((d_prv+1));
         acum_y.resize((d_prv+1));
@@ -38,14 +40,24 @@ class Prediction{
          NodesCharged=false;
         first_tr=true;
         Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
-        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
+        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");        
+        HalfMapSize = (MapSize-1)/2;
+        MapResolution = (MapSize-1)/(max_dimm*2.0);
     }
-    
+
+
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
     void Regression(VectorDbl x,VectorDbl y,int ndatos,int it,int order, VectorDbl &coeffs);
     void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     
+    void Load_Map(std::vector<VectorInt > Map){ ObstacleMap=Map; return;}
+    void Draw_Map();
+    void Check_Recover_Trajectory();
+    Etraj Tr_to_Cells(Etraj tr);
+    bool Check_Map_Coord(int x, int y);
+    void SmoothTrajectory();
+
     const Etraj Get_TR(){return Tr;}
     int Get_Adv(){return adv;}
     const int Get_TRbr(){return tr_brk;}
@@ -89,6 +101,12 @@ class Prediction{
     bool NodesCharged;
     TextStream *Text_Stream_TR;
     TextStream *Text_Stream_Path;
+
+    int max_dimm;
+    int MapSize;
+    int HalfMapSize;
+    double MapResolution;
+    std::vector<VectorInt > ObstacleMap;
     };
 }
 
