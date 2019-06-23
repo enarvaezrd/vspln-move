@@ -500,7 +500,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     return ArmPoseReq;
 }
 
-geometry_msgs::Pose uav_arm_tools::Calc_AbsoluteUAVPose()
+geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 {
     geometry_msgs::Pose quad_pose;
 

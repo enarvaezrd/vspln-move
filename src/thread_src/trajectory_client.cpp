@@ -32,6 +32,7 @@ namespace edArm_trajectory
 
     void FollowTrajectoryClient::jointStateCB(const sensor_msgs::JointState::ConstPtr &msg)
     {
+         
       std::vector<double> ordered_js;
       ordered_js.resize(NUM_JOINTS);
 
@@ -54,6 +55,7 @@ namespace edArm_trajectory
       ROS_INFO_ONCE("Got joint state!");
       current_joint_state_ = ordered_js;
       got_joint_state_ = true;
+      
     }
 
     //! Sends the command to start a given trajectory
@@ -71,7 +73,7 @@ namespace edArm_trajectory
             val=minv;
         return;
     }
-
+    
     control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTrajectory(std::vector<double> joints_obj)
     {
         const size_t NUM_TRAJ_POINTS = 2;
@@ -102,17 +104,18 @@ namespace edArm_trajectory
           if (!ros::ok())
             exit(-1);
         }
+        got_joint_state_ = false;
         double Wait_Time = wait_time_calc(req_positions);
 
         trajectory_msgs::JointTrajectory trajectory;
         trajectory.joint_names = joint_names_;
         trajectory.points.resize(NUM_TRAJ_POINTS);
         // trajectory point:0
-        trajectory.points[0].time_from_start = ros::Duration(0.003);
+        trajectory.points[0].time_from_start = ros::Duration(0.04);
         trajectory.points[0].positions.resize(NUM_JOINTS);
         trajectory.points[0].positions = current_joint_state_;
         // trajectory point:1
-        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.003); //Ttimer quitar el 0.005
+        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.04); //Ttimer quitar el 0.005
         trajectory.points[1].positions.resize(NUM_JOINTS);
         trajectory.points[1].positions = req_positions;
 

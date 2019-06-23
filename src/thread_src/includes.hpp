@@ -29,7 +29,10 @@
 #include <geometry_msgs/PoseArray.h>
 
 //Prediction
-#include<sensor_msgs/LaserScan.h>
+#include <sensor_msgs/LaserScan.h>
+
+//UAV control message
+#include <geometry_msgs/Twist.h>
 
 #include <thread>
 #include <mutex>
@@ -39,72 +42,91 @@
 #define PI 3.141592654
 #define PRINT
 
-
-using namespace std;  
-struct Position_{
-    double x,y,z;
+using namespace std;
+struct Position_
+{
+    double x, y, z;
 };
-struct Orientation_{
-    double w,x,y,z;
+struct Orientation_
+{
+    double w, x, y, z;
+};
+struct Angles
+{
+    float yaw, roll, pitch;
+};
+
+struct Quat
+{
+    double x, y, z, w;
 };
 
 typedef vector<double> VectorDbl;
 typedef vector<int> VectorInt;
 
 typedef std::chrono::high_resolution_clock Clock;
-struct Nodes{
-   vector<VectorDbl >  coord;
-   vector<VectorDbl >  coordT;
-   VectorDbl cost;
-   VectorDbl costParent;
-   vector<int >   parent;
-   vector<int >   id;  //No usado por ahora
-   vector<int >   region;
-   int N;                   //Numero de nodos activos
+struct Nodes
+{
+    vector<VectorDbl> coord;
+    vector<VectorDbl> coordT;
+    VectorDbl cost;
+    VectorDbl costParent;
+    vector<int> parent;
+    vector<int> id; //No usado por ahora
+    vector<int> region;
+    int N; //Numero de nodos activos
 };
 
-struct Node{
-     VectorDbl coord;
-     VectorDbl coordT;
-     double cost;
-     double costParent;
-     int parent;
-     int id;
-     int region;
+struct Node
+{
+    VectorDbl coord;
+    VectorDbl coordT;
+    double cost;
+    double costParent;
+    int parent;
+    int id;
+    int region;
 };
-struct Etraj { //Trajectory vector
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
-     VectorDbl w;
-     VectorDbl x;
-     VectorDbl y;
-     VectorDbl z;
+struct Etraj
+{ //Trajectory vector
+    VectorDbl xval;
+    VectorDbl yval;
+    VectorDbl zval;
+    VectorDbl w;
+    VectorDbl x;
+    VectorDbl y;
+    VectorDbl z;
 };
-struct Position { //Only position
-     double xval;
-     double yval;
-     double zval;
+struct Position
+{ //Only position
+    double xval;
+    double yval;
+    double zval;
 };
-struct Positions { //Only positions
-     VectorDbl xval;
-     VectorDbl yval;
-     VectorDbl zval;
+struct Positions
+{ //Only positions
+    VectorDbl xval;
+    VectorDbl yval;
+    VectorDbl zval;
 };
-namespace rrtns{
-    struct MeanValues{
-        double vx,vy,vz;
-    };
-}
-struct Vicinity{
-   vector<VectorDbl >  TP;
-   vector<vector<long double> >  R;
-   //std::vector<std::vector<VectorDbl > > RP;
-   vector<VectorDbl > angles;
-   VectorDbl N;
-   int L;
+namespace rrtns
+{
+struct MeanValues
+{
+    double vx, vy, vz;
 };
-struct LaserDataS{
+} // namespace rrtns
+struct Vicinity
+{
+    vector<VectorDbl> TP;
+    vector<vector<long double>> R;
+    //std::vector<std::vector<VectorDbl > > RP;
+    vector<VectorDbl> angles;
+    VectorDbl N;
+    int L;
+};
+struct LaserDataS
+{
     VectorDbl ranges;
     VectorDbl intensities;
     float range_min;
@@ -116,16 +138,15 @@ struct LaserDataS{
     bool state;
 };
 
-
-
-class Printer{
+class Printer
+{
 public:
-    Printer(){}
-    void operator()(std::string str, double a = -1111, double b = -1111 , double c = -1111,double d = -1111,double e = -1111,double f = -1111, double g = -1111)
+    Printer() {}
+    void operator()(std::string str, double a = -1111, double b = -1111, double c = -1111, double d = -1111, double e = -1111, double f = -1111, double g = -1111)
     {
-        #ifndef PRINT 
-            return;
-        #endif 
+#ifndef PRINT
+        return;
+#endif
         std::vector<double> input;
         input.push_back(a);
         input.push_back(b);
@@ -134,11 +155,11 @@ public:
         input.push_back(e);
         input.push_back(f);
         input.push_back(g);
-        int strSize=0;
-        std::cout<<"> "<<str<<": ";
+        int strSize = 0;
+        std::cout << "> " << str << ": ";
         strSize += 4;
         strSize += str.size();
-        for(auto i : input )
+        for (auto i : input)
         {
             //std::cout<<i;
             if (i != -1111)
@@ -146,73 +167,77 @@ public:
                 std::ostringstream str_s;
                 str_s << i;
                 std::string str_t = str_s.str();
-                std::cout<<i<<", ";
+                std::cout << i << ", ";
                 strSize += 2;
                 strSize += str_t.size();
             }
-
         }
-        std::cout<<'\b';
-        std::cout<<' ';
-        std::cout<<"\n";
+        std::cout << '\b';
+        std::cout << ' ';
+        std::cout << "\n";
         for (int i = 0; i < strSize; i++)
         {
-            std::cout<<'\b';
+            std::cout << '\b';
         }
         return;
     }
-
 };
-class TextStream{
-    public:
-    TextStream(string text_file){
+class TextStream
+{
+public:
+    int limiter;
+    bool activated;
+
+    TextStream(string text_file) : limiter(-110),
+                                   activated(false)
+    {
         outputfile.open(text_file);
-        limiter = -110;
     }
-   /* ~TextStream(){
+    /* ~TextStream(){
         outputfile.close();
     }*/
 
     void write_Data(double data)
     {
+        if (activated)
             outputfile << data << ";";
     }
-     void write_Data(string data)
+    void write_Data(string data)
     {
+        if (activated)
             outputfile << data << ";";
     }
     void write_Data(VectorDbl data)
     {
-        for(int i=0;i<data.size();i++)
-            outputfile << data[i] << ";";
+        if (activated)
+            for (int i = 0; i < data.size(); i++)
+                outputfile << data[i] << ";";
     }
     void write_TimeStamp()
     {
-        auto time_point = std::chrono::system_clock::now();
-        std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
-        std::stringstream ss;
-        ss << now_c;
-         outputfile << to_string(now_c) << ";";
+        if (activated)
+        {
+            auto time_point = std::chrono::system_clock::now();
+            std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+            std::stringstream ss;
+            ss << now_c;
+            outputfile << to_string(now_c) << ";";
 
-        auto tse = time_point.time_since_epoch();
-        auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
-        auto now_s = std::chrono::duration_cast<std::chrono::seconds>(tse);
-        auto jst_ms = now_ms - now_s;
-        
-        outputfile << jst_ms.count() << ";"<<limiter<<";\n";
+            auto tse = time_point.time_since_epoch();
+            auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+            auto now_s = std::chrono::duration_cast<std::chrono::seconds>(tse);
+            auto jst_ms = now_ms - now_s;
+
+            outputfile << jst_ms.count() << ";" << limiter << ";\n";
+        }
     }
-   
 
-     void jump_line()
+    void jump_line()
     {
+        if (activated)
             outputfile << "\n";
     }
     ofstream outputfile;
-    int limiter;
 };
-
-
-
-
 
 #endif

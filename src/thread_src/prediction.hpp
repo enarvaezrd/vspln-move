@@ -7,7 +7,7 @@ using namespace std;
 namespace PredNs{
 class Prediction{
 
-    public:
+public:
     Prediction(int img_size_,int d_prv_, int d_pr_m_,int prof_expl_,int map_size_, float scale_) :
     image_size(img_size_),
     d_prv(d_prv_),
@@ -21,7 +21,7 @@ class Prediction{
         image_Ptraj = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         White_Imag = cv::Mat( image_size, image_size, CV_8UC3 ,cv::Scalar(255,255,255));
         maxsc = max_dimm;
-        scale = floor(image_size/(2*maxsc));
+        scale = floor(image_size/(2.0*maxsc));
         acum_x.resize((d_prv+1));
         acum_y.resize((d_prv+1));
         f_dist=0.1;
@@ -40,7 +40,7 @@ class Prediction{
          NodesCharged=false;
         first_tr=true;
         Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
-        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");        
+        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
         HalfMapSize = (MapSize-1)/2;
         MapResolution = (MapSize-1)/(max_dimm*2.0);
     }
@@ -51,10 +51,11 @@ class Prediction{
     void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     
-    void Load_Map(std::vector<VectorInt > Map){ ObstacleMap=Map; return;}
+    void Load_Map(std::vector<VectorInt > Map, std::vector<Position> OP){ ObstacleMap=Map; Obstacle_Points=OP; return;}
     void Draw_Map();
     void Check_Recover_Trajectory();
     Etraj Tr_to_Cells(Etraj tr);
+    double Cell_to_Real(int point_cell);
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();
 
@@ -70,7 +71,7 @@ class Prediction{
     double Distance(VectorDbl P0, VectorDbl P1);
     void Selection();
     bool get_Stop_RRT_Flag(){flagMtx.lock();bool flag=Stop_RRT_flag;flagMtx.unlock();return flag; }
-    private:
+private:
     struct rrtns::MeanValues mean;
 
     VectorDbl acum_x;
@@ -102,11 +103,13 @@ class Prediction{
     TextStream *Text_Stream_TR;
     TextStream *Text_Stream_Path;
 
-    int max_dimm;
+    float max_dimm;
     int MapSize;
     int HalfMapSize;
     double MapResolution;
+    
     std::vector<VectorInt > ObstacleMap;
+     std::vector<Position> Obstacle_Points;
     };
 }
 

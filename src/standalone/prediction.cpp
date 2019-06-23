@@ -239,6 +239,7 @@ void Prediction::CreateMap()
             if (x>400 && x<600 && y>1900 && y<2100)//left
                 {
                     ObstacleMap[x][y]=1;
+                    
                     cv::circle( image_Ptraj, cv::Point( round((((x-(MapSize-1)/2)/MapResolution)+maxsc)*scale),round((((y-(MapSize-1)/2)/MapResolution)+maxsc)*scale) ), 0.1, Colors[0],  2, 8 );
                 }
         }

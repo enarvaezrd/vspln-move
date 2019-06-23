@@ -214,8 +214,8 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         }
         fixed_dist=f_dist;
     }
-    //Check_Recover_Trajectory();
-    //SmoothTrajectory();
+    Check_Recover_Trajectory();
+    SmoothTrajectory();
     TP_Mtx.unlock();
     first_tr=true;
     //Print("step-Prediction -7 ",tr_brk);
@@ -240,7 +240,6 @@ void Prediction::Check_Recover_Trajectory()//should be executed in sequence
             double diffy =  abs(Tr_Cells.yval[i]- Tr_Cells.yval[i-1]);
             if(diffx>diffy) horiz=true;
         }
-            
 
         int x = Tr_Cells.xval[i];
         int y = Tr_Cells.yval[i];
@@ -377,7 +376,12 @@ Etraj Prediction::Tr_to_Cells(Etraj tr)
     }
     return Traj_Cells;
 }
-
+double Prediction::Cell_to_Real(int point_cell)
+{
+    double RealPoint = ((point_cell-(MapSize-1)/2.0)/MapResolution);
+    //Print("real point ",RealPoint);
+    return RealPoint;
+}
 
 bool Prediction::Check_Map_Coord(int x, int y)
 {
@@ -743,26 +747,28 @@ void Prediction::Selection()
             Print("fail finding nodes", nodes.N);
         }
 
-
         Text_Stream_Path->write_TimeStamp();
         Text_Stream_Path->write_Data(nodes.coord[RoadIndexes[0]]);
         Text_Stream_Path->jump_line();
         for (int i=0;i<RoadIndexes.size()-1;i++)
         {
-               int iR=RoadIndexes[i];
+            int iR=RoadIndexes[i];
             int iRN=RoadIndexes[i+1];
-              if (i==RoadIndexes.size()-2) 
+            if (i==RoadIndexes.size()-2) 
                 cv::circle( image_Ptraj, cv::Point( (nodes.coord[iR][0] +maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ), 5, Colors[5],CV_FILLED,  3, 8 );
-       
             cv::line( image_Ptraj, cv::Point((nodes.coord[iR][0]+maxsc)*scale,(nodes.coord[iR][1]+maxsc)*scale ),
                 cv::Point((nodes.coord[iRN][0]+maxsc)*scale,(nodes.coord[iRN][1]+maxsc)*scale ),
                 cv::Scalar( 00, 230, 50 ),  2, 8 );
-        Text_Stream_Path->write_Data(nodes.coord[iRN]);
-        Text_Stream_Path->jump_line();
+
+            Text_Stream_Path->write_Data(nodes.coord[iRN]);
+            Text_Stream_Path->jump_line();
         }
+        
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[VS_Node_Indx][0] +maxsc)*scale,(nodes.coord[VS_Node_Indx][1]+maxsc)*scale ), 6, Colors[0],CV_FILLED,  3, 8 );
         cv::circle( image_Ptraj, cv::Point( (nodes.coord[RRTVS_Indx][0] +maxsc)*scale,(nodes.coord[RRTVS_Indx][1]+maxsc)*scale ), 6, Colors[1],CV_FILLED,  3, 8 );
+       
         //Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
+        
         NodesMtx.unlock();
         NodesAvailable = false;
        
@@ -782,15 +788,12 @@ return;
 
 void Prediction::Draw_Map()
 {
-    for (int i=0;i<MapSize;i++)
+//    Print("OBS SIZE" ,Obstacle_Points.size() );
+
+    for (int i=0;i<Obstacle_Points.size();i++)
     {
-         for (int j=0;j<MapSize;j++)
-         {
-             if(ObstacleMap[i][j]==1)
-             {
-                 cv::circle( image_Ptraj, cv::Point( (i+maxsc)*scale,(j+maxsc)*scale ), 0.1, Colors[0],CV_FILLED,  3, 8 );
-             }
-         }
+        //Print("drawing",i, Obstacle_Points[i].xval, Obstacle_Points[i].yval);
+        cv::circle( image_Ptraj, cv::Point(  (float)(Obstacle_Points[i].xval), (float)(Obstacle_Points[i].yval) ), 1, cv::Scalar(190, 190, 190),1);
     }
     return;
 }
@@ -800,6 +803,8 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer 
     #ifdef OPENCV_DRAW
     White_Imag.copyTo(image_Ptraj);
     #endif
+    
+    
     //tic();
    // Print("-------RRt Sequence A-------------");
     XYMean_Calculation(Marker_Abs_Pose);
@@ -808,7 +813,7 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer 
    // Print("-------RRt2 TrajPredict------------");
     Trajectory_Prediction(Marker_Abs_Pose);
    // Print("AAA tiempo Traj Predict",toc());
-
+    
 
 
    

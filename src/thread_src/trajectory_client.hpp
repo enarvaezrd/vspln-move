@@ -1,6 +1,6 @@
 #ifndef TRAJECTORY_CLIENT
 #define TRAJECTORY_CLIENT
-#include"map_gen.hpp"
+#include "map_gen.hpp"
 
 
 #define NUM_JOINTS 6
@@ -30,8 +30,8 @@ namespace edArm_trajectory
       void boundValue(double& val, double maxv,double minv);
       void jointStateCB(const sensor_msgs::JointState::ConstPtr &msg);
       double wait_time_calc(std::vector<double> joints);
-
-
+      std::chrono::time_point<std::chrono::high_resolution_clock> start;
+      Printer Print;
 
     };
 }
