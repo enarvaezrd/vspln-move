@@ -43,7 +43,7 @@ public:
         PIDdata.Ki = 0.04;
         counter = 0;
         rad_ext = 0.4;
-        rad_int = 0.2;
+        rad_int = 0.22;
 
         sub_UAVmark = nh_ua.subscribe("/tag_detections_pose", 1, &uav_arm_tools::Marker_Handler, this);
         oldPos_ci.x.resize(6);

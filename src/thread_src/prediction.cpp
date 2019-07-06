@@ -89,7 +89,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { 
             fixed_dist=0.003; 
             Stop_RRT_flag=true;
-            Print("fixed in 0.003");//antes era 0.1. Para cuando el UAV esta quieto
+           // Print("fixed in 0.003");//antes era 0.1. Para cuando el UAV esta quieto
         }
         else {
             fixed_dist=f_dist; 
@@ -788,21 +788,20 @@ return;
 
 void Prediction::Draw_Map()
 {
-//    Print("OBS SIZE" ,Obstacle_Points.size() );
+
 
     for (int i=0;i<Obstacle_Points.size();i++)
     {
         //Print("drawing",i, Obstacle_Points[i].xval, Obstacle_Points[i].yval);
         cv::circle( image_Ptraj, cv::Point(  (float)(Obstacle_Points[i].xval), (float)(Obstacle_Points[i].yval) ), 1, cv::Scalar(190, 190, 190),1);
     }
+   Print("DRAW MAP OBS SIZE" ,Obstacle_Points.size() );
     return;
 }
 
 void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer vecindad
 {
-    #ifdef OPENCV_DRAW
-    White_Imag.copyTo(image_Ptraj);
-    #endif
+ 
     
     
     //tic();
@@ -820,6 +819,13 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose)//extraer 
     return;    
 
 }
+void Prediction::ClearImage_Ptraj()
+{
+   #ifdef OPENCV_DRAW
+    White_Imag.copyTo(image_Ptraj);
+    #endif
+}
+
 double Prediction::Distance(VectorDbl P0, VectorDbl P1)
 {        
     return  sqrt(((P1[0]-P0[0])*(P1[0]-P0[0]))+ ((P1[1]-P0[1])*(P1[1]-P0[1]))+((P1[2]-P0[2])*(P1[2]-P0[2])));

@@ -18,7 +18,7 @@
  <!--ROBOT1-->
  <group ns="robot1">
   	
-  	 <node pkg="ed_pmov" type="pmov" name="pmov" output="screen" /
+  	 <node pkg="ed_pmov" type="pmov" name="pmov" output="screen"/>
 	 <include file="$(find dynamixel_moveit_arm)/launch/demo.launch" >
 		 <arg name="z" default="0.05"/>
 	 	 <arg name="x" default="0.0"/> <!-- -1.5-->

@@ -123,7 +123,7 @@ int main(int argc, char** argv)
            }
            while(!sequence_loop_th && ros::ok())
            {
-               Print("RRT paused ");
+               //Print("RRT paused ");
                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                sequence_loop_th = RRT_model.getLoopState();
                //ros::spinOnce();
@@ -139,18 +139,19 @@ int main(int argc, char** argv)
         auto clA=std::chrono::high_resolution_clock::now();
     while(ros::ok())
     {
+        Predict_B.ClearImage_Ptraj();
        Predict_B.Load_Map(ObstacleMap.get_Map(),ObstacleMap.get_Obs_Points());//Load Obstacle Map
+
         geometry_msgs::Pose CurrentArmPose;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();//desde el brazo
         
-
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
         RRT_model.ArmModel.tic();
         //cout<<"Estado de marker: "<<UavArm_tools.getTrackingState() <<endl;
         if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
         {//Tracking OK
 
-            geometry_msgs::Pose LocalUAVPose= UavArm_tools.Calc_LocalUAVPose(); //not used for now
+            geometry_msgs::Pose LocalUAVPose= UavArm_tools.Calc_LocalUAVPose();
             Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose);
             TrackingState++;
             //Publicar aqui la pose absoluta del UAV para su control, tracking system
@@ -171,15 +172,15 @@ int main(int argc, char** argv)
 
         if (TrackingState > 1)
         {
-            UavArm_tools.counter_addOne(); //para envio espaciado de orientaciones
+            UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
             m.lock();
-            //UavArm_tools.uavPose_to_ArmPoseReq_full(); //for rrt process
-            UavArm_tools.uavPose_to_ArmPoseReq_arm();  //for visual servoing
+            //UavArm_tools.uavPose_to_ArmPoseReq_full(); // for rrt process
+            UavArm_tools.uavPose_to_ArmPoseReq_arm();  // for visual servoing
             m.unlock();
            
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
             
-            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();//with mutex
+            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
             
             //RRT_modelA.ArmModel.PrintPose("req th pose ",CurrentRequest_Thread);
             //RRT_modelA.Load_NdsReord(RRT_modelB.Get_NdsReord());
@@ -188,9 +189,9 @@ int main(int argc, char** argv)
             Predict_B.Selection();
             RRT_model.loop_start();
         }
-
         
         Predict_B.Draw_Map();
+
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
         std::chrono::microseconds  elapsed_time =RRT_model.ArmModel.toc();
@@ -201,21 +202,21 @@ int main(int argc, char** argv)
        
         RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,2); //type 1 with normal execution, type 2 for last joint preference
         
-        UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count()/1000000; 
+        UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count()/1000000;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
         UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
          
-            cv::Mat imageA=Predict_B.getImage_Ptraj();
-            cv::imshow(window_name,imageA);
-         cv::waitKey(1); 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(35));
-            loop_rate.sleep();
-//            Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
-            clA=std::chrono::high_resolution_clock::now();
+        cv::Mat imageA=Predict_B.getImage_Ptraj();
+        cv::imshow(window_name,imageA);
+        cv::waitKey(1);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(35));
+        loop_rate.sleep();
+//      Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
+        clA=std::chrono::high_resolution_clock::now();
     }
 });
 
-   // if (rrt_thread.joinable()) rrt_thread.join();
+// if (rrt_thread.joinable()) rrt_thread.join();
 //if (main_thread.joinable()) main_thread.join();
 
 rrt_threadB.detach();

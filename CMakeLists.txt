@@ -6,14 +6,12 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
-  tf
   moveit_core
   moveit_ros_planning_interface
   actionlib
   trajectory_msgs
   control_msgs
   sensor_msgs
-  cv_bridge
 )
 
 find_package(OpenCV 3 REQUIRED)
@@ -24,7 +22,6 @@ catkin_package(
  INCLUDE_DIRS #include
 #  LIBRARIES ed_control
  CATKIN_DEPENDS roscpp
-  cv_bridge
   actionlib
   trajectory_msgs
   control_msgs
@@ -37,20 +34,20 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-)
+) 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
- add_executable(pmov src/pmov.cpp
+# add_executable(pmov src/pmov.cpp
 	#include 
-	src/armfcn.h
-	src/rrtfunctions.h
-	src/armbase.h
-	src/uavarmfcns.h
-	src/movfcns.h)
+#	src/armfcn.h
+#	src/rrtfunctions.h
+#	src/armbase.h
+#	src/uavarmfcns.h
+#	src/movfcns.h)
 
 
-target_link_libraries(pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
-add_dependencies(pmov ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+#add_dependencies(pmov ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(ed_pmov src/thread_src/main.cpp
@@ -62,24 +59,16 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/map_gen.cpp
 	src/thread_src/uav_ugv_commands.cpp
 	#include
-	src/thread_src/uav_arm_tools.hpp
-	src/thread_src/prediction.hpp
-	src/thread_src/ed_pmov.hpp
-	src/thread_src/trajectory_client.hpp
-	src/thread_src/includes.hpp
-	src/thread_src/rrt_functions.hpp
-	src/thread_src/map_gen.hpp
-	src/thread_src/uav_ugv_commands.hpp
 	)
 
 target_link_libraries(ed_pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
 add_dependencies(ed_pmov ${catkin_EXPORTED_TARGETS})
 
-add_executable(thrtest src/test/main.cpp)
+#add_executable(thrtest src/test/main.cpp)
 
 
-target_link_libraries(thrtest ${catkin_LIBRARIES} ${OpenCS_LIBS} )
-add_dependencies(thrtest ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(thrtest ${catkin_LIBRARIES} ${OpenCS_LIBS} )
+#add_dependencies(thrtest ${catkin_EXPORTED_TARGETS})
 
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -15,10 +15,10 @@ public:
     float max_uav_correction;
 
     RobotCommands() :
-    uav_xpos(0.05),
-    uav_ypos(0.24),
+    uav_xpos(0.1), 
+    uav_ypos(0.27),
     uav_altitude(1.5),
-    max_uav_correction(0.1)
+    max_uav_correction(0.5)
     {
         uav_msg_pub = nh_uav_ugv_comm.advertise<geometry_msgs::Twist>("/robot2/visual_local_guidance/uav_msg", 1); //commands for the UAV
     }
@@ -26,6 +26,7 @@ public:
     void Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose);
     void Send_Empty_Commands();
     Angles ConvPosetoAngles(geometry_msgs::Pose pose);
+    Printer Print;
 };
 
 #endif

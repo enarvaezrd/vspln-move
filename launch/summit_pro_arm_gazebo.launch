@@ -22,8 +22,6 @@
   </include>
 
 
-
-
 <node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
 <!--  ROBOT1 -->
  <group ns="robot1">
@@ -69,7 +67,10 @@
   </node>
 
  	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/> 
-
-
+<!--Summit_controller-->
+<!--Joystick-->
+   <node name="joystick_node" pkg="joy" type="joy_node" output="screen"/>
+<!--node_controller-->
+   <node name="summit_control" pkg="ed_control" type="summit_control" output="screen"/>
 
 </launch>

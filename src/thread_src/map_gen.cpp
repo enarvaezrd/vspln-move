@@ -23,24 +23,26 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
             int yc = R_to_Cells(yr,false);
             if (xc>=0 && xc<MapSize && yc>=0 && yc<MapSize)
             {
-                ObstacleMapT[xc][yc]=1;               
+                ObstacleMapT[xc][yc]=1;
             }
         }
-    }
+    
     ObstacleMapT = Thicken_Map(ObstacleMapT,obs_pos);
     Map_mtx.lock();
-    ObstacleMap.assign(ObstacleMapT.begin(),ObstacleMapT.end());   
+    ObstacleMap.assign(ObstacleMapT.begin(),ObstacleMapT.end());
     Map_mtx.unlock();
     
     Pts_mtx.lock();
     Obstacle_Points.assign(obs_pos.begin(),obs_pos.end());
     Pts_mtx.unlock();
+    Print("Obstacle Points SIZE",Obstacle_Points.size());
+    }
     return;
 }
 
 std::vector<VectorInt >  ObstacleMapGen::Thicken_Map(std::vector<VectorInt > Obs_Map, std::vector<Position> &obs_positions)
 {
-    obs_positions.clear();
+   // obs_positions.clear();
 
     for (int i=0; i<MapSize; i++){
         for (int j=0; j<MapSize; j++){
@@ -81,6 +83,7 @@ void ObstacleMapGen::Laser_Handler(const sensor_msgs::LaserScan& laser_msg)
 {
       LaserData.size = laser_msg.ranges.size();
       if (LaserData.size>0){
+          
           LaserData.state = true;
           VectorDbl rangesT(laser_msg.ranges.begin(),laser_msg.ranges.end());
           VectorDbl intensitiesT(laser_msg.ranges.begin(),laser_msg.ranges.end());
