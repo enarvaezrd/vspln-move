@@ -4,6 +4,7 @@
 #include "rrt_functions.hpp"
 
 typedef geometry_msgs::Pose Pose_msg;
+typedef apriltag_ros::AprilTagDetectionArray AprilTagPose;
 namespace ua_ns
 {
 
@@ -45,7 +46,7 @@ public:
         rad_ext = 0.4;
         rad_int = 0.22;
 
-        sub_UAVmark = nh_ua.subscribe("/tag_detections_pose", 1, &uav_arm_tools::Marker_Handler, this);
+        sub_UAVmark = nh_ua.subscribe("/tag_detections", 1, &uav_arm_tools::Marker_Handler, this);
         oldPos_ci.x.resize(6);
         oldPos_ci.y.resize(6);
         oldPos_ciFull.x.resize(6);
@@ -56,12 +57,12 @@ public:
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.45;
+        armDelay = 0.045;
         minArmAltitude = 1.1;
         state = 0;
     }
 
-    void Marker_Handler(const geometry_msgs::PoseArray &ma);
+    void Marker_Handler(const AprilTagPose &apriltag_marker_detections);
 
     void counter_addOne();
     void setArmPoseReq(Pose_msg Pose) { ArmPoseReq = Pose; }

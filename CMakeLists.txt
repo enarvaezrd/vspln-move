@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   control_msgs
   sensor_msgs
+apriltag_ros
 )
 
 find_package(OpenCV 3 REQUIRED)
@@ -26,6 +27,7 @@ catkin_package(
   trajectory_msgs
   control_msgs
   sensor_msgs
+  
 #  DEPENDS system_lib
    DEPENDS moveit_core
  moveit_ros_planning_interface

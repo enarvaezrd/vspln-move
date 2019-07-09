@@ -55,7 +55,7 @@
   	</include>
   </group>
  	
-<!--sd -->
+<!--sd
 
  <node pkg="apriltags_ros" type="apriltag_detector_node" name="apriltag_detector" output="screen">
     <remap from="image_rect" to="/robot1/cam/image_raw" />
@@ -64,9 +64,16 @@
     <param name="projected_optics" type="bool" value="true" />
     <rosparam param="tag_descriptions">[{id: 13, size: 0.04, frame_id: odom_combined}]
  </rosparam>
-  </node>
+  </node> -->
 
- 	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/> 
+<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
+			<arg name="camera_name" value="/robot1/cam"/>
+			<arg name="camera_frame" value="/robot1/cam"/>
+			
+			<arg name="image_topic" value="image_raw"/>
+		</include>
+
+ <node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/> 
 <!--Summit_controller-->
 <!--Joystick-->
    <node name="joystick_node" pkg="joy" type="joy_node" output="screen"/>

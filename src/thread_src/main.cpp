@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
     int prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
-    int Map_size = 1000;
+    int Map_size = 500;
     float scale = 1;
     //=======================================
 
@@ -140,8 +140,8 @@ int main(int argc, char** argv)
     while(ros::ok())
     {
         Predict_B.ClearImage_Ptraj();
-       Predict_B.Load_Map(ObstacleMap.get_Map(),ObstacleMap.get_Obs_Points());//Load Obstacle Map
-
+        Predict_B.Load_Map(ObstacleMap.get_Map(),ObstacleMap.get_Obs_Points());//Load Obstacle Map
+        Predict_B.Draw_Map();
         geometry_msgs::Pose CurrentArmPose;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();//desde el brazo
         
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
             RRT_model.loop_start();
         }
         
-        Predict_B.Draw_Map();
+        
 
         //CurrentRequest = UavArm_tools.getArmPoseReq();
         //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
         RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
         //RRT_model.loop_start();
        
-        RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,2); //type 1 with normal execution, type 2 for last joint preference
+        RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,1); //type 1 with normal execution, type 2 for last joint preference
         
         UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count()/1000000;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();

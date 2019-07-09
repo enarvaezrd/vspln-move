@@ -11,12 +11,14 @@ void uav_arm_tools::counter_addOne()
     counter++;
 }
 
-void uav_arm_tools::Marker_Handler(const geometry_msgs::PoseArray &ma)
+void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detections)
 {
-    state = ma.poses.size();
-    if (state == 1)
+    state = apriltag_marker_detections.detections.size();
+    if (state >= 1)
     {
-        marker_pose = ma.poses[0];
+        marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
+       // Print("==State marker ",state,  apriltag_marker_detections.detections[0].pose.header.seq, marker_pose.position.x );
+
     }
     else
     {
@@ -173,7 +175,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
     }
 
     float cx, cy, corg;
-    corg = 0.007; //0.0065
+    corg = 0.005; //0.0065
 
     cx = xc1;
     cy = yc1;

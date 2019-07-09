@@ -111,11 +111,11 @@ namespace edArm_trajectory
         trajectory.joint_names = joint_names_;
         trajectory.points.resize(NUM_TRAJ_POINTS);
         // trajectory point:0
-        trajectory.points[0].time_from_start = ros::Duration(0.04);
+        trajectory.points[0].time_from_start = ros::Duration(Wait_Time+0.01);
         trajectory.points[0].positions.resize(NUM_JOINTS);
-        trajectory.points[0].positions = current_joint_state_;
+        trajectory.points[0].positions = req_positions;
         // trajectory point:1
-        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.04); //Ttimer quitar el 0.005
+        trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.03); //Ttimer quitar el 0.005
         trajectory.points[1].positions.resize(NUM_JOINTS);
         trajectory.points[1].positions = req_positions;
 

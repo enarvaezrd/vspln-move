@@ -26,6 +26,7 @@
 //uav_arm_tools
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseArray.h>
+#include <apriltag_ros/AprilTagDetectionArray.h>
 
 //Prediction
 #include <sensor_msgs/LaserScan.h>
