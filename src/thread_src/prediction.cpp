@@ -10,7 +10,6 @@ using namespace PredNs;
 
 void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
 {
-    
     //1. vicinities_init - conteo de acumulaciones,
     //2. d_pr_m - profundidad de datos previos para acumulaciones,
     //3. d_prv -  profundidad de datos previos para prediccion
@@ -21,7 +20,6 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     //9. flag1 - Bandera de primera entrada, indica creacion de primeras vecinadades y almacenamiento de anterior trayectoria
     //10. tr_brk - Trajectory break, punto de quiebre de trayectorias, indica en donde termina la anterior y empieza la nueva trayectoria. q_tr en matlab
     //11. tr_old - Anterior trayectoria almacenada, para comparar con la nueva tr, y realizar composicion de trayectoria
-
 
     Position CurrentPoint;
     CurrentPoint.xval=Marker_Abs_Pose.position.x;
@@ -37,7 +35,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     traj.zval.resize(prof_expl_adv+1);
    
     
-    double fixed_dist=f_dist;//seria la distancia fija a la que se extiende la prediccion
+    double fixed_dist=rrt_extension;//seria la distancia fija a la que se extiende la prediccion
     double zvalue=eeff_min_height;
 
     TP_Mtx.lock();
@@ -70,7 +68,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         double vx=mean.vx, vy=mean.vy;
         double vxtm=0.002,vytm=0.002;
         float maxdm=0.035,pnd=1.0;
-        const int stepc=10000;
+        const int stepc=1000;
         std::vector<double> xvala(stepc),yvala(stepc);
         //xvala.resize(stepc); si compila estas lineas no son necesarias
         //yvala.resize(stepc);
@@ -84,15 +82,15 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
            // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i]=zvalue;
         }
-        double Fixf_dist = 0.002;
+        double sationary_step_dist = 0.002;
         flagMtx.lock();
-        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= Fixf_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= Fixf_dist) { 
+        if ( abs(acum_x[d_prv]-acum_x[d_prv-1]) <= sationary_step_dist && abs(acum_y[d_prv]-acum_y[d_prv-1]) <= sationary_step_dist) { 
             fixed_dist=0.003; 
             Stop_RRT_flag=true;
            // Print("fixed in 0.003");//antes era 0.1. Para cuando el UAV esta quieto
         }
         else {
-            fixed_dist=f_dist; 
+            fixed_dist=rrt_extension; 
             Stop_RRT_flag=false;
            // Print("fixed in ",fixed_dist);
             }
@@ -212,7 +210,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             }
             CheckandFix_Boundaries(Tr.xval, Tr.yval, prof_expl_adv);
         }
-        fixed_dist=f_dist;
+        fixed_dist=rrt_extension;
     }
     Check_Recover_Trajectory();
     SmoothTrajectory();
@@ -406,9 +404,10 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
     mean.vy = 0.0;
     for(int i = 0;i < d_prv;i++)
     {
-        acum_x[i] = acum_x[i+1];
-        acum_y[i] = acum_y[i+1];
+        acum_x[i] = acum_x[i+1]- ugv_state.velocity_linear.dx * ugv_state_factor;
+        acum_y[i] = acum_y[i+1]- ugv_state.velocity_linear.dy * ugv_state_factor;
     }
+
     acum_x[d_prv] = Marker_Abs_Pose.position.x;
     acum_y[d_prv] = Marker_Abs_Pose.position.y;
     eeff_min_height = Marker_Abs_Pose.position.z; //this is the z value for the entire rrt, modify here to contact phase
@@ -430,10 +429,11 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
     }
     mean.vx /= (acum_values-1); // Acumulacion sobre numero de datos　vx　es la variacion promedio en x
     mean.vy /= (acum_values-1);
+  
 return mean;
 }
 
-void Prediction::Regression(std::vector<double> x,std::vector<double> y,int ndatos,int it,int order, std::vector<double> &coeffs)
+void Prediction::Regression(std::vector<double> x, std::vector<double> y, int ndatos, int it, int order, std::vector<double> &coeffs)
 {
     //x-Valores de X
     //y-Valores de Y
@@ -788,14 +788,11 @@ return;
 
 void Prediction::Draw_Map()
 {
-
-
     for (int i=0;i<Obstacle_Points.size();i++)
     {
         //Print("drawing",i, Obstacle_Points[i].xval, Obstacle_Points[i].yval);
-        cv::circle( image_Ptraj, cv::Point(  (float)(Obstacle_Points[i].xval), (float)(Obstacle_Points[i].yval) ), 1, cv::Scalar(190, 190, 190),1);
+        cv::circle( image_Ptraj, cv::Point(  Obstacle_Points[i].xval,Obstacle_Points[i].yval ), 1, cv::Scalar(190, 190, 190),1);
     }
-   Print("DRAW MAP OBS SIZE" ,Obstacle_Points.size() );
     return;
 }
 

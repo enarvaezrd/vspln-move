@@ -29,10 +29,14 @@ public:
     }
 
     geometry_msgs::Pose getCurrentPose();
+
+    void CheckandFixPoseRequest(geometry_msgs::Pose &pose_req);
     bool ReqMovement_byJointsValues(std::vector<double> );
     bool SendMovement_byJointsValues(std::vector<double> );
-    bool ReqMovement_byPose(geometry_msgs::Pose , int );
-    bool Check_Collision( std::vector<double> , int );
+    bool ReqMovement_byPose(geometry_msgs::Pose );
+    bool ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req);
+   bool Check_Collision_TypeA(std::vector<double> Position);
+   bool Check_Collision_TypeB(std::vector<double> Position);
     void PrintCurrentPose(std::string);
     void PrintPose(std::string , geometry_msgs::Pose );
     std::chrono::microseconds getDelayTime(){return delay_time;}

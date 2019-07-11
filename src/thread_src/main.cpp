@@ -16,14 +16,15 @@ int main(int argc, char** argv)
     int prof_expl = 13;  // Profundidad de exploracion  Esz=prof_f
     int Map_size = 500;
     float scale = 1;
+    double rrt_extension = 0.15; //extension of each rrt step for regression
     //=======================================
 
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
-    ros::Rate loop_rate(30);
+    ros::Rate loop_rate(20);
     Printer Print;
     rrt_planif::RRT RRT_model;
-    PredNs::Prediction Predict_B(image_size,d_prv, d_pr_m, prof_expl,Map_size,scale);
+    PredNs::Prediction Predict_B(image_size,d_prv, d_pr_m, prof_expl,Map_size,scale,rrt_extension);
     ObstacleMapGen ObstacleMap(Map_size,scale,image_size);
     RobotCommands Robot_Commands;
 
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
 
     UavArm_tools.setArmPoseReq(target_pose);
     target_pose = UavArm_tools.getArmPoseReq();
-    bool reqState=RRT_model.ArmModel.ReqMovement_byPose(target_pose,1);
+    bool reqState=RRT_model.ArmModel.ReqMovement_byPose(target_pose);
     sleep(1.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
     geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
 
    auto rrt_threadB = std::thread([&](){
-       ros::Rate loop_rate_thread(30);
+       ros::Rate loop_rate_thread(20);
        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
        bool sequence_loop_th=false;
        //sleep(6.0);
@@ -109,8 +110,8 @@ int main(int argc, char** argv)
                 //Print("b33",sequence_loop_th);
                 #ifdef OPENCV_DRAW
                     cv::Mat image = RRT_model.getImage_Ptraj();
-                    //cv::imshow("ImageSeqB",image);
-                    //cv::waitKey(1); 
+                    cv::imshow("ImageSeqB",image);
+                    cv::waitKey(1); 
                 #endif
                 //std::cout<<"Seq B time: "<<RRT_modelB.ArmModel.toc(clB).count()<<std::endl;
                // Print("==SEQUENCE B TIME ",RRT_model.ArmModel.toc(clB).count());
@@ -180,10 +181,11 @@ int main(int argc, char** argv)
            
             UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
             
-            CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
-            
+            //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
+            CurrentRequest_Thread = UavArm_tools.getArmPoseReq();// with mutex
             //RRT_modelA.ArmModel.PrintPose("req th pose ",CurrentRequest_Thread);
             //RRT_modelA.Load_NdsReord(RRT_modelB.Get_NdsReord());
+            Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
             Predict_B.Planif_SequenceA(CurrentRequest_Thread);
             Predict_B.Charge_Nodes();
             Predict_B.Selection();
@@ -198,9 +200,9 @@ int main(int argc, char** argv)
 
        // RRT_model.loop_end();
         RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
-        //RRT_model.loop_start();
-       
-        RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread ,1); //type 1 with normal execution, type 2 for last joint preference
+        // RRT_model.loop_start();
+        // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
+        RRT_model.ArmModel.ReqMovement_byPose(CurrentRequest_Thread); //type 1 with normal execution, type 2 for last joint preference
         
         UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count()/1000000;
         CurrentArmPose = RRT_model.ArmModel.getCurrentPose();

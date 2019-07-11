@@ -482,7 +482,7 @@ void RRT::Add_Node(int It)
             tempPosit[0] = rnTemp1[0];
             tempPosit[1] = rnTemp1[1];
             tempPosit[2] = rnTemp1[2];
-            found_ik_tmp = ArmModel.Check_Collision(tempPosit,1); //modo 1 porque no estoy agregando las orientaciones en rnTemp ArmModel.Check_Collision(tempPosit,1);
+            found_ik_tmp = ArmModel.Check_Collision_TypeA(tempPosit); //modo A porque no estoy agregando las orientaciones en rnTemp ArmModel.Check_Collision(tempPosit,1);
         }
    // }
     found_ik=found_ik_tmp;
@@ -631,14 +631,14 @@ void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T,int It)
  #ifdef OPENCV_DRAW
     mtxA.lock();
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-    //cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
-    int stw=3;
+    cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+    //int stw=3;
     //cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
     
     //cv::circle( image, cv::Point( (q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ), 2, Colors[It],CV_FILLED,  1,8 );
     
     // cv::imshow("ImagepTraj",image_Ptraj);
-    // cv::waitKey(1);
+     //cv::waitKey(1);
     mtxA.unlock();
  #endif
     return;

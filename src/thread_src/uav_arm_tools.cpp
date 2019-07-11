@@ -571,7 +571,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         ArmPoseReq.position.y += corry;
     }
     ArmPoseReqFull = ArmPoseReq;
-    int factor = 1;
+    float factor = 5.0;
     ArmPoseReq.position.x = OldArmPoseReq.position.x + (ArmPoseReq.position.x - OldArmPoseReq.position.x) / factor;
     ArmPoseReq.position.y = OldArmPoseReq.position.y + (ArmPoseReq.position.y - OldArmPoseReq.position.y) / factor;
     OldArmPoseReq = ArmPoseReq;

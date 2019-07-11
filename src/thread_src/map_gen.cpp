@@ -66,14 +66,14 @@ std::vector<VectorInt >  ObstacleMapGen::Thicken_Map(std::vector<VectorInt > Obs
                 }
             }
         }
-    }
+    } 
+    Position pT;
     for (int i=0; i<MapSize; i++){
         for (int j=0; j<MapSize; j++){
             if (Obs_Map[i][j] == 2){
                 Obs_Map[i][j] = 1;
-                Position pT;
-                pT.xval=round(i*map_img_factor);
-                pT.yval=round(j*map_img_factor);
+                pT.xval=(i*map_img_factor);
+                pT.yval=(j*map_img_factor);
                 obs_positions.push_back(pT);
             }
         }

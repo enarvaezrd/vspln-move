@@ -10,12 +10,14 @@ class Prediction
 {
 
 public:
-    Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_, float scale_) : image_size(img_size_),
-                                                                                                      d_prv(d_prv_),
-                                                                                                      d_pr_m(d_pr_m_),
-                                                                                                      prof_expl(prof_expl_),
-                                                                                                      MapSize(map_size_ + 1),
-                                                                                                      max_dimm(scale_)
+    Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_,
+               float scale_, double rrt_extension_) : image_size(img_size_),
+                                                           d_prv(d_prv_),
+                                                           d_pr_m(d_pr_m_),
+                                                           prof_expl(prof_expl_),
+                                                           MapSize(map_size_ + 1),
+                                                           max_dimm(scale_),
+                                                           rrt_extension(rrt_extension_)
     {
         adv = 1;
         acum_values = 0;
@@ -25,7 +27,6 @@ public:
         scale = floor(image_size / (2.0 * maxsc));
         acum_x.resize((d_prv + 1));
         acum_y.resize((d_prv + 1));
-        f_dist = 0.1;
         for (int i = 0; i < (d_prv); i++)
         {
             acum_x[i] = 0.0;
@@ -48,6 +49,7 @@ public:
         Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
+        ugv_state_factor = 0.1; //10%
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -103,6 +105,11 @@ public:
         return flag;
     }
     void ClearImage_Ptraj();
+    void Load_UGV_State(RobotState_ ugv_state_)
+    {
+        ugv_state = ugv_state_;
+    }
+
 private:
     struct rrtns::MeanValues mean;
 
@@ -121,8 +128,8 @@ private:
     int image_size;
     double maxsc;
     double scale;
-    double f_dist;
     double acum_values;
+    double rrt_extension;
     std::vector<cv::Scalar> Colors;
     bool Stop_RRT_flag;
     Printer Print;
@@ -138,6 +145,8 @@ private:
     int MapSize;
     int HalfMapSize;
     double MapResolution;
+    RobotState_ ugv_state;
+    float ugv_state_factor;
 
     std::vector<VectorInt> ObstacleMap;
     std::vector<Position> Obstacle_Points;

@@ -57,7 +57,7 @@ public:
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.045;
+        armDelay = 0.4;  //.035
         minArmAltitude = 1.1;
         state = 0;
     }

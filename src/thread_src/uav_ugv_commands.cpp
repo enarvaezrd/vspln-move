@@ -74,5 +74,23 @@ void RobotCommands::Send_Empty_Commands()
     uav_command.angular.z = 0.0;
     uav_msg_pub.publish(uav_command);
 }
+void RobotCommands::UGV_Odom_Handler(const nav_msgs::Odometry &ugv_odom)
+{
+    ugv_state.position.x = ugv_odom.pose.pose.position.x;
+    ugv_state.position.y = ugv_odom.pose.pose.position.y;
+    ugv_state.position.z = ugv_odom.pose.pose.position.z;
+    ugv_state.orientation.x = ugv_odom.pose.pose.orientation.x;
+    ugv_state.orientation.y = ugv_odom.pose.pose.orientation.y;
+    ugv_state.orientation.z = ugv_odom.pose.pose.orientation.z;
+    ugv_state.orientation.w = ugv_odom.pose.pose.orientation.w;
+
+    ugv_state.velocity_linear.dx = ugv_odom.twist.twist.linear.x;
+    ugv_state.velocity_linear.dy = ugv_odom.twist.twist.linear.y;
+    ugv_state.velocity_linear.dz = ugv_odom.twist.twist.linear.z;
+    ugv_state.velocity_angular.dx = ugv_odom.twist.twist.angular.x;
+    ugv_state.velocity_angular.dy = ugv_odom.twist.twist.angular.y;
+    ugv_state.velocity_angular.dz = ugv_odom.twist.twist.angular.z;
+    return;
+}
 
 #endif

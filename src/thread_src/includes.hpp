@@ -33,6 +33,7 @@
 
 //UAV control message
 #include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 
 #include <thread>
 #include <mutex>
@@ -45,20 +46,32 @@
 using namespace std;
 struct Position_
 {
-    double x, y, z;
+    double x = 0.0, y = 0.0, z = 0.0;
 };
+struct Velocity_
+{
+    double dx = 0.0, dy = 0.0, dz = 0.0;
+};
+
 struct Orientation_
 {
-    double w, x, y, z;
+    double w = 0.0, x = 0.0, y = 0.0, z = 0.0;
+};
+struct RobotState_
+{
+    Position_ position;
+    Orientation_ orientation;
+    Velocity_ velocity_linear;
+    Velocity_ velocity_angular;
 };
 struct Angles
 {
-    float yaw, roll, pitch;
+    float yaw = 0.0, roll = 0.0, pitch = 0.0;
 };
 
 struct Quat
 {
-    double x, y, z, w;
+    double x = 0.0, y = 0.0, z = 0.0, w = 0.0;
 };
 
 typedef vector<double> VectorDbl;
