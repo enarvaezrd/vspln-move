@@ -75,18 +75,21 @@ public:
     const int Get_TRbr() { return tr_brk; }
     void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose); //extraer vecindad
     //const Nodes Get_Nodes(){return nodes;}
-    void Load_Nodes(Nodes nds)
+    void Load_Nodes(Nodes nds, Vicinity vdr)
     {
+        NodesMtx.lock();
         nodes_cpy = nds;
+        rrt_vicinity_copy=vdr;
+        NodesMtx.unlock();
         NodesAvailable = true;
         return;
     } //Called by B loop
     void Charge_Nodes()
     {
         if (NodesAvailable)
-        {
-            NodesMtx.lock();
+        {   NodesMtx.lock();
             nodes = nodes_cpy;
+            rrt_vicinity = rrt_vicinity_copy;
             NodesMtx.unlock();
             NodesAvailable = false;
             NodesCharged = true;
@@ -110,6 +113,8 @@ public:
         ugv_state = ugv_state_;
     }
 
+    int Img(double point);
+    double rad_to_deg(double rad);
 private:
     struct rrtns::MeanValues mean;
 
@@ -122,6 +127,7 @@ private:
     int adv;       //How many points we are advancing the rrt
 
     cv::Mat White_Imag, image_Ptraj;
+    Vicinity rrt_vicinity, rrt_vicinity_copy;
     Etraj Tr;
     Etraj Tr_old, Tr_temp;
     std::mutex TP_Mtx;

@@ -63,8 +63,13 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	#include
 	)
 
+add_executable(ed_ik_solver src/thread_src/ik_solver/ed_pmov.cpp)
+
 target_link_libraries(ed_pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
 add_dependencies(ed_pmov ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(ed_ik_solver ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+add_dependencies(ed_ik_solver ${catkin_EXPORTED_TARGETS})
 
 #add_executable(thrtest src/test/main.cpp)
 

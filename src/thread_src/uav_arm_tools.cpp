@@ -354,7 +354,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
 
     float cx, cy, corg;
-    corg = armDelay * 1.5; //0.0065
+    corg = 0.0165; //0.0065
 
     //PID implementation
     //Error calculation
@@ -403,7 +403,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     ArmPoseReq.position.x += cx;
     ArmPoseReq.position.y -= cy;
 
-    float max = 0.4;
+    float max = 0.41;
     if (ArmPoseReq.position.x >= max)
         ArmPoseReq.position.x = max; //limitaciones rectangulares
     if (ArmPoseReq.position.x <= -max)
@@ -571,7 +571,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         ArmPoseReq.position.y += corry;
     }
     ArmPoseReqFull = ArmPoseReq;
-    float factor = 5.0;
+    float factor = 1.0;
     ArmPoseReq.position.x = OldArmPoseReq.position.x + (ArmPoseReq.position.x - OldArmPoseReq.position.x) / factor;
     ArmPoseReq.position.y = OldArmPoseReq.position.y + (ArmPoseReq.position.y - OldArmPoseReq.position.y) / factor;
     OldArmPoseReq = ArmPoseReq;

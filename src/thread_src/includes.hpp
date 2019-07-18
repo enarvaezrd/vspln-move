@@ -14,6 +14,7 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <queue>
 
 //traj_client
 
@@ -36,6 +37,7 @@
 #include <nav_msgs/Odometry.h>
 
 #include <thread>
+#include <future>
 #include <mutex>
 #include <condition_variable>
 

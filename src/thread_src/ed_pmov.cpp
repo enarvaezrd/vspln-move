@@ -61,13 +61,13 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req)
 {
     ros::Duration tiempo_traj(0.0);
     //CheckandFixPoseRequest(pose_req);
-    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 2, 0.006);
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.006);
 
     if (fk)
     {
         std::vector<double> jv(6);
         control_msgs::FollowJointTrajectoryGoal goale;
-        kinematic_state->copyJointGroupPositions(joint_model_group, jv);
+        kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], jv);
         goale = arm.makeArmUpTrajectory(jv);
         // tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
         //delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
@@ -88,13 +88,13 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
 {
     ros::Duration tiempo_traj(0.0);
     //CheckandFixPoseRequest(pose_req);
-    bool fk = kinematic_state->setFromIK(joint_model_group, pose_req, 2, 0.025);
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.025);
 
     if (fk)
     {
         std::vector<double> joints_result(6);
         control_msgs::FollowJointTrajectoryGoal goale;
-        kinematic_state->copyJointGroupPositions(joint_model_group, joints_result);
+        kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result);
 
         std::vector<double> joints_result_pos(6);
         geometry_msgs::Pose TPoseTemp = pose_req;
@@ -102,10 +102,10 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         TPoseTemp.orientation.x = 0.0;
         TPoseTemp.orientation.y = 1.0;
         TPoseTemp.orientation.z = 0.0;
-        bool found_ikO = kinematic_state->setFromIK(joint_model_group, TPoseTemp, 1, 0.05);
+        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 1, 0.05);
         if (found_ikO)
         {
-            kinematic_state->copyJointGroupPositions(joint_model_group, joints_result_pos); //de jv saco posicion de joints 0 a 5
+            kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result_pos); //de jv saco posicion de joints 0 a 5
             joints_result[0] = joints_result_pos[0];
             joints_result[1] = joints_result_pos[1];
             joints_result[2] = joints_result_pos[2];
@@ -132,24 +132,6 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
     }
     return fk;
 }
-
-bool Ed_Pmov::Check_Collision_TypeA(std::vector<double> Position)
-//type - 1 para solo posicion y 2 para posicion y orientacion juntas
-{
-    geometry_msgs::Pose CheckPose;
-    CheckPose.position.x = Position[0];
-    CheckPose.position.y = Position[1];
-    CheckPose.position.z = Position[2] - 0.05;
-   
-    CheckPose.orientation.w = 0.0;
-    CheckPose.orientation.x = 0.0;
-    CheckPose.orientation.y = 1;
-    CheckPose.orientation.z = 0.0;
-    //tic();
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 1, 0.0008);
-    //Print("check pose",found_ik,toc().count());
-    return found_ik;
-}
 bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
 //type - 1 para solo posicion y 2 para posicion y orientacion juntas
 {
@@ -157,21 +139,106 @@ bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
     CheckPose.position.x = Position[0];
     CheckPose.position.y = Position[1];
     CheckPose.position.z = Position[2] - 0.05;
-    
+
     CheckPose.orientation.w = Position[3];
     CheckPose.orientation.x = Position[4];
     CheckPose.orientation.y = Position[5];
-    CheckPose.orientation.z = Position[6];    
+    CheckPose.orientation.z = Position[6];
     //tic();
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, CheckPose, 1, 0.0008);
+    //  process_mtx.lock();
+    bool found_ik = kinematic_states_[0]->setFromIK(joint_model_groups_[0], CheckPose, 1, 0.0008);
+    //process_mtx.unlock();
     //Print("check pose",found_ik,toc().count());
     return found_ik;
 }
+inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index)
+//type - 1 para solo posicion y 2 para posicion y orientacion juntas
+{
+    geometry_msgs::Pose CheckPose;
+    CheckPose.position.x = Position[0];
+    CheckPose.position.y = Position[1];
+    CheckPose.position.z = Position[2] -0.05;
+
+    CheckPose.orientation.w = 0.0;
+    CheckPose.orientation.x = 0.0;
+    CheckPose.orientation.y = 1;
+    CheckPose.orientation.z = 0.0;
+    bool found_ik = kinematic_states_[index]->setFromIK(joint_model_groups_[index], CheckPose, 1, 0.006);
+    return found_ik;
+}
+
+void Ed_Pmov::FeedCollisionCheck_Queue(VectorDbl eeff_point, VectorDbl eeff_point_traslation, int region)
+{
+
+    PositionResults position;
+    position.Position = eeff_point;
+    position.Position_Only_T = eeff_point_traslation;
+    position.region = region;
+    //Print("feeding values",eeff_point.size(),eeff_point_traslation.size(),region);
+    eeff_positions_queue.push(position);
+    return;
+}
+void Ed_Pmov::ComputeThread_CollisionCheck(int index)
+{
+    computing_thread_.push_back(std::thread([&]() {
+        int index_th = index_ks;
+        Print("THREAD CREATION", index_th);
+        PositionResults eeff_position;
+        PositionResults position_results_t;
+        while (true)
+        {
+            bool input_state = eeff_positions_queue.pop(eeff_position);
+            if (input_state)
+            {
+                //Print("Calculating", index_th);
+                bool state = Check_Collision_Indx(eeff_position.Position, index_th);
+                // Print("result to be created",index_th);
+                position_results_t.Position = eeff_position.Position;
+                position_results_t.Position_Only_T = eeff_position.Position_Only_T;
+                position_results_t.region = eeff_position.region;
+                std::pair<bool, PositionResults> result_N = std::make_pair(state, position_results_t);
+                eeff_positions_results.push(result_N);
+                // Print("result stored",index_th);
+            }
+            else
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+    }));
+    std::this_thread::sleep_for(std::chrono::milliseconds(75));
+    return;
+}
+
+std::pair<bool, PositionResults> Ed_Pmov::RetrieveResults()
+{
+    bool result_retrieved = false;
+    std::pair<bool, PositionResults> result;
+
+    result.first = false;
+    while (!result_retrieved)
+    {
+        bool state = eeff_positions_results.pop(result);
+        if (state)
+        {
+            result_retrieved = true;
+            return result;
+        }
+        else
+        {
+            result_retrieved = false;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+    return result;
+}
+
 
 geometry_msgs::Pose Ed_Pmov::getCurrentPose()
 {
     currentPose = group.getCurrentPose().pose;
-    return currentPose;
+    auto currentPoseT = currentPose;
+    return currentPoseT;
 }
 
 void Ed_Pmov::PrintCurrentPose(std::string workspace)

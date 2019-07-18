@@ -16,8 +16,8 @@ public:
     float max_uav_correction;
 
     RobotCommands() :
-    uav_xpos(0.1), 
-    uav_ypos(0.27),
+    uav_xpos(0.13), 
+    uav_ypos(0.22),
     uav_altitude(1.5),
     max_uav_correction(0.5)
     {
