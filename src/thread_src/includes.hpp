@@ -153,6 +153,8 @@ struct LaserDataS
     bool state;
 };
 
+void MinMax_Correction(double &value, double max_value);
+void MinMax_Correction(float &value, double max_value);
 class Printer
 {
 public:

@@ -12,14 +12,14 @@ class RRT
 
 public:
     Ed_Pmov ArmModel;
-    RRT(int image_size_, int d_prv_, int d_pr_m_, int prof_expl_,int scale_, int NumNodesToAdd_) : ArmModel(), 
-                                                                                        d_prv(d_prv_), d_pr_m(d_pr_m_),
-                                                                                        prof_expl(prof_expl_), image_size(image_size_),
-                                                                                        NumNodesToAdd(NumNodesToAdd_),
-                                                                                        scale(scale_)
+    RRT(int image_size_, int d_prv_, int d_pr_m_, int prof_expl_, int scale_, int NumNodesToAdd_) : ArmModel(),
+                                                                                                    d_prv(d_prv_), d_pr_m(d_pr_m_),
+                                                                                                    prof_expl(prof_expl_), image_size(image_size_),
+                                                                                                    NumNodesToAdd(NumNodesToAdd_),
+                                                                                                    scale(scale_)
     {
         sequence_loop = false;
-        MaxOldNodesReg = NumNodesToAdd;    // Max number of nodes to save
+        MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
         image = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
         image_Ptraj = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
         White_Imag = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
@@ -86,6 +86,15 @@ public:
         EPS = 0.004;           //Maximo movimiento Revisar  0.005  0.007
         TrajNodesIncluded = 2;
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
+        emptyMatrix.resize(3);
+        for (int i = 0; i < 3; i++)
+        {
+            emptyMatrix[i].resize(3);
+            for (int j = 0; j < 3; j++)
+            {
+                emptyMatrix[i][j] = 0.0;
+            }
+        }
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -97,8 +106,10 @@ public:
     //void Regression(VectorDbl x,VectorDbl y,int ndatos,int it,int order, VectorDbl &coeffs);
     //void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     //struct MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
-    void delete_branch(int indx);
-    void Add_Node(int It, int num_nodes);
+    void delete_branch(int);
+    int Add_Node(int, int);
+
+    void RetrieveNodes(int);
 
     void RRT_Generation();
     void RRT_AddValidCoord(VectorDbl, VectorDbl, int);
@@ -228,6 +239,7 @@ private:
     int TrajNodesIncluded;
     std::vector<int> Old_Nodes_Added_Reg;
     TextStream *Text_Stream;
+    vector<VectorDbl> emptyMatrix;
 };
 
 } // namespace rrt_planif

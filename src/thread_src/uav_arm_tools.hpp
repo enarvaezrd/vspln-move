@@ -39,14 +39,15 @@ public:
         PIDdata.time = 0;
         PIDdata.integralx = 0;
         PIDdata.integraly = 0;
-        PIDdata.Kp = 0.25;
-        PIDdata.Kd = 0.05;
-        PIDdata.Ki = 0.04;
+        PIDdata.Kp = 0.04;
+        PIDdata.Kd = 0.001;
+        PIDdata.Ki = 0.0000;
         counter = 0;
         rad_ext = 0.38;
         rad_int = 0.23;
 
         sub_UAVmark = nh_ua.subscribe("/tag_detections", 1, &uav_arm_tools::Marker_Handler, this);
+
         oldPos_ci.x.resize(6);
         oldPos_ci.y.resize(6);
         oldPos_ciFull.x.resize(6);
@@ -58,7 +59,7 @@ public:
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
         armDelay = 0.02;  //.035
-        minArmAltitude = 1.1;
+        minArmAltitude = 0.72;
         state = 0;
     }
 
@@ -88,8 +89,8 @@ public:
         ArmPoseReqFull.position.z = altitude;
     }
 
-    struct Quat ArmOrientReq_toQuaternion(double yaw_Mark, Pose_msg cpose);
-    struct Quat Angles_toQuaternion(double pitch, double roll, double yaw);
+    struct Quat ArmOrientReq_toQuaternion(double , Pose_msg );
+    struct Quat Angles_toQuaternion(double , double , double );
     struct Angles ConvPosetoAngles(Pose_msg);
 
     void UpdateArmCurrentPose(Pose_msg);
@@ -97,8 +98,14 @@ public:
     Pose_msg Calc_LocalUAVPose();          //Local pose from camera to manip coord
     Pose_msg uavPose_to_ArmPoseReq_full(); //=100%
     Pose_msg uavPose_to_ArmPoseReq_arm();  //<100%
-    void ArmPoseReq_decreaseAlt(float dz_less);
+    void ArmPoseReq_decreaseAlt(float);
 
+
+    void PID_Calculation(double& a , double &b );
+    Pose_msg ExternalCircle_Corrections(Pose_msg, Pose_msg);
+    Pose_msg InnerCircle_Corrections(Pose_msg, Pose_msg, int);
+
+    float Load_PID_time(double time){ PIDdata.time = time;}
     float getArmDelay() { return armDelay; }
     Pose_msg getMarkerPose() { return marker_pose; }
     int getTrackingState() { return state; }
@@ -120,6 +127,7 @@ private:
     float armDelay;
     ros::NodeHandle nh_ua;
     mutex m_uatools;
+
     Positions2D oldPos_ci;
     Positions2D oldPos_ciFull;
 };

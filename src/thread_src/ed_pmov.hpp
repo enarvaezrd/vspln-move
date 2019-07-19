@@ -62,7 +62,7 @@ public:
     Ed_Pmov() : group("pro_arm") , 
                 robot_model_loader("robot1/robot_description")
     {
-        num_IK_requests = 4;
+        num_IK_requests = 20;
         index_ks = 0;
         group.setPlannerId("RRTConnectkConfigDefault");//PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);//0.004
@@ -73,26 +73,25 @@ public:
         {
             kinematic_models_.push_back(robot_model_loader.getModel());
         }
+        
+        for(int i=0; i<=num_IK_requests; i++)
+        {
+            robot_state::RobotStatePtr kA(new robot_state::RobotState(kinematic_models_[i]));
+            kinematic_states_.push_back(kA);
+        }
 
-        robot_state::RobotStatePtr kA(new robot_state::RobotState(kinematic_models_[0]));
-        robot_state::RobotStatePtr k1(new robot_state::RobotState(kinematic_models_[1]));
-        robot_state::RobotStatePtr k2(new robot_state::RobotState(kinematic_models_[2]));
-        robot_state::RobotStatePtr k3(new robot_state::RobotState(kinematic_models_[3]));
-        robot_state::RobotStatePtr k4(new robot_state::RobotState(kinematic_models_[4]));
-
-
-        kinematic_states_.push_back(kA);
-        kinematic_states_.push_back(k1);
-        kinematic_states_.push_back(k2);
-        kinematic_states_.push_back(k3);
-        kinematic_states_.push_back(k4);
+        for(int i=0; i<=num_IK_requests;i++)
+            kinematic_states_[i]->setToDefaultValues();
 
        // joint_model_group = kinematic_model->getJointModelGroup("pro_arm");
         joint_model_groups_.push_back(kinematic_models_[0]->getJointModelGroup("pro_arm"));
-        joint_model_groups_.push_back(kinematic_models_[1]->getJointModelGroup("pro_arm_aux"));
-        joint_model_groups_.push_back(kinematic_models_[2]->getJointModelGroup("pro_arm_aux1"));
-        joint_model_groups_.push_back(kinematic_models_[3]->getJointModelGroup("pro_arm_aux2"));
-        joint_model_groups_.push_back(kinematic_models_[4]->getJointModelGroup("pro_arm_aux3"));
+        
+        for(int i=1; i<=num_IK_requests;i++)
+        {
+            string group_name = "pro_arm_aux";
+            group_name += std::to_string(i).c_str();
+            joint_model_groups_.push_back(kinematic_models_[i]->getJointModelGroup(group_name));
+        }
         for(int ith=1; ith<=num_IK_requests; ith++)
         {
             ComputeThread_CollisionCheck(ith);
@@ -150,14 +149,14 @@ typedef robot_model_loader::RobotModelLoader RobotModelLoader;//si se pasa a pub
     typedef moveit::planning_interface::MoveItErrorCode ErrorCode;
     typedef moveit_msgs::MoveItErrorCodes MoveitCodes;
 
-    RobotModelLoader robot_model_loader;
+    RobotModelLoader robot_model_loader,robot_model_loader1;
 
     Printer Print;
     std::vector<robot_model::RobotModelPtr> kinematic_models_;
     std::vector<robot_state::RobotStatePtr> kinematic_states_;
     std::vector<const robot_state::JointModelGroup *> joint_model_groups_;
 
-    BlockingQueue<PositionResults> eeff_positions_queue;
+    BlockingQueue<PositionResults> eeff_positions_input_queue;
     BlockingQueue<std::pair<bool, PositionResults> > eeff_positions_results;
 private:
     

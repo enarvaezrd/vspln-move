@@ -19,7 +19,6 @@ bool Ed_Pmov::ReqMovement_byJointsValues(std::vector<double> joints_values)
     else
     {
         Print("NO solution for joint request!");
-        ;
         state = false;
     }
     return state;
@@ -99,8 +98,8 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         std::vector<double> joints_result_pos(6);
         geometry_msgs::Pose TPoseTemp = pose_req;
         TPoseTemp.orientation.w = 0.0;
-        TPoseTemp.orientation.x = 0.0;
-        TPoseTemp.orientation.y = 1.0;
+        TPoseTemp.orientation.x = 1.0;
+        TPoseTemp.orientation.y = 0.0;
         TPoseTemp.orientation.z = 0.0;
         bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 1, 0.05);
         if (found_ikO)
@@ -151,7 +150,7 @@ bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
     //Print("check pose",found_ik,toc().count());
     return found_ik;
 }
-inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index)
+bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index_f)
 //type - 1 para solo posicion y 2 para posicion y orientacion juntas
 {
     geometry_msgs::Pose CheckPose;
@@ -161,9 +160,9 @@ inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int inde
 
     CheckPose.orientation.w = 0.0;
     CheckPose.orientation.x = 0.0;
-    CheckPose.orientation.y = 1;
+    CheckPose.orientation.y = 1.0;
     CheckPose.orientation.z = 0.0;
-    bool found_ik = kinematic_states_[index]->setFromIK(joint_model_groups_[index], CheckPose, 1, 0.006);
+    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0006);
     return found_ik;
 }
 
@@ -175,19 +174,19 @@ void Ed_Pmov::FeedCollisionCheck_Queue(VectorDbl eeff_point, VectorDbl eeff_poin
     position.Position_Only_T = eeff_point_traslation;
     position.region = region;
     //Print("feeding values",eeff_point.size(),eeff_point_traslation.size(),region);
-    eeff_positions_queue.push(position);
+    eeff_positions_input_queue.push(position);
     return;
 }
 void Ed_Pmov::ComputeThread_CollisionCheck(int index)
 {
     computing_thread_.push_back(std::thread([&]() {
-        int index_th = index_ks;
+        int index_th = index;
         Print("THREAD CREATION", index_th);
         PositionResults eeff_position;
         PositionResults position_results_t;
         while (true)
         {
-            bool input_state = eeff_positions_queue.pop(eeff_position);
+            bool input_state = eeff_positions_input_queue.pop(eeff_position);
             if (input_state)
             {
                 //Print("Calculating", index_th);
@@ -202,9 +201,10 @@ void Ed_Pmov::ComputeThread_CollisionCheck(int index)
             }
             else
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+               // std::this_thread::sleep_for(std::chrono::microseconds(50));
             }
         }
+        Print("END OF THREAD",index_th);
     }));
     std::this_thread::sleep_for(std::chrono::milliseconds(75));
     return;
@@ -227,7 +227,7 @@ std::pair<bool, PositionResults> Ed_Pmov::RetrieveResults()
         else
         {
             result_retrieved = false;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
         }
     }
     return result;

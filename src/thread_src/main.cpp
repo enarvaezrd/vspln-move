@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
     sleep(1.0);
-    RRT_model.ArmModel.PrintCurrentPose("STARTING POSEAAAA");
+    RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
     float alturap = 0.72; //0.21
 
     geometry_msgs::Pose target_pose = RRT_model.ArmModel.getCurrentPose();
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     target_pose.position.z = alturap;
 
     UavArm_tools.setArmPoseReq(target_pose);
-    target_pose = UavArm_tools.getArmPoseReq();
+    //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
     sleep(1.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
@@ -217,10 +217,10 @@ int main(int argc, char **argv)
             // RRT_model.loop_end();
            // RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
             // RRT_model.loop_start();
-            // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
+            // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.position.z,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
             RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(CurrentRequest_Thread); //type 1 with normal execution, type 2 for last joint preference
 
-            UavArm_tools.PIDdata.time = RRT_model.ArmModel.getDelayTime().count() / 1000000;
+            UavArm_tools.Load_PID_time( RRT_model.ArmModel.getDelayTime().count() / 1000000);
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
 

@@ -92,6 +92,8 @@ void RRT::Node_Filter()
         }*/
         int allowednodes = 0;
 
+        VectorDbl T1;
+        vector<VectorDbl> Rpitch, Rroll, Ryaw;
         for (int i = 2; i < nodes.N; i++) //from prof_expl
         {
             cn_Old = 0;
@@ -102,15 +104,14 @@ void RRT::Node_Filter()
             }*/
             //  else
             // {
-            for (int k = 1; k < prof_expl; k++)
+            for (int k = prof_expl-1; k >= 1; k--)
             {
-                vector<VectorDbl> Rpitch, Rroll, Ryaw;
                 Initialize_Inv_Transf_Matrices(Rpitch, Rroll, Ryaw, k);
                 xo = nodes.coord[i][0] - vdr.TP[k][0];
                 yo = nodes.coord[i][1] - vdr.TP[k][1];
                 zo = nodes.coord[i][2] - vdr.TP[k][2];
                 VectorDbl pointT{xo, yo, zo};
-                VectorDbl T1 = Rotation(pointT, Rpitch, Rroll, Ryaw);
+                T1 = Rotation(pointT, Rpitch, Rroll, Ryaw);
                 rx = vdr.R[k][0];
                 ry = vdr.R[k][1];
                 rz = vdr.R[k][2];
@@ -159,7 +160,7 @@ void RRT::Node_Filter()
     return;
 }
 
-void RRT::delete_branch(int indx)
+inline void RRT::delete_branch(int indx)
 {
     std::vector<int> parents;
     parents.push_back(indx); //all the branch with this parent is eliminated
@@ -171,17 +172,17 @@ void RRT::delete_branch(int indx)
     int k = 0;
     bool found = false;
     std::vector<int> valid_parents;
-    valid_parents.resize(0);
+    valid_parents.resize(ln);
     while (k < ln)
     {
         found = false;
         for (int j = 0; j < parents.size(); j++)
         {
-            if (parents[j] == nodestemp1.parent[k] && nodestemp1.parent[k] >= -1) //por que los menores a tr_brk no se borran?
+            if (parents[j] == nodestemp1.parent[k] && nodestemp1.parent[k] >= -1) 
             {
                 parents.push_back(k);
-                if (nodestemp1.id[k] != k)
-                    Print(" nodes indx", nodestemp1.id[k], k);
+                //if (nodestemp1.id[k] != k)
+                //    Print(" nodes indx", nodestemp1.id[k], k);
                 Push_Nodes_Elem_in_Nodes(OldNodes, nodes.id[k]);
                 //Print("old nodesV");
                 nodestemp1.parent[k] = -100; //borro el valor de parent para que no vuelva a caer aqui
@@ -211,14 +212,15 @@ void RRT::delete_branch(int indx)
     int badfound = 0;
 
     for (int i = 0; i < ln; i++)
-        valid_parents.push_back(i);
+        valid_parents[i]=i;
 
     //erase parents elements from valid parents vector
     for (int i = 0; i < parents.size(); i++)
         valid_parents.erase(std::remove(valid_parents.begin(), valid_parents.end(), parents[i]), valid_parents.end());
+    int i;
     for (int j = 0; j < valid_parents.size(); j++)
     {
-        int i = valid_parents[j];
+        i = valid_parents[j];
         // if (i>=0 && i<ln){
         /* Fin_Nodes.coord[fcn]      = nodes.coord[i];
             Fin_Nodes.coordT[fcn]     = nodes.coordT[i];
@@ -268,6 +270,7 @@ void RRT::delete_branch(int indx)
     }
     //Print(" ----DB 4---- #nodos al entrar y salir de deletebranch: ",ln,Fin_Nodes.N);
     nodes = Fin_Nodes; //Fin_nodes seria el arreglo de nodos filtrado
+    return;
 }
 
 void RRT::Nodes_Reorder()
@@ -353,10 +356,13 @@ inline void RRT::RRT_Generation()
 {
     int oldSize = nodes.N;
     //Print("********//Nodes size Start", nodes.N);
-    
+
     Text_Stream->write_TimeStamp();
     //RRT_AddOldCoords();
     //Print("********Recycled nodes", nodes.N - oldSize);
+    int num_requests = 0;
+
+    auto ticA = std::chrono::high_resolution_clock::now();
     for (int j = 0; j < prof_expl; j++) //(int j=prof_expl-1;j >= 0 ;j--)
     {
 
@@ -367,17 +373,22 @@ inline void RRT::RRT_Generation()
 #endif
         if (abs(vdr.R[j][0]) >= 0.005)
         {
-            Add_Node(j,NumNodesToAdd); //agrega N nodos cada vez
+            num_requests += Add_Node(j, NumNodesToAdd); //agrega N nodos cada vez
         }
     }
 
-   // Print("NodesOld size, new size",oldSize,nodes.N);
+    Print("Nodes feeding time", ArmModel.toc(ticA).count());
+    auto tic = std::chrono::high_resolution_clock::now();
+    RetrieveNodes(num_requests);
+    Print("Retrieving time", ArmModel.toc(tic).count());
+
+    Print("NodesOld size, new size", oldSize, nodes.N);
     //Stretch_the_Cord();
     Draw_RRT();
 
     return;
 }
-void RRT::Add_Node(int It, int num_nodes)
+int RRT::Add_Node(int It, int num_nodes)
 {
     //Print("ADD nodes region", It);
     double rx = vdr.R[It][0]; //revisar
@@ -421,8 +432,10 @@ void RRT::Add_Node(int It, int num_nodes)
     int max_tries = 5;
     int max_rnd_tries = 5;
     double rnx, rny, rnz;
-    int request_counter=0;
-    while (request_counter < 1.5*num_nodes)
+    int request_counter = 0;
+    int limit_requests = num_nodes + max_tries;
+
+    while (request_counter < limit_requests)
     {
         if (try_count > max_tries)
         {
@@ -476,42 +489,47 @@ void RRT::Add_Node(int It, int num_nodes)
             tempPosit[1] = rnTemp1[1];
             tempPosit[2] = rnTemp1[2];
             //Print("Feed, try count, IT",try_count, It,request_counter);
-            ArmModel.FeedCollisionCheck_Queue(tempPosit,rnTemp_T,It); 
+
+            ArmModel.FeedCollisionCheck_Queue(tempPosit, rnTemp_T, It);
             request_counter++;
         }
         else
         {
             try_count++;
         }
-        
     }
-    std::vector<PositionResults > results_;
-    if (try_count <= max_tries)
+    if (request_counter == 0 && try_count >= max_tries)
     {
-        for(int ic=0;ic<request_counter;ic++)
+        Print("==ERROR, no random point found around this position");
+    }
+
+    return request_counter;
+}
+
+void RRT::RetrieveNodes(int request_counter)
+{
+    std::vector<PositionResults> results_;
+    if (request_counter > 0)
+    {
+        for (int ic = 0; ic < request_counter; ic++)
         {
-           // Print("Retrieving",i,request_counter);
-            std::pair<bool,PositionResults> result = ArmModel.RetrieveResults();
-            if(result.first)
+            // Print("Retrieving",i,request_counter);
+            std::pair<bool, PositionResults> result = ArmModel.RetrieveResults();
+            if (result.first)
             {
                 results_.push_back(result.second);
+                RRT_AddValidCoord(result.second.Position, result.second.Position_Only_T, result.second.region);
             }
         }
-
+        Print("REquests vs Results", request_counter, results_.size());
+        Print("Input Output sizes", ArmModel.eeff_positions_input_queue.size(), ArmModel.eeff_positions_results.size());
+        if (results_.size() == 0)
+            Print("ERROR No points found by IK for this region");
+        //  Print("Input Queue Size",ArmModel.eeff_positions_input_queue.size(),request_counter,results_.size() );
+        //  Print("Output Queue Size",ArmModel.eeff_positions_results.size());
 
         //Print("Difference ",request_counter-results_.size());
         //Print("ADDING RESULTS",results_.size());
-        for(int ir=0;ir<results_.size();ir++)
-        {
-            //auto temp_tic=Clock::now();
-            //Print("Adding",results_[i].region);
-            RRT_AddValidCoord(results_[ir].Position , results_[ir].Position_Only_T, results_[ir].region);
-            //Print("ADD NODE TIME",toc(temp_tic).count());
-        }
-    }
-    else
-    {
-        Print("---ERROR en demasiados valores buscados en el ciclo while----", q_rand[0], q_rand[1]);
     }
     return;
 }
@@ -803,21 +821,10 @@ void RRT::Initialize_Transf_Matrices(vector<VectorDbl> &Rpitch, vector<VectorDbl
 }
 void RRT::Initialize_Inv_Transf_Matrices(vector<VectorDbl> &Rpitch, vector<VectorDbl> &Rroll, vector<VectorDbl> &Ryaw, int &It)
 {
-    Rpitch.resize(3);
-    Rroll.resize(3);
-    Ryaw.resize(3);
-    for (int i = 0; i < 3; i++)
-    {
-        Rpitch[i].resize(3);
-        Rroll[i].resize(3);
-        Ryaw[i].resize(3);
-        for (int j = 0; j < 3; j++)
-        {
-            Rpitch[i][j] = 0;
-            Rroll[i][j] = 0;
-            Ryaw[i][j] = 0;
-        }
-    }
+    Rpitch = emptyMatrix;
+    Rroll = emptyMatrix;
+    Ryaw = emptyMatrix;
+    
     double InvPitch = 0.0 - vdr.angles[It][1];
     double InvRoll = 0.0 - vdr.angles[It][2];
     double InvYaw = 0.0 - vdr.angles[It][0];
@@ -879,15 +886,13 @@ inline VectorDbl RRT::Rotation(VectorDbl Point, vector<VectorDbl> Rpitch, vector
     //     or eliminate the variable.
     return temp;
 }
-VectorDbl RRT::Matrix_Vector_MultiplyA(vector<VectorDbl> Matrix, VectorDbl Vector)
+inline VectorDbl RRT::Matrix_Vector_MultiplyA(vector<VectorDbl> Matrix, VectorDbl Vector)
 {
-    int rowFirst = 3;
-    int columnFirst = 3;
     VectorDbl mult(3);
-    for (int i = 0; i < rowFirst; ++i)
+    for (int i = 0; i < 3; ++i)
     {
-        mult[i] = 0;
-        for (int k = 0; k < columnFirst; ++k)
+        mult[i] = 0.0;
+        for (int k = 0; k < 3; ++k)
         {
             mult[i] += (Matrix[i][k] * Vector[k]);
         }
@@ -968,19 +973,28 @@ void RRT::RRT_SequenceB() //extraer vecindad
 {                         //tic();
     finish = false;
     //Print("//-------RRt3 InitVicinity-----------");
+    auto tic = std::chrono::high_resolution_clock::now();
+
     Initialize_VicinityRRT();
-    //Print("BBtiempo InitVicinity",toc().count());
+    Print("Initialize Vcnty time", ArmModel.toc(tic).count());
+    tic = std::chrono::high_resolution_clock::now();
     //tic();
     //Print("//-------RRt4 NodelFilter------------");
     Node_Filter();
+    Print("Node Filter      time", ArmModel.toc(tic).count());
+    tic = std::chrono::high_resolution_clock::now();
     //Print("BBBtiempo Node Filter",toc().count());
     //tic();
     //Print("//-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
+    Print("Nodes Reorder    time", ArmModel.toc(tic).count());
+    tic = std::chrono::high_resolution_clock::now();
     //Print("BBtiempo Nodes Reorder",toc().count());
     //tic();
     //Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
+    Print("RT Generation    time", ArmModel.toc(tic).count());
+    tic = std::chrono::high_resolution_clock::now();
     //Print("//-------RRt7 Finish-----------------");
     //Print("BBtiempo RRT Gen",toc().count());
     finish = true;

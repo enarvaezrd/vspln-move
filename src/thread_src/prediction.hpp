@@ -49,7 +49,7 @@ public:
         Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
-        ugv_state_factor = 0.1; //10%
+        ugv_state_factor = 0.15; //10%
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);

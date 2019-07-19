@@ -118,9 +118,9 @@ public:
         for(int i=0; i<3;i++)
             kinematic_states_[i]->setToDefaultValues();
         
-        joint_model_groups_.push_back(kinematic_models_[0]->getJointModelGroup("pro_arm_aux"));
-        joint_model_groups_.push_back(kinematic_models_[1]->getJointModelGroup("pro_arm_aux1"));
-        joint_model_groups_.push_back(kinematic_models_[2]->getJointModelGroup("pro_arm_aux2"));
+        joint_model_groups_.push_back(kinematic_models_[0]->getJointModelGroup("pro_arm_aux1"));
+        joint_model_groups_.push_back(kinematic_models_[1]->getJointModelGroup("pro_arm_aux2"));
+        joint_model_groups_.push_back(kinematic_models_[2]->getJointModelGroup("pro_arm_aux3"));
     }
     void FeedCollisionCheck_Queue(geometry_msgs::Pose position)
     {

@@ -17,8 +17,7 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
     if (state >= 1)
     {
         marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
-       // Print("==State marker ",state,  apriltag_marker_detections.detections[0].pose.header.seq, marker_pose.position.x );
-
+        // Print("==State marker ",state,  apriltag_marker_detections.detections[0].pose.header.seq, marker_pose.position.x );
     }
     else
     {
@@ -150,7 +149,6 @@ struct Angles uav_arm_tools::ConvPosetoAngles(geometry_msgs::Pose pose) //Conver
     angles.yaw = yaw;
     return angles;
 }
-
 geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
 //Funcion de convertir 100% pose del UAV a movimiento del Brazo, contiene restricciones basicas de circulos interno y externo
 {
@@ -180,27 +178,15 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
     cx = xc1;
     cy = yc1;
 
-    if (cx > corg)
-        cx = corg;
-    if (cx < -corg)
-        cx = -corg;
-    if (cy > corg)
-        cy = corg;
-    if (cy < -corg)
-        cy = -corg;
+    MinMax_Correction(cx, corg);
+    MinMax_Correction(cy, corg);
 
     ArmPoseReqFull.position.x += cx;
     ArmPoseReqFull.position.y -= cy;
 
-    float max = 0.4;
-    if (ArmPoseReqFull.position.x >= max)
-        ArmPoseReqFull.position.x = max; //limitaciones rectangulares
-    if (ArmPoseReqFull.position.x <= -max)
-        ArmPoseReqFull.position.x = -max;
-    if (ArmPoseReqFull.position.y >= max)
-        ArmPoseReqFull.position.y = max;
-    if (ArmPoseReqFull.position.y <= -max)
-        ArmPoseReqFull.position.y = -max;
+    float max_rectangle = 0.4;
+    MinMax_Correction(ArmPoseReqFull.position.x, max_rectangle); //limitaciones rectangulares
+    MinMax_Correction(ArmPoseReqFull.position.y, max_rectangle);
 
     double cat1, cat2, offx, offy;
     offx = 0.0;
@@ -339,8 +325,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
-    float xc1 = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
-    float yc1 = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
+    double x_correction = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
+    double y_correction = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
     //==========================================================================================================
 
     if (counter > 1)
@@ -353,20 +339,84 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         //Print("ANGLES REQ roll, pitch, yaw",IAngleMark.roll,IAngleMark.pitch,IAngleMark.yaw);
     }
 
-    float cx, cy, corg;
-    corg = 0.0165; //0.0065
+    float corg;
+    corg = 0.008; //0.0065
 
     //PID implementation
     //Error calculation
     //corg=0.15;
-    double errorx = 0 - xc1;
-    double errory = 0 - yc1;
+
+    PID_Calculation(x_correction, y_correction);
+
+    Pose_msg PID_ArmReq = ArmPoseReq;
+
+    PID_ArmReq.position.x -= x_correction;
+    PID_ArmReq.position.y += y_correction;
+
+    // float max_rectangle = 0.4;
+    //  MinMax_Correction(ArmPoseReqFull.position.x, max_rectangle);//limitaciones rectangulares
+    //  MinMax_Correction(ArmPoseReqFull.position.y, max_rectangle);
+
+    double cat1, cat2, offx(0.0), offy(0.0);
+    cat1 = PID_ArmReq.position.x - offx;
+    cat2 = PID_ArmReq.position.y - offy;
+    double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
+
+   // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
+    //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
+   // Print("DifferenceA", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
+
+    //------agregar flag de contacto-------
+    /* 
+    if (rad >= (rad_ext - 0.01))
+    {
+        minArmAltitude -= 0.001;
+        MinMax_Correction(minArmAltitude, 0.69);
+    }
+    else
+    {
+        minArmAltitude += 0.001;
+        MinMax_Correction(minArmAltitude, 0.72);
+    }
+*/
+    //-------------------------------------
+
+    if (rad >= rad_ext)
+    { //Circulo externo
+        PID_ArmReq = ExternalCircle_Corrections(PID_ArmReq, OldArmPoseReq);
+    }
+
+    if (rad <= rad_int)
+    { //Circulo interno
+        PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
+    }
+   //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
+    //difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
+    //Print("DifferenceB", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
+    ArmPoseReq = PID_ArmReq;
+    ArmPoseReqFull = ArmPoseReq;
+    //  float factor = 0.005;
+    // double full_x_correction = (ArmPoseReq.position.x - OldArmPoseReq.position.x);
+    // double full_y_correction = (ArmPoseReq.position.y - OldArmPoseReq.position.y);
+    // MinMax_Correction(full_x_correction, factor);
+    //MinMax_Correction(full_y_correction, factor);
+
+    //ArmPoseReq.position.x = OldArmPoseReq.position.x + full_x_correction;
+    //ArmPoseReq.position.y = OldArmPoseReq.position.y + full_y_correction;
+    OldArmPoseReq = ArmPoseReq;
+    return ArmPoseReq;
+}
+void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
+{
+
+    double errorx = 0.0 - x_correction; //PID on correction
+    double errory = 0.0 - y_correction;
     //Proportional terms
     double Poutx = PIDdata.Kp * errorx;
     double Pouty = PIDdata.Kp * errory;
 
     //Derivative terms
-    double derx = 0, dery = 0;
+    double derx = 0.0, dery = 0.0;
     if (PIDdata.time != 0.0)
     {
         derx = (errorx - PIDdata.ex) / PIDdata.time;
@@ -381,214 +431,150 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     PIDdata.integraly += errory * PIDdata.time;
     double Ioutx = PIDdata.Ki * PIDdata.integralx;
     double Iouty = PIDdata.Ki * PIDdata.integraly;
-
-    double outputx = Poutx + Ioutx + Doutx;
-    double outputy = Pouty + Iouty + Douty;
+    MinMax_Correction(Ioutx,0.01); //as we dont want large corrections
+    MinMax_Correction(Iouty,0.01);
+    double pid_outputx = Poutx + Ioutx + Doutx;
+    double pid_outputy = Pouty + Iouty + Douty;
     // Restrict to max/min
-    if (outputx >= corg)
-        outputx = corg;
-    if (outputx <= -corg)
-        outputx = -corg;
 
-    if (outputy >= corg)
-        outputy = corg;
-    if (outputy <= -corg)
-        outputy = -corg;
-
-    PIDdata.ex = errorx;
+    PIDdata.ex = errorx; //old values for next iteration
     PIDdata.ey = errory;
-    cx = -outputx;
-    cy = -outputy;
 
-    ArmPoseReq.position.x += cx;
-    ArmPoseReq.position.y -= cy;
+    x_correction = pid_outputx;
+    y_correction = pid_outputy;
+    return;
+}
 
-    float max = 0.41;
-    if (ArmPoseReq.position.x >= max)
-        ArmPoseReq.position.x = max; //limitaciones rectangulares
-    if (ArmPoseReq.position.x <= -max)
-        ArmPoseReq.position.x = -max;
-    if (ArmPoseReq.position.y >= max)
-        ArmPoseReq.position.y = max;
-    if (ArmPoseReq.position.y <= -max)
-        ArmPoseReq.position.y = -max;
-
-    double cat1, cat2, offx, offy;
-    offx = 0.0;
-    offy = 0.0;
-    cat1 = ArmPoseReq.position.x - offx;
-    cat2 = ArmPoseReq.position.y - offy;
-    double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
-
+Pose_msg uav_arm_tools::ExternalCircle_Corrections(Pose_msg CurrentPoseReq, Pose_msg OldPoseReq)
+{
     double theta = 0;
-
-    //------agregar flag de contacto-------
-
-    if (rad >= (rad_ext - 0.03))
+    if (CurrentPoseReq.position.x < 0.0)
     {
-        minArmAltitude -= 0.005;
-        if (minArmAltitude <= 0.67)
-        {
-            minArmAltitude = 0.67;
-        }
+        theta = PI + atan(CurrentPoseReq.position.y / CurrentPoseReq.position.x);
     }
     else
     {
-        minArmAltitude += 0.005;
-        if (minArmAltitude >= 0.72)
-        {
-            minArmAltitude = 0.72;
-        }
+        theta = atan(CurrentPoseReq.position.y / CurrentPoseReq.position.x);
     }
+    Pose_msg Result_PoseReq = CurrentPoseReq;
+    Result_PoseReq.position.y = rad_ext * sin(theta);
+    Result_PoseReq.position.x = rad_ext * cos(theta);
+    return Result_PoseReq;
+}
+Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_msg OldPoseReq, int max_correction)
+{
+    double offx = 0.0, offy = 0.0;
+    double theta = 0;
+    float sx = 0, sy = 0, maxC = 1.0;
+    float xf = CurrentPoseReq.position.x, yf = CurrentPoseReq.position.y;
+    float xo = OldPoseReq.position.x, yo = OldPoseReq.position.y;
+    float dx = 1.5 * (xf - xo);
+    float dy = 1.5 * (yf - yo);
 
-    //-------------------------------------
-
-    //Print("Before x, y, z ",ArmPoseReq.position.x,ArmPoseReq.position.y,ArmPoseReq.position.z);
-    if (rad >= rad_ext)
-    { //Circulo externo
-        if (ArmPoseReq.position.x < 0.0)
-        {
-            theta = PI + atan(ArmPoseReq.position.y / ArmPoseReq.position.x);
-        }
-        else
-        {
-            theta = atan(ArmPoseReq.position.y / ArmPoseReq.position.x);
-        }
-
-        ArmPoseReq.position.y = rad_ext * sin(theta);
-        ArmPoseReq.position.x = rad_ext * cos(theta);
-        //Print("After  x, y ",ArmPoseReq.position.x,ArmPoseReq.position.y);
+    if ((xf >= 0) && (-dx > maxC * xf))
+    {
+        dx = -maxC * xf;
     }
+    else
+    {
 
-    if (rad <= rad_int)
-    { //Circulo interno
-        float sx = 0, sy = 0;
-        float xf = ArmPoseReq.position.x, yf = ArmPoseReq.position.y;
-        float xo = OldArmPoseReq.position.x, yo = OldArmPoseReq.position.y;
-        float dx = 1.5 * (xf - xo);
-        float dy = 1.5 * (yf - yo), maxC = 1.0;
-
-        if ((xf >= 0) && (-dx > maxC * xf))
+        if ((xf < 0) && (-dx < maxC * xf))
         {
             dx = -maxC * xf;
         }
-        else
-        {
+    }
 
-            if ((xf < 0) && (-dx < maxC * xf))
-            {
-                dx = -maxC * xf;
-            }
-        }
-
-        if ((yf >= 0) && (-dy > maxC * yf))
+    if ((yf >= 0) && (-dy > maxC * yf))
+    {
+        dy = -maxC * yf;
+    }
+    else
+    {
+        if ((yf < 0) && (-dy < maxC * yf))
         {
             dy = -maxC * yf;
         }
-        else
-        {
-            if ((yf < 0) && (-dy < maxC * yf))
-            {
-                dy = -maxC * yf;
-            }
-        }
-
-        for (int i = 0; i < 5; i++)
-        {
-            oldPos_ci.x[i] = oldPos_ci.x[i + 1];
-            oldPos_ci.y[i] = oldPos_ci.y[i + 1];
-        }
-
-        oldPos_ci.x[5] = dx;
-        oldPos_ci.y[5] = dy;
-        double dxa = (oldPos_ci.x[0] + oldPos_ci.x[1] + oldPos_ci.x[2] + oldPos_ci.x[3] + oldPos_ci.x[4] + oldPos_ci.x[5]) / 6;
-        double dya = (oldPos_ci.y[0] + oldPos_ci.y[1] + oldPos_ci.y[2] + oldPos_ci.y[3] + oldPos_ci.y[4] + oldPos_ci.y[5]) / 6;
-        // Print("RADIO",rad);
-        dx = dxa;
-        dy = dya;
-
-        if ((xo > 0) && (xf < 0) || (xo < 0) && (xf > 0))
-        {
-            sx = xf - offx + (dx / 30);
-        }
-        else
-        {
-            sx = xf - offx + dx;
-        }
-        if ((yo > 0) && (yf < 0) || (yo < 0) && (yf > 0))
-        {
-            sy = yf - offy + (dy / 30);
-        }
-        else
-        {
-            sy = yf - offy + dy;
-        }
-
-        theta = std::atan2(sy, sx);
-
-        double xf3 = rad_int * cos(theta) + offx; //ideal
-        double yf3 = rad_int * sin(theta) + offy;
-
-        //Print("Comparacion x",xf3,CurrentArmPose.position.x);
-        //Print("Comparacion y",yf3,CurrentArmPose.position.y);
-
-        double corrx = 0.2 * (xf3 - CurrentArmPose.position.x);
-        double corry = 0.2 * (yf3 - CurrentArmPose.position.y);
-        //        Print("dx dy",dx,dy);
-        float corr_factor = 4.0;
-        if (abs(dx) > 3 * abs(dy))
-        {
-            //corrx /= corr_factor;
-            corry *= corr_factor;
-        }
-        else if (abs(dy) > 3 * abs(dx))
-        {
-            //corry /= corr_factor;
-            corrx *= corr_factor;
-        }
-
-        if (abs(dy) + abs(dx) < corg / 3)
-        {
-            corrx = 0.0;
-            corry = 0.0;
-        }
-        //if (dx>0&&corrx<0) corrx=0.0;  //cual es la logica?
-        // if (dx<0&&corrx>0) corrx=0.0;
-        // if (dy>0&&corry<0) corry=0.0;
-        //if (dy<0&&corry>0) corry=0.0;
-
-        if (corrx > corg)
-            corrx = corg;
-        if (corrx < -corg)
-            corrx = -corg;
-        if (corry > corg)
-            corry = corg;
-        if (corry < -corg)
-            corry = -corg;
-
-        //Print("Correccion x",corrx,corry);
-        ArmPoseReq.position.x += corrx;
-        ArmPoseReq.position.y += corry;
     }
-    ArmPoseReqFull = ArmPoseReq;
-    float factor = 1.0;
-    ArmPoseReq.position.x = OldArmPoseReq.position.x + (ArmPoseReq.position.x - OldArmPoseReq.position.x) / factor;
-    ArmPoseReq.position.y = OldArmPoseReq.position.y + (ArmPoseReq.position.y - OldArmPoseReq.position.y) / factor;
-    OldArmPoseReq = ArmPoseReq;
-    return ArmPoseReq;
-}
 
+    for (int i = 0; i < 5; i++)
+    {
+        oldPos_ci.x[i] = oldPos_ci.x[i + 1];
+        oldPos_ci.y[i] = oldPos_ci.y[i + 1];
+    }
+
+    oldPos_ci.x[5] = dx;
+    oldPos_ci.y[5] = dy;
+    double dxa = (oldPos_ci.x[0] + oldPos_ci.x[1] + oldPos_ci.x[2] + oldPos_ci.x[3] + oldPos_ci.x[4] + oldPos_ci.x[5]) / 6.0;
+    double dya = (oldPos_ci.y[0] + oldPos_ci.y[1] + oldPos_ci.y[2] + oldPos_ci.y[3] + oldPos_ci.y[4] + oldPos_ci.y[5]) / 6.0;
+    // Print("RADIO",rad);
+    dx = dxa;
+    dy = dya;
+
+    if ((xo > 0) && (xf < 0) || (xo < 0) && (xf > 0))
+    {
+        sx = xf - offx + (dx / 30.0);
+    }
+    else
+    {
+        sx = xf - offx + dx;
+    }
+    if ((yo > 0) && (yf < 0) || (yo < 0) && (yf > 0))
+    {
+        sy = yf - offy + (dy / 30.0);
+    }
+    else
+    {
+        sy = yf - offy + dy;
+    }
+
+    theta = std::atan2(sy, sx);
+
+    double xf3 = rad_int * cos(theta) + offx; //ideal
+    double yf3 = rad_int * sin(theta) + offy;
+
+    double corrx = 0.3 * (xf3 - CurrentPoseReq.position.x);
+    double corry = 0.3 * (yf3 - CurrentPoseReq.position.y);
+
+    float corr_factor = 4.0;
+    if (abs(dx) > 3.0 * abs(dy))
+    {
+        //corrx /= corr_factor;
+        corry *= corr_factor;
+    }
+    else if (abs(dy) > 3.0 * abs(dx))
+    {
+        //corry /= corr_factor;
+        corrx *= corr_factor;
+    }
+    if (abs(dy) + abs(dx) < max_correction / 3.0)
+    {
+        corrx = 0.0;
+        corry = 0.0;
+    }
+    //if (dx>0&&corrx<0) corrx=0.0;  //cual es la logica?
+    // if (dx<0&&corrx>0) corrx=0.0;
+    // if (dy>0&&corry<0) corry=0.0;
+    //if (dy<0&&corry>0) corry=0.0;
+
+    MinMax_Correction(corrx, max_correction);
+    MinMax_Correction(corry, max_correction);
+
+    Pose_msg Result_poseReq = CurrentPoseReq;
+    Result_poseReq.position.x += corrx;
+    Result_poseReq.position.y += corry;
+    return Result_poseReq;
+}
 geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 {
     geometry_msgs::Pose quad_pose;
 
     //Absolute pose from camera to manip coord mantaining the same z value or altitude
-    Angles IAngleMark1 = ConvPosetoAngles(marker_pose);  //UAV angles
-   // Quat quaternion1 = ArmOrientReq_toQuaternion(IAngleMark1.yaw, CurrentArmPose); //end effector + uav yaw
+    Angles IAngleMark1 = ConvPosetoAngles(marker_pose); //UAV angles
+                                                        // Quat quaternion1 = ArmOrientReq_toQuaternion(IAngleMark1.yaw, CurrentArmPose); //end effector + uav yaw
 
     //std::cout<<"x"<<currentPose.orientation.x<<" y "<<currentPose.orientation.y<<" z "<<currentPose.orientation.z<<" w "<<currentPose.orientation.w<<std::endl;
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose); //end effector angle
-    Quat quaternion_angles = Angles_toQuaternion(0,-PI,AnglesCurrent.yaw+IAngleMark1.yaw);
+    Quat quaternion_angles = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark1.yaw);
 
     AnglesCurrent.yaw += PI / 2;
     float xc11 = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
