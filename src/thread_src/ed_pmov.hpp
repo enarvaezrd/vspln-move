@@ -62,7 +62,7 @@ public:
     Ed_Pmov() : group("pro_arm") , 
                 robot_model_loader("robot1/robot_description")
     {
-        num_IK_requests = 20;
+        num_IK_requests = 30;
         index_ks = 0;
         group.setPlannerId("RRTConnectkConfigDefault");//PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);//0.004

@@ -12,12 +12,12 @@ class Prediction
 public:
     Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_,
                float scale_, double rrt_extension_) : image_size(img_size_),
-                                                           d_prv(d_prv_),
-                                                           d_pr_m(d_pr_m_),
-                                                           prof_expl(prof_expl_),
-                                                           MapSize(map_size_ + 1),
-                                                           max_dimm(scale_),
-                                                           rrt_extension(rrt_extension_)
+                                                      d_prv(d_prv_),
+                                                      d_pr_m(d_pr_m_),
+                                                      prof_expl(prof_expl_),
+                                                      MapSize(map_size_ + 1),
+                                                      max_dimm(scale_),
+                                                      rrt_extension(rrt_extension_)
     {
         adv = 1;
         acum_values = 0;
@@ -27,7 +27,7 @@ public:
         scale = floor(image_size / (2.0 * maxsc));
         acum_x.resize((d_prv + 1));
         acum_y.resize((d_prv + 1));
-        for (int i = 0; i < (d_prv); i++)
+        for (int i = 0; i < (d_prv+1); i++)
         {
             acum_x[i] = 0.0;
             acum_y[i] = 0.0;
@@ -49,7 +49,8 @@ public:
         Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
-        ugv_state_factor = 0.15; //10%
+        ugv_state_factor = 0.35; //10%
+        UAV_Velocity = 0.0;
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -70,6 +71,7 @@ public:
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();
 
+    double Get_UAV_Velocity(){Velocity_mtx.lock();double vel=UAV_Velocity;Velocity_mtx.unlock();return vel; }
     const Etraj Get_TR() { return Tr; }
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
@@ -79,7 +81,7 @@ public:
     {
         NodesMtx.lock();
         nodes_cpy = nds;
-        rrt_vicinity_copy=vdr;
+        rrt_vicinity_copy = vdr;
         NodesMtx.unlock();
         NodesAvailable = true;
         return;
@@ -87,7 +89,8 @@ public:
     void Charge_Nodes()
     {
         if (NodesAvailable)
-        {   NodesMtx.lock();
+        {
+            NodesMtx.lock();
             nodes = nodes_cpy;
             rrt_vicinity = rrt_vicinity_copy;
             NodesMtx.unlock();
@@ -115,6 +118,7 @@ public:
 
     int Img(double point);
     double rad_to_deg(double rad);
+
 private:
     struct rrtns::MeanValues mean;
 
@@ -156,6 +160,9 @@ private:
 
     std::vector<VectorInt> ObstacleMap;
     std::vector<Position> Obstacle_Points;
+    std::mutex Velocity_mtx;
+
+    double UAV_Velocity;
 };
 } // namespace PredNs
 

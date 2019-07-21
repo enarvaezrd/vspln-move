@@ -162,7 +162,7 @@ bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index_f)
     CheckPose.orientation.x = 0.0;
     CheckPose.orientation.y = 1.0;
     CheckPose.orientation.z = 0.0;
-    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0006);
+    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0005);
     return found_ik;
 }
 
@@ -201,12 +201,12 @@ void Ed_Pmov::ComputeThread_CollisionCheck(int index)
             }
             else
             {
-               // std::this_thread::sleep_for(std::chrono::microseconds(50));
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
             }
         }
         Print("END OF THREAD",index_th);
     }));
-    std::this_thread::sleep_for(std::chrono::milliseconds(75));
+    std::this_thread::sleep_for(std::chrono::milliseconds(25));
     return;
 }
 
@@ -227,7 +227,7 @@ std::pair<bool, PositionResults> Ed_Pmov::RetrieveResults()
         else
         {
             result_retrieved = false;
-            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
         }
     }
     return result;

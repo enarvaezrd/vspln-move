@@ -70,13 +70,23 @@ public:
             nodes.coord[i].resize(3);
             nodes.coordT[i].resize(3);
         }
+
+
         r_exterior = 0.45;
         r_interior = 0.08;
         maxsc = 0.45;
         f_dist = 0.1;
 
         finish = true;
+        TrajNodesIncluded = 2;
         EmptyNodes.N = 0;
+         EmptyNodes.coord.resize(TrajNodesIncluded); //longitud dinamica, empieza con el minimo
+        EmptyNodes.coordT.resize(TrajNodesIncluded);
+        EmptyNodes.cost.resize(TrajNodesIncluded);
+        EmptyNodes.costParent.resize(TrajNodesIncluded);
+        EmptyNodes.parent.resize(TrajNodesIncluded);
+        EmptyNodes.id.resize(TrajNodesIncluded);
+        EmptyNodes.region.resize(TrajNodesIncluded);
         OldNodes = EmptyNodes;
         OldNodesLoaded = false;
         first_tr = false;
@@ -84,7 +94,7 @@ public:
         Stretch_Extension = 2; //2 nodes
         r = 0.01;              //Radio de nodos cercanos Revisar  0.009 0.014
         EPS = 0.004;           //Maximo movimiento Revisar  0.005  0.007
-        TrajNodesIncluded = 2;
+        
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
         emptyMatrix.resize(3);
         for (int i = 0; i < 3; i++)
@@ -94,6 +104,10 @@ public:
             {
                 emptyMatrix[i][j] = 0.0;
             }
+        }
+        for(int i = 0; i<prof_expl;i++)
+        {
+            Old_Nodes_Added_Reg.push_back(0);
         }
     }
 
@@ -143,7 +157,7 @@ public:
     VectorDbl Angles_Calculation(VectorDbl P0, VectorDbl P1, VectorDbl P2);
     double Distance(VectorDbl P0, VectorDbl P1);
     bool Check_Boundaries(VectorDbl Point);
-    void Extract_Node_from_Nodes(Node &node, Nodes &nodes, int nIndx);
+    void Extract_Node_from_Nodes(Node &node, Nodes nodes, int nIndx);
     VectorDbl steer(VectorDbl qr, VectorDbl qn, double min_ndist, double EPS);
     void Insert_Node_in_Nodes(Nodes &nodes, int nIndx, Node node);
     void Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
@@ -186,6 +200,7 @@ public:
     int Img(double point);
     double rad_to_deg(double rad);
     Nodes GetNodes() { return nodes; } //use carefully, at the end of sequence B
+    void Load_UAV_Velocity(double vel){UAV_Velocity = vel;}
     Vicinity GetVicinity() { return vdr; }
     void Draw_RRT();
     void Initialize_Inv_Transf_Matrices(vector<VectorDbl> &Rpitch, vector<VectorDbl> &Rroll, vector<VectorDbl> &Ryaw, int &It);
@@ -240,6 +255,7 @@ private:
     std::vector<int> Old_Nodes_Added_Reg;
     TextStream *Text_Stream;
     vector<VectorDbl> emptyMatrix;
+    double UAV_Velocity;
 };
 
 } // namespace rrt_planif

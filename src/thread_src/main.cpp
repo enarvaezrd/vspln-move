@@ -12,11 +12,11 @@ int main(int argc, char **argv)
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 11; // Profundidad de exploracion  Esz=prof_f
+    int prof_expl = 12; // Profundidad de exploracion  Esz=prof_f
     int Map_size = 500;
     float scale = 1;
-    double rrt_extension = 0.35; //extension of each rrt step for regression
-    int num_nodes_per_region = prof_expl+1;
+    double rrt_extension = 0.4; //extension of each rrt step for regression
+    int num_nodes_per_region = prof_expl+10;
     //=======================================
 
     ros::init(argc, argv, "arm_program");
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     int TrackingState = 0;
     int ThreadStep = 0;
     geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
-
+    std::mutex openCV_mutex;
     auto rrt_threadB = std::async(std::launch::async,[&]() {
         ros::Rate loop_rate_thread(20);
         std::this_thread::sleep_for(std::chrono::milliseconds(6000));
@@ -92,6 +92,7 @@ int main(int argc, char **argv)
                 RRT_model.Load_Adv(Predict_B.Get_Adv());
                 RRT_model.Load_TR(Predict_B.Get_TR());
                 RRT_model.Load_TRbr(Predict_B.Get_TRbr());
+                RRT_model.Load_UAV_Velocity(Predict_B.Get_UAV_Velocity());
                 RRT_model.ResetImagePtraj();
                 //  Print("stop flag",Predict_B.get_Stop_RRT_Flag(),RRT_model.get_TR_Size());
                 if (RRT_model.get_TR_Size() > 0 && !Predict_B.get_Stop_RRT_Flag()) //trajA.xval.size()>0 &&
