@@ -7,16 +7,32 @@ void RRT::Initialize_VicinityRRT()
 {
     std::vector<double> angles(3);
     double dnprv, dnxt, dm;
+    adv = 0;
     for (int j = 0; j < prof_expl; j++)
     {
-
         vdr.TP[j][0] = Tr.xval[j + adv]; //Se carga la trayectoria predicha en esta iteracion, a los valores de trayectoria nuevos
         vdr.TP[j][1] = Tr.yval[j + adv];
         vdr.TP[j][2] = Tr.zval[j + adv];
         // mtxA.lock();
-        cv::circle(image_Ptraj, cv::Point((Tr.xval[j + adv] + maxsc) * scale, (Tr.yval[j + adv] + maxsc) * scale), 4, Colors[0], CV_FILLED, 3, 8);
+        cv::circle(image_Ptraj, cv::Point((Tr.xval[j + adv] + maxsc) * scale, (Tr.yval[j + adv] + maxsc) * scale), 4, Colors[0], 3, 8);
         //mtxA.unlock();
     }
+    for (int j = 0; j < 4; j++)
+    {
+        Old_Positions.xval[j] = Old_Positions.xval[j + 1];
+        Old_Positions.yval[j] = Old_Positions.yval[j + 1];
+        Old_Positions.zval[j] = Old_Positions.zval[j + 1];
+    }
+    Old_Positions.xval[4] = Tr.xval[0];
+    Old_Positions.yval[4] = Tr.yval[0];
+    Old_Positions.zval[4] = Tr.zval[0];
+    double UAV_vel = 0.0;
+    for (int j = 0; j < 4; j++)
+    {
+        UAV_vel += sqrt((Old_Positions.xval[j] * Old_Positions.xval[j]) + (Old_Positions.xval[j + 1] * Old_Positions.xval[j + 1]));
+    }
+    UAV_Velocity = UAV_vel;
+
     for (int j = 0; j < prof_expl; j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
     {
         if (j == 0) //Si es el primer paso
@@ -53,7 +69,7 @@ void RRT::Initialize_VicinityRRT()
             dm = 0.05;
         //if (dm<=0.001) dm=0.001;
         //VD.R[j][1]  Es el radio de apertura creciente
-        vdr.R[j][2] = 0.001;  //valor de radio  z
+        vdr.R[j][2] = 0.002;  //valor de radio  z
         vdr.R[j][0] = 2 * dm; //dm, distancia entre puntos
 
         double acDist = 1.1;
@@ -67,25 +83,26 @@ void RRT::Initialize_VicinityRRT()
         vdr.R[j][1] = 0.01 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
         if (vdr.R[j][1] <= 0.0002)
             vdr.R[j][1] = 0.0002;
-       
 
-        if (j < prof_expl / 2 && UAV_Velocity<0.003)
+        if (j < prof_expl / 2 && UAV_Velocity < 0.4)
         {
             vdr.R[j][1] *= 1.1;
         }
-         if (j < prof_expl / 3 && UAV_Velocity<0.003)
+        if (j < prof_expl / 3 && UAV_Velocity < 0.4)
         {
-            vdr.R[j][1] *= 1.4;
+            vdr.R[j][1] *= 1.3;
         }
-         if (j < 1 && UAV_Velocity<0.002)
+        if (j < 3 && UAV_Velocity < 0.4)
         {
-            vdr.R[j][1] *= 1.6;
+            vdr.R[j][1] = 0.05;
         }
+
         // mtxA.lock();
         // cv::circle(image_Ptraj, cv::Point((vdr.TP[j][0] + maxsc) * scale, (vdr.TP[j][1] + maxsc) * scale), 4, Colors[0], CV_FILLED, 3, 8);
         //  mtxA.unlock();
     }
-    Print("UAV VELOCITY",UAV_Velocity);
+    Print("REGION 0",vdr.R[0][0],vdr.R[0][1],vdr.R[0][2] );
+    //Print("UAV VELOCITY", UAV_Velocity);
     vdr.L = prof_expl;
     return;
 }
@@ -292,7 +309,7 @@ void RRT::Nodes_Reorder()
     }
     //ANTIGUOS NODOS DE TRAYECTORIA, REQUIEREN SWEEP Y ACTUALIZACION DE PADRES
 
-    for (int j = 0; j < 0; j++) //  tr_brk   son los nuevos, requieren inicializar hijos, solo para los puntos de trayectoria
+    /*for (int j = 0; j < 0; j++) //  tr_brk   son los nuevos, requieren inicializar hijos, solo para los puntos de trayectoria
     {
         if (nodes_reordered == 1) //Revisar restriciones&& tr_brk < prof_expl-1
         {
@@ -317,7 +334,7 @@ void RRT::Nodes_Reorder()
             }
             nodes.region[j] = j;
         }
-    }
+    }*/
     if (nodes.N <= TrajNodesIncluded)
         nodes.N = TrajNodesIncluded;
     //if (nodes.N < prof_expl-2) nodes.N = prof_expl;//ya que los nodos estan inicializados
@@ -329,50 +346,38 @@ void RRT::Nodes_Reorder()
 //========================================================================================================================
 inline void RRT::RRT_Generation()
 {
-
     int oldSize = nodes.N;
     int NumNodesToAdd_reduced = NumNodesToAdd;
     //Print("********//Nodes size Start", nodes.N);
-    if (oldSize > 350)
+    /* if (oldSize > 350)
     {
         NumNodesToAdd_reduced /= 5;
-        if (oldSize > 350)
+        if (oldSize > 400)
         {
             NumNodesToAdd_reduced /= 7;
         }
-        if (oldSize > 450)
+        if (oldSize > 500)
         {
             NumNodesToAdd_reduced = 0; //Control of number of nodes after filtering and before rrt generation
         }
-    }
-
+    }*/
     //Text_Stream->write_TimeStamp();
-    // RRT_AddOldCoords();
-    //Print("********Recycled nodes", nodes.N - oldSize);
     int num_requests = 0;
-
     auto ticA = std::chrono::high_resolution_clock::now();
     if (NumNodesToAdd_reduced != 0)
     {
         for (int j = 0; j < prof_expl; j++) //(int j=prof_expl-1;j >= 0 ;j--)
         {
-
 #ifdef OPENCV_DRAW
-            //    mtxA.lock();
             cv::ellipse(image_Ptraj, cv::Point(Img(vdr.TP[j][0]), Img(vdr.TP[j][1])), cv::Size(scale * vdr.R[j][0], scale * vdr.R[j][1]), rad_to_deg(vdr.angles[j][0]), 0, 360, Colors[j], 1, 8);
-            // mtxA.unlock();
 #endif
-            //  if (abs(vdr.R[j][0]) >= 0.005)
-            //  {
             double num_nodes_to_add = NumNodesToAdd_reduced;
-            if (j < 2)
-                num_nodes_to_add *= 2;
+            if (j <= 2)
+                num_nodes_to_add *= 1.6;
 
             num_requests += Add_Node(j, num_nodes_to_add); //agrega N nodos cada vez
-                                                           // }
         }
     }
-
     Print("Nodes feeding time", ArmModel.toc(ticA).count());
     auto tic = std::chrono::high_resolution_clock::now();
     RetrieveNodes(num_requests);
@@ -384,7 +389,6 @@ inline void RRT::RRT_Generation()
 
     return;
 }
-
 //===================================================================================================================================
 //===================================================================================================================================
 
@@ -418,22 +422,21 @@ int RRT::Add_Node(int It, int num_nodes)
     
     */
 
-    /*
-        std::uniform_real_distribution<double> distxr(-rx*prcs,rx*prcs);//uniform_real_distribution
-        std::uniform_real_distribution<double> distyr(-ry*prcs,ry*prcs);
-        std::uniform_real_distribution<double> distzr(-rz*prcs,rz*prcs);
-         */
+    std::uniform_real_distribution<double> distxr(-rx * prcs, rx * prcs); //uniform_real_distribution
+    std::uniform_real_distribution<double> distyr(-ry * prcs, ry * prcs);
+    std::uniform_real_distribution<double> distzr(-rz * prcs, rz * prcs);
+    /*    
     std::normal_distribution<double> distxr(-rx, rx); //uniform_real_distribution
     std::normal_distribution<double> distyr(-ry, ry);
     std::normal_distribution<double> distzr(-rz, rz);
-
+*/
     //Print("Radios",rx,ry,rz);
     //Print("Maximum " , xmax,ymax,zmax);
     int max_tries = 5;
     int max_rnd_tries = 5;
     double rnx, rny, rnz;
     int request_counter = 0;
-    int limit_requests = num_nodes + max_tries - 2;
+    int limit_requests = num_nodes + max_tries - 1;
 
     while (request_counter < limit_requests)
     {
@@ -453,19 +456,22 @@ int RRT::Add_Node(int It, int num_nodes)
                 Print("fail, too many rand tries");
                 break;
             }
-            /*
-            rnx = distxr(genx);
-            rny = distyr(geny);
-            rnz = distzr(genz);  
-            Print("rnx",rnx,rny,rnz);
-            rnx -= rx*prcs-1; rnx /= prcs;
-            rny -= ry*prcs-1; rny /= prcs;
-            rnz -= rz*prcs-1; rnz /= prcs;
-        */
+
             rnx = distxr(genx);
             rny = distyr(geny);
             rnz = distzr(genz);
-
+            //Print("rnx",rnx,rny,rnz);
+            //rnx -= rx*prcs-1;
+            rnx /= prcs;
+            // rny -= ry*prcs-1;
+            rny /= prcs;
+            //rnz -= rz*prcs-1;
+            rnz /= prcs;
+            /*
+            rnx = distxr(genx);
+            rny = distyr(geny);
+            rnz = distzr(genz);
+ */
             q_rand[0] = rnx;
             q_rand[1] = rny;
             q_rand[2] = rnz;
@@ -521,8 +527,8 @@ void RRT::RetrieveNodes(int request_counter)
                 RRT_AddValidCoord(result.second.Position, result.second.Position_Only_T, result.second.region);
             }
         }
-        Print("REquests vs Results", request_counter, results_.size());
-        Print("Input Output sizes", ArmModel.eeff_positions_input_queue.size(), ArmModel.eeff_positions_results.size());
+        Print("Total Requests Sent vs Results Received", request_counter, results_.size());
+        //Print("Input Output sizes", ArmModel.eeff_positions_input_queue.size(), ArmModel.eeff_positions_results.size());
         if (results_.size() == 0)
             Print("ERROR No points found by IK for this region");
         //  Print("Input Queue Size",ArmModel.eeff_positions_input_queue.size(),request_counter,results_.size() );
@@ -631,19 +637,17 @@ inline void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T, int
     int q_min_Indx = index_near;
     for (int j = 0; j < nodes.N; j++)
     {
-        if (true || nodes.region[j] >= It - 1 && nodes.region[j] <= It + 1) //&& j<2 && j>=prof_expl)
-        {                                                                   //Print("region",nodes.region[j]);
-            double Dist_node_to_qnew = Distance(nodes.coord[j], q_new.coord);
-            if (Dist_node_to_qnew <= r) //Si esta dentro del circulo de radio r, se considera un nearest
+        //Print("region",nodes.region[j]);
+        double Dist_node_to_qnew = Distance(nodes.coord[j], q_new.coord);
+        if (Dist_node_to_qnew <= r) //Si esta dentro del circulo de radio r, se considera un nearest
+        {
+            double Cost_q_nearest = Dist_node_to_qnew + nodes.cost[j];
+            if (Cost_q_nearest < C_min)
             {
-                double Cost_q_nearest = Dist_node_to_qnew + nodes.cost[j];
-                if (Cost_q_nearest < C_min)
-                {
-                    Extract_Node_from_Nodes(q_min, nodes, j); //q_min seria el que tiene menor costo, es decir el nuevo padre de q_new
-                    C_min = Cost_q_nearest;
-                    q_min_Indx = j;
-                    break;
-                }
+                Extract_Node_from_Nodes(q_min, nodes, j); //q_min seria el que tiene menor costo, es decir el nuevo padre de q_new
+                C_min = Cost_q_nearest;
+                q_min_Indx = j;
+                break;
             }
         }
     }
@@ -983,17 +987,15 @@ void RRT::RRT_SequenceB() //extraer vecindad
 
     Initialize_VicinityRRT();
     Print("Initialize Vcnty time", ArmModel.toc(tic).count());
-    tic = std::chrono::high_resolution_clock::now();
     //tic();
     //Print("//-------RRt4 NodelFilter------------");
     //Node_Filter();
-    Print("Node Filter      time", ArmModel.toc(tic).count());
-    tic = std::chrono::high_resolution_clock::now();
+    //tic = std::chrono::high_resolution_clock::now();
     //Print("BBBtiempo Node Filter",toc().count());
     //tic();
     //Print("//-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
-    Print("Nodes Reorder    time", ArmModel.toc(tic).count());
+    // Print("Nodes Reorder    time", ArmModel.toc(tic).count());
     tic = std::chrono::high_resolution_clock::now();
     //Print("BBtiempo Nodes Reorder",toc().count());
     //tic();

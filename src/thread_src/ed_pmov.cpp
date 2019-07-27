@@ -117,9 +117,9 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         goale = arm.makeArmUpTrajectory(joints_result);
 
         //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
-        // tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
-        //delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
-        //usleep(1000000*(delay_time));
+         tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
+        delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
+        usleep((delay_time.count()));
         arm.startTrajectory(goale); //Inicio de trayectoria en GAZEBO
     }
     else
@@ -150,19 +150,19 @@ bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
     //Print("check pose",found_ik,toc().count());
     return found_ik;
 }
-bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index_f)
+inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int index_f)
 //type - 1 para solo posicion y 2 para posicion y orientacion juntas
 {
     geometry_msgs::Pose CheckPose;
     CheckPose.position.x = Position[0];
     CheckPose.position.y = Position[1];
-    CheckPose.position.z = Position[2] -0.05;
+    CheckPose.position.z = Position[2];
 
     CheckPose.orientation.w = 0.0;
     CheckPose.orientation.x = 0.0;
     CheckPose.orientation.y = 1.0;
     CheckPose.orientation.z = 0.0;
-    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0005);
+    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0004);
     return found_ik;
 }
 
@@ -201,12 +201,12 @@ void Ed_Pmov::ComputeThread_CollisionCheck(int index)
             }
             else
             {
-                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                std::this_thread::sleep_for(std::chrono::microseconds(1));
             }
         }
         Print("END OF THREAD",index_th);
     }));
-    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    std::this_thread::sleep_for(std::chrono::milliseconds(35));
     return;
 }
 

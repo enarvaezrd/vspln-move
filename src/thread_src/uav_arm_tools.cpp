@@ -362,11 +362,24 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     cat2 = PID_ArmReq.position.y - offy;
     double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
 
-   // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
+    // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
-   // Print("DifferenceA", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
+    // Print("DifferenceA", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
 
     //------agregar flag de contacto-------
+    
+    if (rad <= (rad_int + 0.02))
+    {
+        minArmAltitude += 0.0015;
+        MinMax_Correction(minArmAltitude, 0.85);
+    }
+    else
+    {
+        minArmAltitude -= 0.001;
+        if(minArmAltitude<=0.75) minArmAltitude = 0.75;
+        MinMax_Correction(minArmAltitude, 0.75);
+    }
+
     /* 
     if (rad >= (rad_ext - 0.01))
     {
@@ -390,7 +403,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     { //Circulo interno
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
     }
-   //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
+    //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
     //Print("DifferenceB", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
     ArmPoseReq = PID_ArmReq;
@@ -431,8 +444,8 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     PIDdata.integraly += errory * PIDdata.time;
     double Ioutx = PIDdata.Ki * PIDdata.integralx;
     double Iouty = PIDdata.Ki * PIDdata.integraly;
-    MinMax_Correction(Ioutx,0.01); //as we dont want large corrections
-    MinMax_Correction(Iouty,0.01);
+    MinMax_Correction(Ioutx, 0.01); //as we dont want large corrections
+    MinMax_Correction(Iouty, 0.01);
     double pid_outputx = Poutx + Ioutx + Doutx;
     double pid_outputy = Pouty + Iouty + Douty;
     // Restrict to max/min

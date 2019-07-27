@@ -74,9 +74,9 @@ public:
 
         r_exterior = 0.45;
         r_interior = 0.08;
-        maxsc = 0.45;
         f_dist = 0.1;
-
+        maxsc = scale;
+        scale = floor(image_size / (2.0 * maxsc));
         finish = true;
         TrajNodesIncluded = 2;
         EmptyNodes.N = 0;
@@ -93,7 +93,7 @@ public:
         Stop_RRT_flag = true;
         Stretch_Extension = 2; //2 nodes
         r = 0.01;              //Radio de nodos cercanos Revisar  0.009 0.014
-        EPS = 0.004;           //Maximo movimiento Revisar  0.005  0.007
+        EPS = 0.007;           //Maximo movimiento Revisar  0.005  0.007
         
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
         emptyMatrix.resize(3);
@@ -107,8 +107,13 @@ public:
         }
         for(int i = 0; i<prof_expl;i++)
         {
-            Old_Nodes_Added_Reg.push_back(0);
+            Old_Nodes_Added_Reg.push_back(0);            
         }
+        Old_Positions.xval.resize(5);
+        Old_Positions.yval.resize(5);
+        Old_Positions.zval.resize(5);
+
+
     }
 
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
@@ -200,6 +205,7 @@ public:
     int Img(double point);
     double rad_to_deg(double rad);
     Nodes GetNodes() { return nodes; } //use carefully, at the end of sequence B
+    
     void Load_UAV_Velocity(double vel){UAV_Velocity = vel;}
     Vicinity GetVicinity() { return vdr; }
     void Draw_RRT();
@@ -256,6 +262,7 @@ private:
     TextStream *Text_Stream;
     vector<VectorDbl> emptyMatrix;
     double UAV_Velocity;
+    Etraj Old_Positions;
 };
 
 } // namespace rrt_planif

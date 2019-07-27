@@ -31,7 +31,9 @@ public:
     PIDarm PIDdata;
     int counter;
 
-    uav_arm_tools()
+    uav_arm_tools(float rad_int_, float rad_ext_) : rad_ext(rad_ext_), 
+        rad_int(rad_int_)
+
     {
         PIDdata.ex = 0;
         PIDdata.ey = 0;
@@ -43,8 +45,8 @@ public:
         PIDdata.Kd = 0.001;
         PIDdata.Ki = 0.0000;
         counter = 0;
-        rad_ext = 0.38;
-        rad_int = 0.23;
+       // rad_ext = 0.45;
+        //rad_int = 0.24;
 
         sub_UAVmark = nh_ua.subscribe("/tag_detections", 1, &uav_arm_tools::Marker_Handler, this);
 
@@ -59,7 +61,7 @@ public:
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
         armDelay = 0.02;  //.035
-        minArmAltitude = 0.72;
+        minArmAltitude = 0.76;
         state = 0;
     }
 
