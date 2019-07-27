@@ -206,7 +206,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         double scale1 = floor(400 / (2 * maxsc1));
         if (first_tr)
         {
-            double dvxy = abs((mean.vx + mean.vy) / 2);
+            /*double dvxy = abs((mean.vx + mean.vy) / 2);
             tr_brk = prof_expl_adv - 1; //Primero suponer que toda la trayectoria debe reemplazarse
             for (int j = 0; j < prof_expl_adv - 1; j++)
             {
@@ -218,7 +218,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
                     Print("TR BREAK",j);
                     break;
                 }
-            }
+            }*/
             for (int j = 0; j < prof_expl_adv; j++)
             {
               /*  if (j < tr_brk)
@@ -787,7 +787,7 @@ void Prediction::CheckandFix_Boundaries(std::vector<double> &x, std::vector<doub
         //    color[0] = 0;
         //    color[1] = 0;
         //    color[2] = 0;
-        cv::circle(image_Ptraj, cv::Point(round((x[i] + maxsc) * scale), round((y[i] + maxsc) * scale)), 5, cv::Scalar(0, 0, 0), -1, 8);
+        cv::circle(image_Ptraj, cv::Point(round((x[i] + maxsc) * scale), round((y[i] + maxsc) * scale)), 1, cv::Scalar(0, 0, 0), -1, 8);
 //mtxA.unlock();
 #endif
         // Print("Image size and points from check function", image_Ptraj.cols, round(( x[i]+maxsc)*scale),round(( y[i]+maxsc)*scale));
@@ -954,8 +954,8 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
     {
         VectorDbl Visual_Servoing_position{Tr.xval[0], Tr.yval[0], Tr.zval[0]};
         double minDistance = 100000.0;
-        int VS_Index_in_PPath = 0;
-
+        int VS_Index_in_PPath = PathPlanning_Indexes.size()-1;
+        int Road_VS_Result_Indx=0;
         //Find path planning road point closest to VS point
         for (int i = 0; i < PathPlanning_Indexes.size(); i++)
         {
@@ -965,17 +965,29 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
             {
                 minDistance = distance;
                 VS_Index_in_PPath = PPlan_Indx;
+                Road_VS_Result_Indx=i;
             }
         }
-        Print("VS index in path", VS_Index_in_PPath);
-        int Final_VSPP_Index = VS_Index_in_PPath;
+        Print("VS index in path, path size", VS_Index_in_PPath,PathPlanning_Indexes.size() );
+        
+        if (trust_index > 0.8)
+        {
+            Road_VS_Result_Indx--;
+        }
+        if (trust_index > 0.6)
+        {
+            Road_VS_Result_Indx--;
+        }
         if (trust_index > 0.5)
         {
-            Final_VSPP_Index++;
+            Road_VS_Result_Indx--;
         }
-        Final_VSPP_Index += PathPlanningAdvancing_Index;
+        
+        Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
 
-        Print("VS index FINAL", Final_VSPP_Index);
+        if(Road_VS_Result_Indx<0) Road_VS_Result_Indx=0;
+        int Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
+        Print("Road VS index, FINAL node Index", Road_VS_Result_Indx,Final_VSPP_Index);
         //Add more cases here
 
         geometry_msgs::Pose NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation

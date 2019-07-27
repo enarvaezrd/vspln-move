@@ -123,7 +123,7 @@ int main(int argc, char **argv)
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 }*/
                 sequence_loop_th = RRT_model.getLoopState();
-//Print("b33",sequence_loop_th);
+                //Print("b33",sequence_loop_th);
 #ifdef OPENCV_DRAW
                 //openCV_mutex.lock();
                 //  cv::Mat image_B =  cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));//RRT_model.getImage_Ptraj();
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
                 UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                 UavArm_tools.counter = 0;
             }
-            geometry_msgs::Pose NextArmRequest=CurrentArmPose;
+            geometry_msgs::Pose NextArmRequest = CurrentArmPose;
             if (TrackingState > 1)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
                     Predict_B.Planif_SequenceA(CurrentRequest_Thread);
                     Predict_B.Charge_Nodes();
                     Predict_B.RRT_Path_Generation();
-                    NextArmRequest = Predict_B.Selection_Function(0.1);
+                    NextArmRequest = Predict_B.Selection_Function(0.8);
                     RRT_model.loop_start();
                 }
                 catch (const std::exception &e)
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
             // RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
             // RRT_model.loop_start();
             // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.position.z,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
-            RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(CurrentRequest_Thread); //type 1 with normal execution, type 2 for last joint preference
+            RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest); //type 1 with normal execution, type 2 for last joint preference
 
             UavArm_tools.Load_PID_time(RRT_model.ArmModel.getDelayTime().count() / 1000000);
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();

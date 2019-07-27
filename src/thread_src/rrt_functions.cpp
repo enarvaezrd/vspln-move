@@ -101,7 +101,7 @@ void RRT::Initialize_VicinityRRT()
         // cv::circle(image_Ptraj, cv::Point((vdr.TP[j][0] + maxsc) * scale, (vdr.TP[j][1] + maxsc) * scale), 4, Colors[0], CV_FILLED, 3, 8);
         //  mtxA.unlock();
     }
-    Print("REGION 0",vdr.R[0][0],vdr.R[0][1],vdr.R[0][2] );
+ 
     //Print("UAV VELOCITY", UAV_Velocity);
     vdr.L = prof_expl;
     return;
