@@ -65,7 +65,7 @@ int main(int argc, char** argv)
             while(!sequence_loop_th)
             {
                 Print("RRT paused ");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 sequence_loop_th = RRT_model.getLoopState();
                 Print("RRT paused ",sequence_loop_th);
             }
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         #endif
             RRT_model.loop_start();
             //Print("finish, now pause");
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             //Print("finish already paused");
             Print("SEQUENCE A TIME ",RRT_model.toc(clA).count());
             clA=std::chrono::high_resolution_clock::now();

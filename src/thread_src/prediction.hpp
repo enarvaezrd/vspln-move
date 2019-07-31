@@ -21,7 +21,7 @@ public:
                                                                                       rad_int(rad_int_),
                                                                                       rad_ext(rad_ext_)
     {
-        adv = 0;
+        adv = 1;
         acum_values = 0;
         image_Ptraj = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
         White_Imag = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
@@ -72,10 +72,13 @@ public:
     }
     void Draw_Map();
     void Check_Recover_Trajectory();
+    void Check_Recover_Trajectory_tendency();
     Etraj Tr_to_Cells(Etraj tr);
     double Cell_to_Real(int point_cell);
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();
+
+    void SmoothTrajectory_Average(int,int);
 
     double Get_UAV_Velocity()
     {

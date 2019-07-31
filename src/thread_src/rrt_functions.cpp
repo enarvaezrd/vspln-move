@@ -372,8 +372,8 @@ inline void RRT::RRT_Generation()
             cv::ellipse(image_Ptraj, cv::Point(Img(vdr.TP[j][0]), Img(vdr.TP[j][1])), cv::Size(scale * vdr.R[j][0], scale * vdr.R[j][1]), rad_to_deg(vdr.angles[j][0]), 0, 360, Colors[j], 1, 8);
 #endif
             double num_nodes_to_add = NumNodesToAdd_reduced;
-            if (j <= 2)
-                num_nodes_to_add *= 1.6;
+            if (j>0&&j <= 3)
+                num_nodes_to_add *= 2.0;
 
             num_requests += Add_Node(j, num_nodes_to_add); //agrega N nodos cada vez
         }

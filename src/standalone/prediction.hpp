@@ -54,6 +54,7 @@ class Prediction{
     void CheckandFix_Boundaries(VectorDbl  &x, VectorDbl  &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
     
+    void SmoothTrajectory_Average(int neighbours,int iterations);
     //new 
     void CreateMap();
     void Check_Recover_Trajectory();

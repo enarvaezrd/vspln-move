@@ -6,12 +6,15 @@
 class ObstacleMapGen
 {
 public:
-    ObstacleMapGen(int map_size_, float scale_, int image_size_) : MapSize(map_size_ + 1),
-                                                                   max_dimm(scale_),
-                                                                   x_offset(0.18),
-                                                                   k(20),
-                                                                   image_size(image_size_)
+    ObstacleMapGen(int map_size_, float scale_, int image_size_, float rad_int_, float rad_ext_) : MapSize(map_size_ + 1),
+                                                                                                   max_dimm(scale_),
+                                                                                                   x_offset(0.18),
+                                                                                                   k(40),
+                                                                                                   image_size(image_size_),
+                                                                                                   rad_ext(rad_ext_),
+                                                                                                   rad_int(rad_int_)
     {
+        toDegrees = 180.0 / 3.141593;
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
         ObstacleMap.resize(MapSize);
@@ -26,13 +29,14 @@ public:
         ObstacleMap = ObstacleMapV;
         //  /opt/ros/kinetic/share/robotnik_sensors/urdf/hokuyo_ust10lx.urdf.xacro  //To modify frecuency
         sub_Laser = nh_map_gen.subscribe("/robot1/front_laser/scan", 1, &ObstacleMapGen::Laser_Handler, this);
-        map_img_factor = (float)(image_size) / (float)(MapSize);
+        map_img_factor = (double)(image_size) / (float)(MapSize);
     }
 
     void Thicken_Map();
     void CreateMap();
     void Laser_Handler(const sensor_msgs::LaserScan &ls);
     int R_to_Cells(float real_point, bool limit);
+    double Cells_to_Real(float cells_point) ;
     std::vector<VectorInt> get_Map()
     {
         Map_mtx.lock();
@@ -62,7 +66,13 @@ public:
     std::vector<VectorInt> Thicken_Map_from_Image(cv::Mat Image, std::vector<Position> &obs_positions);
     void Get_Obstacle_Points(std::vector<VectorInt> Obs_Map, std::vector<Position> &obs_positions);
 
-        Printer Print;
+    void ExpandObstacle_Polar(std::vector<VectorInt> &ObstacleMapT, std::vector<Position> &obs_pos);
+
+    void Rect_to_Polar(int x, int y, double &radius, double &angle);
+
+    void Expand_Obstacle(double radius, double angle, std::vector<VectorInt> &ObstacleMapT);
+
+    Printer Print;
     std::vector<VectorInt> ObstacleMap, ObstacleMapV;
     float max_dimm;
     ros::NodeHandle nh_map_gen;
@@ -75,10 +85,12 @@ public:
     int HalfMapSize;
     double MapResolution;
     int k;
-    float map_img_factor;
+    double map_img_factor;
     int image_size;
     std::vector<Position> Obstacle_Points_Thick;
     std::vector<Position> Obstacle_Points;
+    float rad_ext, rad_int;
+    double toDegrees;
 };
 
 #endif

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     int prof_expl = 13; // Profundidad de exploracion  Esz=prof_f
     int Map_size = 500;
     float scale = 1;
-    double rrt_extension = 0.38; //extension of each rrt step for regression
+    double rrt_extension = 0.35; //extension of each rrt step for regression
     int num_nodes_per_region = prof_expl + 22;
     double rad_int = 0.25;
     double rad_ext = 0.46;
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     Printer Print;
     rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region);
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, scale, rrt_extension, rad_int, rad_ext);
-    ObstacleMapGen ObstacleMap(Map_size, scale, image_size);
+    ObstacleMapGen ObstacleMap(Map_size, scale, image_size, rad_int, rad_ext);
     RobotCommands Robot_Commands;
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext);
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
     int TrackingState = 0;
     int ThreadStep = 0;
-    geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread;
+    geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread=target_posea;
     std::mutex openCV_mutex;
 
     //  namedWindow(window_name_B, cv::WINDOW_NORMAL);
@@ -154,6 +154,7 @@ int main(int argc, char **argv)
     });
     auto rrt_threadA = std::thread([&]() {
         string window_name = "Prediction + RRT Image";
+        cv::namedWindow(window_name,cv::WINDOW_NORMAL);
         //std::unique_lock<std::mutex> lck(mtx_main);
         auto clA = std::chrono::high_resolution_clock::now();
         while (ros::ok())
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
             Predict_B.Draw_Map();
             geometry_msgs::Pose CurrentArmPose;
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
-
+            geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             //RRT_model.ArmModel.tic();
             //cout<<"Estado de marker: "<<UavArm_tools.getTrackingState() <<endl;
@@ -189,7 +190,7 @@ int main(int argc, char **argv)
                 UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                 UavArm_tools.counter = 0;
             }
-            geometry_msgs::Pose NextArmRequest = CurrentArmPose;
+            
             if (TrackingState > 1)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
