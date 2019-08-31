@@ -5,7 +5,7 @@
 
 using namespace PredNs;
 
-void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
+void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentEEFF_Pose)
 {
     //1. vicinities_init - conteo de acumulaciones,
     //2. d_pr_m - profundidad de datos previos para acumulaciones,
@@ -34,7 +34,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         delta_x_prev += abs(abs(deltas_x_[i + 1]) - abs(deltas_x_[i]));
         delta_y_prev += abs(abs(deltas_y_[i + 1]) - abs(deltas_y_[i]));
     }
-    Print("deltas", delta_x_prev, delta_y_prev);
+    //Print("deltas", delta_x_prev, delta_y_prev);
     if (delta_x_prev < 0.001 && delta_y_prev < 0.001)
     {
         n = 1;
@@ -44,6 +44,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
     CurrentPoint.xval = Marker_Abs_Pose.position.x;
     CurrentPoint.yval = Marker_Abs_Pose.position.y;
     CurrentPoint.zval = Marker_Abs_Pose.position.z;
+
     tr_brk = 0;
     int prof_expl_adv = prof_expl + adv;
     std::vector<double> coeffs(n + 1);
@@ -105,7 +106,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
             // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i] = zvalue;
         }
-        double sationary_step_dist = 0.0016;
+        double sationary_step_dist = 0.0014; //0.0016
         flagMtx.lock();
         if (abs(acum_x[d_prv] - acum_x[d_prv - 1]) <= sationary_step_dist && abs(acum_y[d_prv] - acum_y[d_prv - 1]) <= sationary_step_dist)
         {
@@ -241,19 +242,24 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         fixed_dist = rrt_extension;
     }
     ////Print("Check recover tr");
-    Check_Recover_Trajectory();
+    Check_Recover_Trajectory(true);
+    SmoothTrajectory_Average(7, 2);
+    Check_Recover_Trajectory(false);
     SmoothTrajectory_Average(5, 2);
-    Check_Recover_Trajectory();
-    SmoothTrajectory_Average(3, 2);
-    Check_Recover_Trajectory();
-    SmoothTrajectory_Average(3, 1);
+    for (int k = 0; k < 5; k++)
+    {
+        Check_Recover_Trajectory(false);
+        SmoothTrajectory_Average(3, 2);
+        Check_Recover_Trajectory(false);
+        SmoothTrajectory_Average(3, 1);
+    }
     // Print("smooth tr");
 
     //SmoothTrajectory();
     //  Print("end");
-   
+
     TP_Mtx.unlock();
-      for (int i = 0; i < Tr.xval.size() - 1; i++)
+    for (int i = 0; i < Tr.xval.size() - 1; i++)
     {
         //Recovered TRajectory
         cv::circle(image_Ptraj, cv::Point(round((Tr.xval[i] + maxsc) * scale), round((Tr.yval[i] + maxsc) * scale)), 2, cv::Scalar(204, 0, 102), -1, 8);
@@ -266,13 +272,148 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
 
 void Prediction::Check_Recover_Trajectory_tendency() //should be executed in sequence
 {
-     //CHECK transformations cells <-> Real word xy coords
+    //CHECK transformations cells <-> Real word xy coords
     Etraj Tr_Cells = Tr_to_Cells(Tr); //convert to cell coords
     Etraj Final_Tr = Tr;
     int max_iter = 200;
     std::string tendency_v("none");
     std::string tendency_h("none");
     int overshot = 7;
+    double global_tr_correction_x = 0.0;
+    double global_tr_correction_y = 0.0;
+    for (int i = Tr_Cells.xval.size() - 1; i >= 0; i--)
+    {
+        bool horiz = false;
+        if (i > 0)
+        {
+            double diffx = abs(Tr_Cells.xval[i] - Tr_Cells.xval[i - 1]);
+            double diffy = abs(Tr_Cells.yval[i] - Tr_Cells.yval[i - 1]);
+            if (diffx > diffy)
+                horiz = true;
+        }
+
+        int x = Tr_Cells.xval[i];
+        int y = Tr_Cells.yval[i];
+        if (ObstacleMap[x][y] > 0)
+        {
+            int inc = 0;
+            float ch = 1;
+            bool found_better = false;
+            int xchk, ychk;
+            for (int j = 0; j < max_iter; j++)
+            {
+                if (!horiz)
+                {
+                    if (Check_Map_Coord(x + inc, y) && tendency_h != "left")
+                    {
+                        xchk = x + inc + overshot;
+                        ychk = y; //right
+                        tendency_h = "right";
+                        found_better = true;
+                        break;
+                    }
+
+                    if (Check_Map_Coord(x - inc, y) && tendency_h != "right")
+                    {
+                        xchk = x - inc - overshot;
+                        ychk = y; //left
+                        tendency_h = "left";
+                        found_better = true;
+                        break;
+                    }
+                }
+                else
+                {
+
+                    if (Check_Map_Coord(x, y + inc) && tendency_v != "bottom")
+                    {
+                        xchk = x;
+                        ychk = y + inc + overshot; //top
+                        tendency_v = "top";
+                        found_better = true;
+                        break;
+                    }
+
+                    if (Check_Map_Coord(x, y - inc) && tendency_v != "top")
+                    {
+                        xchk = x;
+                        ychk = y - inc - overshot; //bottom
+                        tendency_v = "bottom";
+                        found_better = true;
+                        break;
+                    }
+                }
+
+                if (Check_Map_Coord(x + inc, y + inc) && tendency_v != "bottom" && tendency_h != "left")
+                {
+                    xchk = x + inc + overshot;
+                    ychk = y + inc + overshot; //top-right
+                    tendency_h = "right";
+                    tendency_v = "top";
+
+                    found_better = true;
+                    break;
+                }
+
+                if (Check_Map_Coord(x - inc, y - inc) && tendency_v != "bottom" && tendency_h != "right")
+                {
+                    xchk = x - inc - overshot;
+                    ychk = y - inc - overshot; //top-left
+                    tendency_h = "left";
+                    tendency_v = "top";
+                    found_better = true;
+                    break;
+                }
+
+                if (Check_Map_Coord(x + inc, y - inc) && tendency_v != "top" && tendency_h != "left")
+                {
+                    xchk = x + inc + overshot;
+                    ychk = y - inc - overshot; //bottom-right
+                    tendency_h = "right";
+                    tendency_v = "bottom";
+                    found_better = true;
+                    break;
+                }
+
+                if (Check_Map_Coord(x - inc, y - inc) && tendency_v != "top" && tendency_h != "right")
+                {
+                    xchk = x - inc - overshot;
+                    ychk = y - inc - overshot; //bottom-left
+                    tendency_h = "left";
+                    tendency_v = "bottom";
+                    found_better = true;
+                    break;
+                }
+                inc++;
+            }
+            if (found_better)
+            {
+                double point_correction_x = (xchk - ((MapSize - 1) / 2)) / MapResolution;
+                double point_correction_y = (ychk - ((MapSize - 1) / 2)) / MapResolution;
+                Tr.xval[i] = point_correction_x + 3 * global_tr_correction_x / Tr_Cells.xval.size();
+                Tr.yval[i] = point_correction_y + 3 * global_tr_correction_y / Tr_Cells.xval.size();
+
+                global_tr_correction_x += point_correction_x;
+                global_tr_correction_y += point_correction_y;
+            }
+        }
+    }
+    Tr_old = Tr;
+
+    return;
+}
+void Prediction::Check_Recover_Trajectory(bool add_global) //should be executed in sequence
+{
+    //CHECK transformations cells <-> Real word xy coords
+    Etraj Tr_Cells = Tr_to_Cells(Tr); //convert to cell coords
+    Etraj Final_Tr = Tr;
+    int max_iter = 200;
+    std::string tendency_v("none");
+    std::string tendency_h("none");
+    int overshot = 7;
+
+    double global_tr_correction_x = 0.0;
+    double global_tr_correction_y = 0.0;
     for (int i = Tr_Cells.xval.size() - 1; i >= 0; i--)
     {
         bool horiz = false;
@@ -382,126 +523,19 @@ void Prediction::Check_Recover_Trajectory_tendency() //should be executed in seq
             {
                 Tr.xval[i] = (xchk - ((MapSize - 1) / 2)) / MapResolution;
                 Tr.yval[i] = (ychk - ((MapSize - 1) / 2)) / MapResolution;
+                double point_correction_x = (xchk - x - ((MapSize - 1) / 2)) / MapResolution;
+                double point_correction_y = (ychk - y - ((MapSize - 1) / 2)) / MapResolution;
+                global_tr_correction_x += point_correction_x;
+                global_tr_correction_y += point_correction_y;
             }
+        }
+        if (add_global)
+        {
+            Tr.xval[i] += global_tr_correction_x / (6 * Tr.xval.size());
+            Tr.yval[i] += global_tr_correction_y / (6 * Tr.xval.size());
         }
     }
     Tr_old = Tr;
-
-
-    return;
-}
-
-
-void Prediction::Check_Recover_Trajectory() //should be executed in sequence
-{
-     //CHECK transformations cells <-> Real word xy coords
-    Etraj Tr_Cells = Tr_to_Cells(Tr); //convert to cell coords
-    Etraj Final_Tr = Tr;
-    int max_iter = 200;
-    std::string tendency_v("none");
-    std::string tendency_h("none");
-    int overshot = 7;
-    for (int i = Tr_Cells.xval.size() - 1; i >= 0; i--)
-    {
-        bool horiz = false;
-        if (i > 0)
-        {
-            double diffx = abs(Tr_Cells.xval[i] - Tr_Cells.xval[i - 1]);
-            double diffy = abs(Tr_Cells.yval[i] - Tr_Cells.yval[i - 1]);
-            if (diffx > diffy)
-                horiz = true;
-        }
-
-        int x = Tr_Cells.xval[i];
-        int y = Tr_Cells.yval[i];
-        if (ObstacleMap[x][y] > 0)
-        {
-            int inc = 0;
-            float ch = 1;
-            bool found_better = false;
-            int xchk, ychk;
-            for (int j = 0; j < max_iter; j++)
-            {
-                if (!horiz)
-                {
-                    if (Check_Map_Coord(x + inc, y) )
-                    {
-                        xchk = x + inc + overshot;
-                        ychk = y; //right
-                        found_better = true;
-                        break;
-                    }
-
-                    if (Check_Map_Coord(x - inc, y) )
-                    {
-                        xchk = x - inc - overshot;
-                        ychk = y; //left
-                        found_better = true;
-                        break;
-                    }
-                }
-                else
-                {
-
-                    if (Check_Map_Coord(x, y + inc) )
-                    {
-                        xchk = x;
-                        ychk = y + inc + overshot; //top
-                        found_better = true;
-                        break;
-                    }
-
-                    if (Check_Map_Coord(x, y - inc) )
-                    {
-                        xchk = x;
-                        ychk = y - inc - overshot; //bottom
-                        found_better = true;
-                        break;
-                    }
-                }
-
-                if (Check_Map_Coord(x + inc, y + inc) )
-                {
-                    xchk = x + inc + overshot;
-                    ychk = y + inc + overshot; //top-right
-                    found_better = true;
-                    break;
-                }
-
-                if (Check_Map_Coord(x - inc, y - inc) )
-                {
-                    xchk = x - inc - overshot;
-                    ychk = y - inc - overshot; //top-left
-                    found_better = true;
-                    break;
-                }
-
-                if (Check_Map_Coord(x + inc, y - inc) )
-                {
-                    xchk = x + inc + overshot;
-                    ychk = y - inc - overshot; //bottom-right
-                    found_better = true;
-                    break;
-                }
-
-                if (Check_Map_Coord(x - inc, y - inc))
-                {
-                    xchk = x - inc - overshot;
-                    ychk = y - inc - overshot; //bottom-
-                    found_better = true;
-                    break;
-                }
-                inc++;
-            }
-            if (found_better)
-            {
-                Tr.xval[i] = (xchk - ((MapSize - 1) / 2)) / MapResolution;
-                Tr.yval[i] = (ychk - ((MapSize - 1) / 2)) / MapResolution;
-            }
-        }
-    }
-    Tr_old = Tr;
-
 
     return;
 }
@@ -513,7 +547,7 @@ void Prediction::SmoothTrajectory_Average(int neighbours, int iterations)
 
     for (int k = 0; k < iterations; k++)
     {
-        for (int i = 1; i < Tr.xval.size() - 3; i++)
+        for (int i = 1; i < Tr.xval.size() - 2; i++)
         {
             double x_acum = 0.0;
             double y_acum = 0.0;
@@ -531,7 +565,7 @@ void Prediction::SmoothTrajectory_Average(int neighbours, int iterations)
             }
             else if (i >= (Tr.xval.size() - sides_neighbours))
             {
-                int up_spaces = Tr.xval.size() - i - 3;
+                int up_spaces = Tr.xval.size() - i - 2;
                 for (int j = -up_spaces; j <= up_spaces; j++) //-NO_OF_NEIGHBOURS + up_spaces + 1
                 {
                     x_acum += Tr.xval[i + j];
@@ -1023,7 +1057,7 @@ void Prediction::RRT_Path_Generation()
         int RRTVS_Indx, VS_Node_Indx;
         VectorDbl TR{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]}; //VS position
         double D_traj_avd = Distance(nodes.coord[0], TR);       //as VS is faster than RRT,its needed to find a point near the current VS position
-        Print("Distance VS", D_traj_avd);
+                                                                //  Print("Distance VS", D_traj_avd);
         /* Print("speed",speed);
         DFactor = max_cost;// / (1.0 + speed) ;  //look for a node with this cost
         double Min_RRTVS_Dist=1000000.0,Min_VS_Node_Dist=10000.0;
@@ -1126,21 +1160,22 @@ void Prediction::RRT_Path_Generation()
         }
         //Draw vicinity here
 
-        // for (int j = 0; j < rrt_vicinity.R.size(); j++)
-        //{
-        //   cv::ellipse(image_Ptraj, cv::Point(Img(rrt_vicinity.TP[j][0]), Img(rrt_vicinity.TP[j][1])),
-        //              cv::Size(scale * rrt_vicinity.R[j][0], scale * rrt_vicinity.R[j][1]),
-        //             rad_to_deg(rrt_vicinity.angles[j][0]), 0, 360, Colors[j], 1, 8);
-        // }
+        for (int j = 0; j < rrt_vicinity.R.size(); j++)
+        {
+            cv::ellipse(image_Ptraj, cv::Point(Img(rrt_vicinity.TP[j][0]), Img(rrt_vicinity.TP[j][1])),
+                        cv::Size(scale * rrt_vicinity.R[j][0], scale * rrt_vicinity.R[j][1]),
+                        rad_to_deg(rrt_vicinity.angles[j][0]), 0, 360, Colors[j], 1, 8);
+        }
     }
     return;
 }
+
 geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
 {
-    Print("AVAILABILITY",PathPlanning_Available,Stop_RRT_flag);
-    if (PathPlanning_Available )
+    //  Print("AVAILABILITY", PathPlanning_Available, Stop_RRT_flag);
+    if (PathPlanning_Available && !Stop_RRT_flag)
     {
-        VectorDbl Visual_Servoing_position{Tr.xval[0], Tr.yval[0], Tr.zval[0]};
+        VectorDbl Visual_Servoing_position{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]};
         double minDistance = 100000.0;
         int VS_Index_in_PPath = PathPlanning_Indexes.size() - 1;
         int Road_VS_Result_Indx = 0;
@@ -1156,19 +1191,19 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
                 Road_VS_Result_Indx = i;
             }
         }
-        Print("VS index in path, path size", VS_Index_in_PPath, PathPlanning_Indexes.size());
+        //   Print("VS index in path, path size", VS_Index_in_PPath, PathPlanning_Indexes.size());
 
         if (trust_index > 0.8)
         {
-            Road_VS_Result_Indx--;
+            Road_VS_Result_Indx -= 2;
         }
         if (trust_index > 0.6)
         {
-            Road_VS_Result_Indx--;
+            Road_VS_Result_Indx -= 2;
         }
         if (trust_index > 0.5)
         {
-            Road_VS_Result_Indx--;
+            Road_VS_Result_Indx -= 2;
         }
 
         Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
@@ -1176,7 +1211,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
         if (Road_VS_Result_Indx < 0)
             Road_VS_Result_Indx = 0;
         int Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
-        Print("Road VS index, FINAL node Index", Road_VS_Result_Indx, Final_VSPP_Index);
+        //  Print("Road VS index, FINAL node Index", Road_VS_Result_Indx, Final_VSPP_Index);
         //Add more cases here
 
         geometry_msgs::Pose NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
@@ -1185,7 +1220,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
         NextRobotRequest.position.y = nodes.coord[Final_VSPP_Index][1];
         NextRobotRequest.position.z = nodes.coord[Final_VSPP_Index][2];
 #ifdef OPENCV_DRAW
-        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 6, cv::Scalar(200,0,0), -1, 8);
+        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
         PathPlanningAdvancing_Index++;
         return NextRobotRequest;
@@ -1194,7 +1229,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
     {
         geometry_msgs::Pose NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
 #ifdef OPENCV_DRAW
-        cv::circle(image_Ptraj, cv::Point((Tr.xval[adv] + maxsc) * scale, (Tr.yval[adv] + maxsc) * scale), 6, cv::Scalar(200,0,0), -1, 8);
+        cv::circle(image_Ptraj, cv::Point((Tr.xval[adv] + maxsc) * scale, (Tr.yval[adv] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
         NextRobotRequest.position.x = Tr.xval[adv]; //Then copy position
         NextRobotRequest.position.y = Tr.yval[adv];
@@ -1205,28 +1240,39 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
 void Prediction::Draw_Map()
 {
 #ifdef OPENCV_DRAW
-    for (int i = 0; i < Obstacle_Points_thick.size(); i++)
+    int obs_thick_size  = Obstacle_Points_thick.size();
+    int obs_size  = Obstacle_Points.size();
+     int major_size =obs_thick_size;
+    if (obs_size >= major_size)
     {
-        cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points_thick[i].yval, Obstacle_Points_thick[i].xval);
-        color[0] = 190;
-        color[1] = 190;
-        color[2] = 190;
+        major_size = obs_size;
+    }
+
+
+    for (int i = 0; i < major_size; i++)
+    {
+        if (i < obs_thick_size)
+        {
+            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points_thick[i].yval, Obstacle_Points_thick[i].xval);
+            color[0] = 190;
+            color[1] = 190;
+            color[2] = 190;
+        }
+        if (i < obs_size)
+        {
+            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points[i].yval, Obstacle_Points[i].xval);
+            color[0] = 70;
+            color[1] = 70;
+            color[2] = 70;
+        }
         //cv::circle(image_Ptraj, cv::Point(Obstacle_Points_thick[i].xval, Obstacle_Points_thick[i].yval), 1, cv::Scalar(190, 190, 190), 1);
     }
-    for (int i = 0; i < Obstacle_Points.size(); i++)
-    {
-
-        cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points[i].yval, Obstacle_Points[i].xval);
-        color[0] = 70;
-        color[1] = 70;
-        color[2] = 70;
-        //cv::circle(image_Ptraj, cv::Point(Obstacle_Points[i].xval, Obstacle_Points[i].yval), 1, cv::Scalar(100, 100, 100), 1);
-    }
+    
 #endif
     return;
 }
 
-void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose) //extraer vecindad
+void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose) //extraer vecindad
 {
 
     //tic();
@@ -1235,7 +1281,7 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose) //extraer
     //Print("tiempo RRT XY Mean Calc",toc());
     //tic();
     // Print("-------RRt2 TrajPredict------------");
-    Trajectory_Prediction(Marker_Abs_Pose);
+    Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose);
     // Print("AAA tiempo Traj Predict",toc());
 
     return;
@@ -1246,7 +1292,12 @@ void Prediction::ClearImage_Ptraj()
     White_Imag.copyTo(image_Ptraj);
 #endif
 }
-
+void Prediction::InsertElement_in_Vector(VectorDbl &vector, int Position, double value)
+{
+    VectorDbl::iterator it = vector.begin();
+    vector.insert(it + Position, value);
+    return;
+}
 double Prediction::Distance(VectorDbl P0, VectorDbl P1)
 {
     return sqrt(((P1[0] - P0[0]) * (P1[0] - P0[0])) + ((P1[1] - P0[1]) * (P1[1] - P0[1])) + ((P1[2] - P0[2]) * (P1[2] - P0[2])));

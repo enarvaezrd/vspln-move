@@ -48,17 +48,17 @@ public:
         NodesCharged = false;
         New_Nodes_from_RRT = false;
         PathPlanning_Available = false;
-        PathPlanningAdvancing_Index=0;
+        PathPlanningAdvancing_Index = 0;
         first_tr = true;
         Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
         Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
-        ugv_state_factor = 0.35; //10%
+        ugv_state_factor = 0.5; //40%
         UAV_Velocity = 0.0;
     }
 
-    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose);
+    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose);
     void Regression(VectorDbl x, VectorDbl y, int ndatos, int it, int order, VectorDbl &coeffs);
     void CheckandFix_Boundaries(VectorDbl &x, VectorDbl &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
@@ -71,14 +71,14 @@ public:
         return;
     }
     void Draw_Map();
-    void Check_Recover_Trajectory();
+    void Check_Recover_Trajectory(bool);
     void Check_Recover_Trajectory_tendency();
     Etraj Tr_to_Cells(Etraj tr);
     double Cell_to_Real(int point_cell);
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();
 
-    void SmoothTrajectory_Average(int,int);
+    void SmoothTrajectory_Average(int, int);
 
     double Get_UAV_Velocity()
     {
@@ -87,10 +87,16 @@ public:
         Velocity_mtx.unlock();
         return vel;
     }
-    const Etraj Get_TR() { TP_Mtx.lock(); Etraj trajectory=Tr;TP_Mtx.unlock(); return trajectory; }
+    const Etraj Get_TR()
+    {
+        TP_Mtx.lock();
+        Etraj trajectory = Tr;
+        TP_Mtx.unlock();
+        return trajectory;
+    }
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
-    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose); //extraer vecindad
+    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose); //extraer vecindad
     //const Nodes Get_Nodes(){return nodes;}
     void Load_Nodes(Nodes nds, Vicinity vdr)
     {
@@ -135,6 +141,7 @@ public:
         ugv_state = ugv_state_;
     }
 
+    void InsertElement_in_Vector(VectorDbl &vector, int Position, double value);
     int Img(double point);
     double rad_to_deg(double rad);
 

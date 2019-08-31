@@ -10,35 +10,38 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
     // cv::Mat image_test = cv::Mat::zeros(MapSize, MapSize, CV_8UC1);
     std::vector<Position> obs_pos_thick, obs_pos;
     //Print("Laser Data", LaserData.min_angle, LaserData.max_angle, LaserData.range_max, LaserData.range_min, LaserData.state, LaserData.angle_increment,LaserData.size);
+
     if (LaserData.state)
     {
-        for (int i = 0; i < LaserData.size; i++)
+        int i = 0;
+        for (auto laser_range : LaserData.ranges)
         {
             float angle = LaserData.min_angle + (i * LaserData.angle_increment);
-            if (LaserData.ranges[i] == INFINITY)
-                LaserData.ranges[i] = LaserData.range_max;
-            float yr = LaserData.ranges[i] * sin(angle);
-            float xr = LaserData.ranges[i] * cos(angle) + x_offset; //added Lidar offset from manipulator coordinates
+            i++;
+            if (laser_range == INFINITY)
+                laser_range = LaserData.range_max;
+            double yr = laser_range * sin(angle);
+            double xr = laser_range * cos(angle) + x_offset; //added Lidar offset from manipulator coordinates
 
             int xc = R_to_Cells(xr, false); //no limit, otherwise the limit will appear as obstacle
             int yc = R_to_Cells(yr, false);
-            if (xc >= 0 && xc < MapSize && yc >= 0 && yc < MapSize)
+            if (xc >= 0 && xc < MapSize && yc >= 0 && yc < MapSize && laser_range > 0.008)
             {
                 ObstacleMapT[xc][yc] = 1;
+                //  cout << "value for " << i << ": " << LaserData.ranges[i] << ", angle: " << angle <<", intensities: "<<LaserData.intensities[i]<< endl;
                 //image_test.at<int>(xc, yc) = 1;
             }
         }
-
-        //auto start = std::chrono::high_resolution_clock::now();
         // ObstacleMapT = Thicken_Map_from_Image(image_test,obs_pos);
         Get_Obstacle_Points(ObstacleMapT, obs_pos);
         ExpandObstacle_Polar(ObstacleMapT, obs_pos);
-        ObstacleMapT = Thicken_Map(ObstacleMapT, obs_pos_thick);
-
+       // auto start = std::chrono::high_resolution_clock::now();
+        ObstacleMapT = Thicken_Map_Manhattan(ObstacleMapT, obs_pos_thick);
+        // ObstacleMapT = Thicken_Map(ObstacleMapT, obs_pos_thick);
         //ObstacleMapT = Thicken_Map(ObstacleMapT, obs_pos_thick);
-        // auto end = std::chrono::high_resolution_clock::now();
-        //auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        // Print("Dilation time",elapsed.count());
+       // auto end = std::chrono::high_resolution_clock::now();
+       // auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+       // Print("=== OOOOO == Dilation time", elapsed.count());
 
         Map_mtx.lock();
         ObstacleMap.assign(ObstacleMapT.begin(), ObstacleMapT.end());
@@ -67,28 +70,28 @@ void ObstacleMapGen::ExpandObstacle_Polar(std::vector<VectorInt> &ObstacleMapT, 
     obs_pos.clear();
     Position pT;
     bool is_obstacle;
-    for (int i = 0; i < ObstacleMapT.size(); i++)
+
+    for (int i = 15; i < MapSize - 15; i++)
     {
-        for (int j = 0; j < ObstacleMapT[i].size(); j++)
+        for (int j = 15; j < MapSize - 15; j++)
         {
             is_obstacle = false;
             if (ObstacleMapT[i][j] == 2 || ObstacleMapT[i][j] == 1)
             {
                 is_obstacle = true;
             }
-            else
+            /* else
             {
 
                 double x_real = Cells_to_Real(i);
                 double y_real = Cells_to_Real(j);
                 double radius = sqrt((x_real * x_real) + (y_real * y_real));
-                if ( radius < rad_int-0.21)
+                if ( radius < rad_int-0.24)
                 {
                     is_obstacle = true;
                     //Print("radius", radius,x_real,y_real,i,j);
-                    
                 }
-            }
+            }*/
             if (is_obstacle)
             {
                 pT.xval = (i * map_img_factor);
@@ -161,6 +164,8 @@ void ObstacleMapGen::Get_Obstacle_Points(std::vector<VectorInt> Obs_Map, std::ve
 
 std::vector<VectorInt> ObstacleMapGen::Thicken_Map(std::vector<VectorInt> Obs_Map, std::vector<Position> &obs_positions)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (int i = 0; i < MapSize; i++)
     {
         for (int j = 0; j < MapSize; j++)
@@ -172,29 +177,47 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map(std::vector<VectorInt> Obs_Ma
                     int remainingk = k - abs(i - l);
                     for (int m = j - remainingk; m <= j + remainingk; m++)
                     {
-                        if (l >= 0 && m >= 0 && l < MapSize && m < MapSize && Obs_Map[l][m] == 0)
+                        if (Obs_Map[l][m] == 0)
                         {
-                            Obs_Map[l][m] = 2;
+                            if (l >= 0 && m >= 0 && l < MapSize && m < MapSize)
+                            {
+                                Obs_Map[l][m] = 2;
+                            }
                         }
                     }
                 }
             }
         }
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //Print("=== OOOOO == thick time", elapsed.count());
+    start = std::chrono::high_resolution_clock::now();
     Position pT;
-    for (int i = 0; i < MapSize; i++)
+    obs_positions.resize(MapSize * MapSize + 10);
+    int size_obs_pos = 0;
+    int it_i = 0, it_j = 0;
+    for (auto i : Obs_Map)
     {
-        for (int j = 0; j < MapSize; j++)
+        it_j = 0;
+        for (auto j : i)
         {
-            if (Obs_Map[i][j] == 2)
+            if (j == 2)
             {
-                Obs_Map[i][j] = 1;
-                pT.xval = (i * map_img_factor);
-                pT.yval = (j * map_img_factor);
-                obs_positions.push_back(pT);
+                j = 1;
+                pT.xval = (it_i * map_img_factor);
+                pT.yval = (it_j * map_img_factor);
+                obs_positions[size_obs_pos] = pT;
+                size_obs_pos++;
             }
+            it_j++;
         }
+        it_i++;
     }
+    obs_positions.resize(size_obs_pos);
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    Print("=== OOOOO == assign time", elapsed.count());
     return Obs_Map;
 }
 
@@ -202,9 +225,9 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map(std::vector<VectorInt> Obs_Ma
 std::vector<VectorInt> ObstacleMapGen::Manhattan(std::vector<VectorInt> Obs_Map)
 {
     // traverse from top left to bottom right
-    for (int i = 0; i < Obs_Map.size(); i++)
+    for (int i = 0; i < MapSize; i++)
     {
-        for (int j = 0; j < Obs_Map[i].size(); j++)
+        for (int j = 0; j < MapSize; j++)
         {
             if (Obs_Map[i][j] == 1)
             {
@@ -216,7 +239,7 @@ std::vector<VectorInt> ObstacleMapGen::Manhattan(std::vector<VectorInt> Obs_Map)
                 // pixel was off
                 // It is at most the sum of the lengths of the array
                 // away from a pixel that is on
-                Obs_Map[i][j] = Obs_Map.size() + Obs_Map[i].size();
+                Obs_Map[i][j] = MapSize + MapSize;
                 // or one more than the pixel to the north
                 if (i > 0)
                     Obs_Map[i][j] = std::min(Obs_Map[i][j], Obs_Map[i - 1][j] + 1);
@@ -227,16 +250,16 @@ std::vector<VectorInt> ObstacleMapGen::Manhattan(std::vector<VectorInt> Obs_Map)
         }
     }
     // traverse from bottom right to top left
-    for (int i = Obs_Map.size() - 1; i >= 0; i--)
+    for (int i = MapSize - 1; i >= 0; i--)
     {
-        for (int j = Obs_Map[i].size() - 1; j >= 0; j--)
+        for (int j = MapSize - 1; j >= 0; j--)
         {
             // either what we had on the first pass
             // or one more than the pixel to the south
-            if (i + 1 < Obs_Map.size())
+            if (i + 1 < MapSize)
                 Obs_Map[i][j] = std::min(Obs_Map[i][j], Obs_Map[i + 1][j] + 1);
             // or one more than the pixel to the east
-            if (j + 1 < Obs_Map[i].size())
+            if (j + 1 < MapSize)
                 Obs_Map[i][j] = std::min(Obs_Map[i][j], Obs_Map[i][j + 1] + 1);
         }
     }
@@ -247,11 +270,12 @@ std::vector<VectorInt> ObstacleMapGen::Manhattan(std::vector<VectorInt> Obs_Map)
 std::vector<VectorInt> ObstacleMapGen::Thicken_Map_Manhattan(std::vector<VectorInt> Obs_Map, std::vector<Position> &obs_positions)
 {
     Obs_Map = Manhattan(Obs_Map);
-    for (int i = 0; i < Obs_Map.size(); i++)
+    for (int i = 0; i < MapSize; i++)
     {
-        for (int j = 0; j < Obs_Map[i].size(); j++)
+        for (int j = 0; j < MapSize; j++)
         {
             Obs_Map[i][j] = ((Obs_Map[i][j] <= k) ? 1 : 0);
+
             if (Obs_Map[i][j] == 1)
             {
                 Position pT;
@@ -295,7 +319,7 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map_from_Image(cv::Mat Image, std
     return ObstacleMap;
 }
 
-int ObstacleMapGen::R_to_Cells(float real_point, bool limit = false) //if limited, the point will be always inside area
+int ObstacleMapGen::R_to_Cells(double real_point, bool limit = false) //if limited, the point will be always inside area
 {
     if (real_point >= max_dimm && limit)
         real_point = max_dimm;

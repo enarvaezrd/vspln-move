@@ -21,7 +21,7 @@ public:
     {
         bool state = false;
         this->mutex_.lock();
-        if (!this->queue_.empty())
+        if (this->queue_.size()>0)
         {
             t = this->queue_.front();
             this->queue_.pop();
@@ -39,7 +39,7 @@ public:
     int size()
     {
         this->mutex_.lock();
-        int size = queue_.size();
+        int size = this->queue_.size();
         this->mutex_.unlock();
         return size;
     }
@@ -64,7 +64,7 @@ public:
                 robot_model_loader_aux1("robot1/robot_description_aux1"),
                 robot_model_loader_aux2("robot1/robot_description_aux2")
     {
-        num_IK_requests = 5;
+        num_IK_requests = 2;
         index_ks = 0;
         group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);                  //0.004
@@ -111,6 +111,8 @@ public:
     bool SendMovement_byJointsValues(VectorDbl);
     bool ReqMovement_byPose(geometry_msgs::Pose);
     bool ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req);
+
+    bool ReqMovement_byPose_Moveit(geometry_msgs::Pose pose_req);
 
     bool Check_Collision_Indx(VectorDbl Position, int index);
     bool Check_Collision_TypeB(VectorDbl Position);

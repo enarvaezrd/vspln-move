@@ -31,8 +31,8 @@ public:
     PIDarm PIDdata;
     int counter;
 
-    uav_arm_tools(float rad_int_, float rad_ext_) : rad_ext(rad_ext_), 
-        rad_int(rad_int_)
+    uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_) : rad_ext(rad_ext_),
+                                                                            rad_int(rad_int_), minArmAltitude(minArmAltitude_)
 
     {
         PIDdata.ex = 0;
@@ -45,7 +45,8 @@ public:
         PIDdata.Kd = 0.001;
         PIDdata.Ki = 0.0000;
         counter = 0;
-       // rad_ext = 0.45;
+        minArm_Altitude_Limit = minArmAltitude;
+        // rad_ext = 0.45;
         //rad_int = 0.24;
 
         sub_UAVmark = nh_ua.subscribe("/tag_detections", 1, &uav_arm_tools::Marker_Handler, this);
@@ -60,8 +61,7 @@ public:
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.02;  //.035
-        minArmAltitude = 0.76;
+        armDelay = 0.02;           //.035
         state = 0;
     }
 
@@ -91,8 +91,8 @@ public:
         ArmPoseReqFull.position.z = altitude;
     }
 
-    struct Quat ArmOrientReq_toQuaternion(double , Pose_msg );
-    struct Quat Angles_toQuaternion(double , double , double );
+    struct Quat ArmOrientReq_toQuaternion(double, Pose_msg);
+    struct Quat Angles_toQuaternion(double, double, double);
     struct Angles ConvPosetoAngles(Pose_msg);
 
     void UpdateArmCurrentPose(Pose_msg);
@@ -102,12 +102,11 @@ public:
     Pose_msg uavPose_to_ArmPoseReq_arm();  //<100%
     void ArmPoseReq_decreaseAlt(float);
 
-
-    void PID_Calculation(double& a , double &b );
+    void PID_Calculation(double &a, double &b);
     Pose_msg ExternalCircle_Corrections(Pose_msg, Pose_msg);
     Pose_msg InnerCircle_Corrections(Pose_msg, Pose_msg, int);
 
-    float Load_PID_time(double time){ PIDdata.time = time;}
+    float Load_PID_time(double time) { PIDdata.time = time; }
     float getArmDelay() { return armDelay; }
     Pose_msg getMarkerPose() { return marker_pose; }
     int getTrackingState() { return state; }
@@ -129,6 +128,7 @@ private:
     float armDelay;
     ros::NodeHandle nh_ua;
     mutex m_uatools;
+    float minArm_Altitude_Limit;
 
     Positions2D oldPos_ci;
     Positions2D oldPos_ciFull;

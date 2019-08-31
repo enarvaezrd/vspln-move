@@ -57,7 +57,7 @@ class Prediction{
     void SmoothTrajectory_Average(int neighbours,int iterations);
     //new 
     void CreateMap();
-    void Check_Recover_Trajectory();
+    void Check_Recover_Trajectory(bool);
     Etraj Tr_to_Cells(Etraj tr);
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();

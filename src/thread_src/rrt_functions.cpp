@@ -75,7 +75,7 @@ void RRT::Initialize_VicinityRRT()
         double acDist = 1.1;
         for (int k = 0; k <= j; k++)
         {
-            acDist += 0.8 * vdr.R[k][0];
+            acDist += 0.9 * vdr.R[k][0];
         }
         if (acDist == 0)
             acDist = 0.01; //Quitar o revisar valor
@@ -371,17 +371,17 @@ inline void RRT::RRT_Generation()
 #ifdef OPENCV_DRAW
             cv::ellipse(image_Ptraj, cv::Point(Img(vdr.TP[j][0]), Img(vdr.TP[j][1])), cv::Size(scale * vdr.R[j][0], scale * vdr.R[j][1]), rad_to_deg(vdr.angles[j][0]), 0, 360, Colors[j], 1, 8);
 #endif
-            double num_nodes_to_add = NumNodesToAdd_reduced;
-            if (j>0&&j <= 3)
-                num_nodes_to_add *= 2.0;
+            double num_nodes_to_add = double(NumNodesToAdd_reduced);
+            if (j>0&&j <= 4)
+                num_nodes_to_add *= 1.7;
 
             num_requests += Add_Node(j, num_nodes_to_add); //agrega N nodos cada vez
         }
     }
-    Print("Nodes feeding time", ArmModel.toc(ticA).count());
-    auto tic = std::chrono::high_resolution_clock::now();
+   // Print("Nodes feeding time", ArmModel.toc(ticA).count());
+   // auto tic = std::chrono::high_resolution_clock::now();
     RetrieveNodes(num_requests);
-    Print("Retrieving time", ArmModel.toc(tic).count());
+    //Print("Retrieving time", ArmModel.toc(tic).count());
 
     Print("NodesOld size, new size", oldSize, nodes.N);
     //Stretch_the_Cord();
@@ -983,10 +983,10 @@ void RRT::RRT_SequenceB() //extraer vecindad
     finish = false;
     nodes = EmptyNodes;
     //Print("//-------RRt3 InitVicinity-----------");
-    auto tic = std::chrono::high_resolution_clock::now();
+    //auto tic = std::chrono::high_resolution_clock::now();
 
     Initialize_VicinityRRT();
-    Print("Initialize Vcnty time", ArmModel.toc(tic).count());
+    //Print("Initialize Vcnty time", ArmModel.toc(tic).count());
     //tic();
     //Print("//-------RRt4 NodelFilter------------");
     //Node_Filter();
@@ -996,13 +996,13 @@ void RRT::RRT_SequenceB() //extraer vecindad
     //Print("//-------RRt5 NodesReorder-----------");
     Nodes_Reorder();
     // Print("Nodes Reorder    time", ArmModel.toc(tic).count());
-    tic = std::chrono::high_resolution_clock::now();
+    auto tic = std::chrono::high_resolution_clock::now();
     //Print("BBtiempo Nodes Reorder",toc().count());
     //tic();
     //Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
     Print("RT Generation    time", ArmModel.toc(tic).count());
-    tic = std::chrono::high_resolution_clock::now();
+    
     //Print("//-------RRt7 Finish-----------------");
     //Print("BBtiempo RRT Gen",toc().count());
     finish = true;

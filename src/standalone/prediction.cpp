@@ -219,11 +219,11 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose)
         fixed_dist = f_dist;
     }
 
-    Check_Recover_Trajectory();
+    Check_Recover_Trajectory(true);
     SmoothTrajectory_Average(5, 2);
-    Check_Recover_Trajectory();
+    Check_Recover_Trajectory(false);
     SmoothTrajectory_Average(3, 2);
-    Check_Recover_Trajectory();
+    Check_Recover_Trajectory(false);
     SmoothTrajectory_Average(3, 1);
     for (int i = 0; i < Tr.xval.size() - 1; i++)
     {
@@ -262,7 +262,7 @@ void Prediction::CreateMap()
     return;
 }
 
-void Prediction::Check_Recover_Trajectory() //should be executed in sequence
+void Prediction::Check_Recover_Trajectory(bool add_global) //should be executed in sequence
 {
     //CHECK transformations cells <-> Real word xy coords
     Etraj Tr_Cells = Tr_to_Cells(Tr); //convert to cell coords
@@ -271,6 +271,9 @@ void Prediction::Check_Recover_Trajectory() //should be executed in sequence
     std::string tendency_v("none");
     std::string tendency_h("none");
     int overshot = 50;
+
+    double global_tr_correction_x = 0.0;
+    double global_tr_correction_y = 0.0;
     for (int i = Tr_Cells.xval.size() - 1; i >= 0; i--)
     {
         bool horiz = false;
@@ -380,7 +383,16 @@ void Prediction::Check_Recover_Trajectory() //should be executed in sequence
             {
                 Tr.xval[i] = (xchk - ((MapSize - 1) / 2)) / MapResolution;
                 Tr.yval[i] = (ychk - ((MapSize - 1) / 2)) / MapResolution;
+                double point_correction_x = (xchk - x - ((MapSize - 1) / 2)) / MapResolution;
+                double point_correction_y = (ychk - y - ((MapSize - 1) / 2)) / MapResolution;
+                global_tr_correction_x += point_correction_x;
+                global_tr_correction_y += point_correction_y;
             }
+        }
+        if (add_global)
+        {
+            Tr.xval[i] += global_tr_correction_y / (7 * Tr.xval.size());
+            Tr.yval[i] += global_tr_correction_y / (7 * Tr.xval.size());
         }
     }
     Tr_old = Tr;

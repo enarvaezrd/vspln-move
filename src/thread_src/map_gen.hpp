@@ -8,8 +8,8 @@ class ObstacleMapGen
 public:
     ObstacleMapGen(int map_size_, float scale_, int image_size_, float rad_int_, float rad_ext_) : MapSize(map_size_ + 1),
                                                                                                    max_dimm(scale_),
-                                                                                                   x_offset(0.18),
-                                                                                                   k(40),
+                                                                                                   x_offset(0.23),
+                                                                                                   k(20),
                                                                                                    image_size(image_size_),
                                                                                                    rad_ext(rad_ext_),
                                                                                                    rad_int(rad_int_)
@@ -28,15 +28,17 @@ public:
                 ObstacleMapV[i][j] = 0;
         ObstacleMap = ObstacleMapV;
         //  /opt/ros/kinetic/share/robotnik_sensors/urdf/hokuyo_ust10lx.urdf.xacro  //To modify frecuency
-        sub_Laser = nh_map_gen.subscribe("/robot1/front_laser/scan", 1, &ObstacleMapGen::Laser_Handler, this);
+        sub_Laser = nh_map_gen.subscribe("/scan", 1, &ObstacleMapGen::Laser_Handler, this); ///robot1/front_laser/scan. REAL
+
+        //sub_Laser = nh_map_gen.subscribe("/robot1/front_laser/scan", 1, &ObstacleMapGen::Laser_Handler, this);   ///robot1/front_laser/scan SIMM
         map_img_factor = (double)(image_size) / (float)(MapSize);
     }
 
     void Thicken_Map();
     void CreateMap();
     void Laser_Handler(const sensor_msgs::LaserScan &ls);
-    int R_to_Cells(float real_point, bool limit);
-    double Cells_to_Real(float cells_point) ;
+    int R_to_Cells(double real_point, bool limit);
+    double Cells_to_Real(float cells_point);
     std::vector<VectorInt> get_Map()
     {
         Map_mtx.lock();

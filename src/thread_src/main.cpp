@@ -12,13 +12,14 @@ int main(int argc, char **argv)
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 13; // Profundidad de exploracion  Esz=prof_f
-    int Map_size = 500;
+    int prof_expl = 12; // Profundidad de exploracion  Esz=prof_f
+    int Map_size = 800;
     float scale = 1;
-    double rrt_extension = 0.35; //extension of each rrt step for regression
-    int num_nodes_per_region = prof_expl + 22;
+    double rrt_extension = 0.38; //extension of each rrt step for regression
+    int num_nodes_per_region = prof_expl + 10;
     double rad_int = 0.25;
     double rad_ext = 0.46;
+    double armMinAltitude = 0.52;
     //==================================================================================
 
     ros::init(argc, argv, "arm_program");
@@ -30,7 +31,7 @@ int main(int argc, char **argv)
     ObstacleMapGen ObstacleMap(Map_size, scale, image_size, rad_int, rad_ext);
     RobotCommands Robot_Commands;
 
-    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext);
+    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext,armMinAltitude);
     sleep(1.0);
 
     RRT_model.ArmModel.PrintModelInfo();
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
     sleep(1.0);
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
-    float alturap = 0.72; //0.21
+    float alturap = armMinAltitude; //0.21
 
     geometry_msgs::Pose target_pose = RRT_model.ArmModel.getCurrentPose();
 
@@ -77,7 +78,7 @@ int main(int argc, char **argv)
 
     int TrackingState = 0;
     int ThreadStep = 0;
-    geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread=target_posea;
+    geometry_msgs::Pose CurrentRequest, CurrentRequest_Thread = target_posea;
     std::mutex openCV_mutex;
 
     //  namedWindow(window_name_B, cv::WINDOW_NORMAL);
@@ -86,7 +87,7 @@ int main(int argc, char **argv)
     //cv::resizeWindow(window_name, image_size, image_size);
     auto rrt_threadB = std::thread([&]() {
         string window_name_B = "Prediction + RRT Image";
-        ros::Rate loop_rate_thread(30);
+        ros::Rate loop_rate_thread(25);
         std::this_thread::sleep_for(std::chrono::milliseconds(6000));
         bool sequence_loop_th = false;
         //sleep(6.0);
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
                 //openCV_mutex.unlock();
 #endif
                 //std::cout<<"Seq B time: "<<RRT_modelB.ArmModel.toc(clB).count()<<std::endl;
-                Print("==SEQUENCE B TIME ", RRT_model.ArmModel.toc(clB).count());
+                Print("==========SEQUENCE B TIME ", RRT_model.ArmModel.toc(clB).count());
                 clB = std::chrono::high_resolution_clock::now();
                 // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
@@ -154,17 +155,21 @@ int main(int argc, char **argv)
     });
     auto rrt_threadA = std::thread([&]() {
         string window_name = "Prediction + RRT Image";
-        cv::namedWindow(window_name,cv::WINDOW_NORMAL);
+        cv::namedWindow(window_name, cv::WINDOW_NORMAL);
         //std::unique_lock<std::mutex> lck(mtx_main);
         auto clA = std::chrono::high_resolution_clock::now();
+        geometry_msgs::Pose CurrentArmPose;
         while (ros::ok())
         {
+
             Predict_B.ClearImage_Ptraj();
             Predict_B.Load_Map(ObstacleMap.get_Map(), ObstacleMap.get_Obs_Points(), ObstacleMap.get_Obs_Points_Thick()); //Load Obstacle Map
             Predict_B.Draw_Map();
-            geometry_msgs::Pose CurrentArmPose;
-            CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
+
+            //CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
+
+            CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             //RRT_model.ArmModel.tic();
             //cout<<"Estado de marker: "<<UavArm_tools.getTrackingState() <<endl;
@@ -182,7 +187,10 @@ int main(int argc, char **argv)
             {
                 Robot_Commands.Send_Empty_Commands();
                 Print("ENTER IN RESET of B");
-                RRT_model.loop_end();
+                if (TrackingState == 0)
+                {
+                    RRT_model.loop_end();
+                }
 
                 RRT_model.reset_nodes_reordered();
                 UavArm_tools.PIDReset(); //reset, set zeros to errors and integrals
@@ -190,7 +198,7 @@ int main(int argc, char **argv)
                 UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                 UavArm_tools.counter = 0;
             }
-            
+            auto ticMap = std::chrono::high_resolution_clock::now();
             if (TrackingState > 1)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
@@ -200,19 +208,21 @@ int main(int argc, char **argv)
                 //m.unlock();
 
                 UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude());
+               
 
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
                 //RRT_modelA.ArmModel.PrintPose("req th pose ",CurrentRequest_Thread);
-                //RRT_modelA.Load_NdsReord(RRT_modelB.Get_NdsReord());
+                //RRT_modelA.Load_NdsReord(RRT_modelB.Get_NdsReord()); 
+               
                 try
                 {
-                    Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
 
-                    Predict_B.Planif_SequenceA(CurrentRequest_Thread);
+                    Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
+                    Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                     Predict_B.Charge_Nodes();
                     Predict_B.RRT_Path_Generation();
-                    NextArmRequest = Predict_B.Selection_Function(0.8);
+                    NextArmRequest = Predict_B.Selection_Function(0.4);
                     RRT_model.loop_start();
                 }
                 catch (const std::exception &e)
@@ -220,7 +230,7 @@ int main(int argc, char **argv)
                     std::cerr << "Prediction exeption: " << e.what() << '\n';
                 }
             }
-
+            Print("PARTIAL LOOP A PREDICT IF BLOCK", RRT_model.ArmModel.toc(ticMap).count());
             //CurrentRequest = UavArm_tools.getArmPoseReq();
             //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
@@ -229,11 +239,12 @@ int main(int argc, char **argv)
             // RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
             // RRT_model.loop_start();
             // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.position.z,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
-            RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest); //type 1 with normal execution, type 2 for last joint preference
 
+
+           // RRT_model.ArmModel.ReqMovement_byPose_Moveit(NextArmRequest);
+            RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(CurrentRequest_Thread);// CurrentRequest_Thread   NextArmRequest
+  
             UavArm_tools.Load_PID_time(RRT_model.ArmModel.getDelayTime().count() / 1000000);
-            CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
-            UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
 
             cv::Mat imageA = Predict_B.getImage_Ptraj();
 
@@ -244,8 +255,9 @@ int main(int argc, char **argv)
 
             // openCV_mutex.unlock();
             //std::this_thread::sleep_for(std::chrono::milliseconds(35));
-            loop_rate.sleep();
-            //      Print("SEQUENCE A TIME ",RRT_modelA.ArmModel.toc(clA).count());
+            // loop_rate.sleep();
+
+            Print("===--->SEQUENCE A TIME ", RRT_model.ArmModel.toc(clA).count());
             clA = std::chrono::high_resolution_clock::now();
         }
     });

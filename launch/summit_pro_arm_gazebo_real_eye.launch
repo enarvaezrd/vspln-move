@@ -60,25 +60,20 @@
 		</include>
 	</group>
 
-	<!--sd
 
-	<node pkg="apriltags_ros" type="apriltag_detector_node" name="apriltag_detector" output="screen">
-		<remap from="image_rect" to="/robot1/cam/image_raw" />
-		<remap from="camera_info" to="/robot1/cam/camera_info" />
-		<param name="tag_family" type="str" value="36h11" />
-		<param name="projected_optics" type="bool" value="true" />
-		<rosparam param="tag_descriptions">[{id: 13, size: 0.04, frame_id: odom_combined}]
-	</rosparam>
-  </node> -->
+<!--Camera Launcher-->
+<include file="$(find ueye_cam)/launch/rgb8.launch"/>
 
+<!--April Tag ROS launcher-->
 	<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
-		<arg name="camera_name" value="/robot1/cam"/>
-		<arg name="camera_frame" value="/robot1/cam"/>
+		<arg name="camera_name" value="/camera"/>   <!--/robot1/cam-->
+		<arg name="camera_frame" value="/camera"/>  <!--/robot1/cam-->
 
 		<arg name="image_topic" value="image_raw"/>
 	</include>
 
 	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+
 	<!--Summit_controller-->
 	<!--Joystick-->
 	<node name="joystick_node" pkg="joy" type="joy_node"/>
@@ -86,5 +81,20 @@
 	<node name="summit_control" pkg="ed_control" type="summit_control"/>
 
 
+
+<!--Real arm controllers-->
+	<include file="$(find dynamixel_workbench_controllers)/launch/mx_arm_controllers.launch">
+		<arg name="launch_joystick" value="false"/>
+	</include>
+
+
+
+
+	<include file="$(find timed_roslaunch)/launch/timed_roslaunch.launch">
+		<arg name="time" value="3" />
+		<arg name="pkg" value="dynamixel_workbench_controllers" />
+		<arg name="file" value="pro_arm_controllers.launch" />
+		<arg name="value" value="launch_joystick:=false" />
+	</include>
 
 </launch>

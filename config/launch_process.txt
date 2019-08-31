@@ -1,0 +1,17 @@
+connect dynamixel2usb for pro motors first
+connect dynamixel2usb for mx motors second
+
+
+
+
+
+potentially change:
+
+map_gen.hpp:  line 31, /scan for real robot
+		       /robot1/front_laser/scan for simmulation
+
+
+
+
+
+

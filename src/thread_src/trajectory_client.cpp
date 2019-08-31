@@ -17,6 +17,8 @@ namespace edArm_trajectory
         joint_names_.push_back("joint6");
 
       joint_state_sub_ = nh_.subscribe("/robot1/joint_states", 1, &FollowTrajectoryClient::jointStateCB, this);
+      pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot2/arm_general/goal_command", 1); //commands for the arm
+
        spinner_.start();
 
       // wait for action server to come up
@@ -63,6 +65,8 @@ namespace edArm_trajectory
     {  // When to start the trajectory: 1s from now
       goal.trajectory.header.stamp = ros::Time::now();// + ros::Duration(0.1);
       traj_client_.sendGoal(goal);
+      pub_trajectory_arm_command.publish(goal);
+
     }
 
     void FollowTrajectoryClient::boundValue(double& val, double maxv,double minv)
@@ -113,7 +117,7 @@ namespace edArm_trajectory
         // trajectory point:0
         trajectory.points[0].time_from_start = ros::Duration(Wait_Time+0.01);
         trajectory.points[0].positions.resize(NUM_JOINTS);
-        trajectory.points[0].positions = req_positions;
+        trajectory.points[0].positions = req_positions;  //siempre poner en primera posicion, para controlador de motores dynamixel
         // trajectory point:1
         trajectory.points[1].time_from_start = ros::Duration(Wait_Time+0.03); //Ttimer quitar el 0.005
         trajectory.points[1].positions.resize(NUM_JOINTS);

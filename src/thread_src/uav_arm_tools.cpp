@@ -371,13 +371,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (rad <= (rad_int + 0.02))
     {
         minArmAltitude += 0.0015;
-        MinMax_Correction(minArmAltitude, 0.85);
+        MinMax_Correction(minArmAltitude, minArm_Altitude_Limit+0.13);
     }
     else
     {
         minArmAltitude -= 0.001;
-        if(minArmAltitude<=0.75) minArmAltitude = 0.75;
-        MinMax_Correction(minArmAltitude, 0.75);
+        if(minArmAltitude<=minArm_Altitude_Limit) minArmAltitude = minArm_Altitude_Limit;
+        MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
     }
 
     /* 
