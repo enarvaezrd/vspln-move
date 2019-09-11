@@ -3,18 +3,6 @@
 
 #include "uav_ugv_commands.hpp"
 
-void MinMax_Correction(double &value, double max_value)
-{
-    if(value > max_value) value = max_value;
-    if(value < -max_value) value = -max_value;
-    return;
-}
-void MinMax_Correction(float &value, double max_value)
-{
-    if(value > max_value) value = max_value;
-    if(value < -max_value) value = -max_value;
-    return;
-}
 
 Angles RobotCommands::ConvPosetoAngles(geometry_msgs::Pose pose) //Convertir quaternion de pose en angulos
 {

@@ -62,9 +62,11 @@ public:
     Ed_Pmov() : group("pro_arm"),
                 robot_model_loader("robot1/robot_description"),
                 robot_model_loader_aux1("robot1/robot_description_aux1"),
-                robot_model_loader_aux2("robot1/robot_description_aux2")
+                robot_model_loader_aux2("robot1/robot_description_aux2"),
+                robot_model_loader_aux3("robot1/robot_description_aux3"),
+                robot_model_loader_aux4("robot1/robot_description_aux4")
     {
-        num_IK_requests = 2;
+        num_IK_requests = 5;
         index_ks = 0;
         group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);                  //0.004
@@ -77,7 +79,8 @@ public:
         }
         kinematic_models_[1] = robot_model_loader_aux1.getModel();
         kinematic_models_[2] = robot_model_loader_aux2.getModel();
-
+        kinematic_models_[3] = robot_model_loader_aux3.getModel();
+        kinematic_models_[4] = robot_model_loader_aux4.getModel();
         for (int i = 0; i <= num_IK_requests; i++)
         {
             robot_state::RobotStatePtr kA(new robot_state::RobotState(kinematic_models_[i]));
@@ -105,6 +108,7 @@ public:
     }
 
     geometry_msgs::Pose getCurrentPose();
+    std::vector< double > getCurrentJoints();
 
     void CheckandFixPoseRequest(geometry_msgs::Pose &pose_req);
     bool ReqMovement_byJointsValues(VectorDbl);
@@ -112,6 +116,9 @@ public:
     bool ReqMovement_byPose(geometry_msgs::Pose);
     bool ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req);
 
+    control_msgs::FollowJointTrajectoryGoal Req_Joints_byPose_FIx_Orientation(geometry_msgs::Pose pose_req);
+
+    bool Request_Movement_byJointsTrajectory(control_msgs::FollowJointTrajectoryGoal goal);
     bool ReqMovement_byPose_Moveit(geometry_msgs::Pose pose_req);
 
     bool Check_Collision_Indx(VectorDbl Position, int index);
@@ -155,7 +162,7 @@ public:
     typedef moveit::planning_interface::MoveItErrorCode ErrorCode;
     typedef moveit_msgs::MoveItErrorCodes MoveitCodes;
 
-    RobotModelLoader robot_model_loader, robot_model_loader_aux1, robot_model_loader_aux2;
+    RobotModelLoader robot_model_loader, robot_model_loader_aux1, robot_model_loader_aux2,robot_model_loader_aux3,robot_model_loader_aux4;
 
     Printer Print;
     std::vector<robot_model::RobotModelPtr> kinematic_models_;
@@ -168,6 +175,7 @@ public:
 private:
     std::chrono::microseconds delay_time;
     geometry_msgs::Pose currentPose;
+    std::vector< double > currentJoints;
     ros::Publisher joints_pub;
     ros::NodeHandle nh_;
     std::mutex positions_mtx, results_mtx, process_mtx;

@@ -11,6 +11,9 @@ map_gen.hpp:  line 31, /scan for real robot
 		       /robot1/front_laser/scan for simmulation
 
 
+where is Pioneer odom topic
+
+
 
 
 

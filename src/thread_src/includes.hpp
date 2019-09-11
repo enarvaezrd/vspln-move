@@ -44,7 +44,7 @@
 #define OPENCV_DRAW
 #define PI 3.141592654
 #define PRINT
-
+#define SREAMING_
 using namespace std;
 struct Position_
 {
@@ -153,8 +153,28 @@ struct LaserDataS
     bool state;
 };
 
-void MinMax_Correction(double &value, double max_value);
-void MinMax_Correction(float &value, double max_value);
+class NumberCorrection
+{
+public:
+    NumberCorrection() {}
+    void MinMax_Correction(double &value, double max_value)
+    {
+        if (value > max_value)
+            value = max_value;
+        if (value < -max_value)
+            value = -max_value;
+        return;
+    }
+    void MinMax_Correction(float &value, double max_value)
+    {
+        if (value > max_value)
+            value = max_value;
+        if (value < -max_value)
+            value = -max_value;
+        return;
+    }
+};
+
 class Printer
 {
 public:

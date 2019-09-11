@@ -34,11 +34,11 @@
 
     <xacro:pioneer3dx prefix="$(arg prefix)"/>
 <!--laser
+-->
    <xacro:sick_lms_1xx name="laser" ros_topic="front_laser/scan" parent="$(arg prefix)base_link">
 	<origin xyz="0.215 0.0 0.18" rpy="0 0 0"/>
     </xacro:sick_lms_1xx>
 
--->
     <xacro:pioneer_gazebo_control prefix="/robot1"/>
     <xacro:gazebo_pioneer_params />
     <xacro:gazebo_pioneer_drive prefix="/robot1"/>

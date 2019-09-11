@@ -93,7 +93,7 @@ public:
         Stop_RRT_flag = true;
         Stretch_Extension = 2; //2 nodes
         r = 0.01;              //Radio de nodos cercanos Revisar  0.009 0.014
-        EPS = 0.007;           //Maximo movimiento Revisar  0.005  0.007
+        EPS = 0.005;           //Maximo movimiento Revisar  0.005  0.007
         
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
         emptyMatrix.resize(3);
@@ -168,6 +168,7 @@ public:
     void Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState() { return sequence_loop; }
     void reset_nodes_reordered() { nodes_reordered = 0; }
+    control_msgs::FollowJointTrajectoryGoal SteerJoints(control_msgs::FollowJointTrajectoryGoal goal);
 
     void PrintNode(cv::Mat, VectorDbl);
     void loop_start();
@@ -210,6 +211,7 @@ public:
     Vicinity GetVicinity() { return vdr; }
     void Draw_RRT();
     void Initialize_Inv_Transf_Matrices(vector<VectorDbl> &Rpitch, vector<VectorDbl> &Rroll, vector<VectorDbl> &Ryaw, int &It);
+
     VectorDbl Rotation(VectorDbl, vector<VectorDbl>, vector<VectorDbl>, vector<VectorDbl>);
     bool Stop_RRT_flag;
     int get_TR_Size() { return Tr.xval.size(); }

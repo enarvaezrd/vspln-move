@@ -103,7 +103,7 @@ public:
     void ArmPoseReq_decreaseAlt(float);
 
     void PID_Calculation(double &a, double &b);
-    Pose_msg ExternalCircle_Corrections(Pose_msg, Pose_msg);
+    Pose_msg ExternalCircle_Corrections(Pose_msg);
     Pose_msg InnerCircle_Corrections(Pose_msg, Pose_msg, int);
 
     float Load_PID_time(double time) { PIDdata.time = time; }
@@ -132,6 +132,7 @@ private:
 
     Positions2D oldPos_ci;
     Positions2D oldPos_ciFull;
+    NumberCorrection num;
 };
 } // namespace ua_ns
 

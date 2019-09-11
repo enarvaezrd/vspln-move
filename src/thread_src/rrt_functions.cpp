@@ -14,7 +14,9 @@ void RRT::Initialize_VicinityRRT()
         vdr.TP[j][1] = Tr.yval[j + adv];
         vdr.TP[j][2] = Tr.zval[j + adv];
         // mtxA.lock();
+#ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((Tr.xval[j + adv] + maxsc) * scale, (Tr.yval[j + adv] + maxsc) * scale), 4, Colors[0], 3, 8);
+#endif
         //mtxA.unlock();
     }
     for (int j = 0; j < 4; j++)
@@ -101,7 +103,7 @@ void RRT::Initialize_VicinityRRT()
         // cv::circle(image_Ptraj, cv::Point((vdr.TP[j][0] + maxsc) * scale, (vdr.TP[j][1] + maxsc) * scale), 4, Colors[0], CV_FILLED, 3, 8);
         //  mtxA.unlock();
     }
- 
+
     //Print("UAV VELOCITY", UAV_Velocity);
     vdr.L = prof_expl;
     return;
@@ -174,7 +176,7 @@ void RRT::Node_Filter()
                 del_List.push_back(i);
             }
         }
-        Print("Nodos antiguos", OldNodes.N);
+        // Print("Nodos antiguos", OldNodes.N);
         // Print("allowed, existent",allowednodes,nodes.N,nodes.coord.size());
         //Print("Old Nodes Size First", OldNodes.N);
         //filtrado por trayectoria, puntos no necesarios de la antigua trayectoria
@@ -364,6 +366,7 @@ inline void RRT::RRT_Generation()
     //Text_Stream->write_TimeStamp();
     int num_requests = 0;
     auto ticA = std::chrono::high_resolution_clock::now();
+    double num_nodes_to_add = double(NumNodesToAdd_reduced);
     if (NumNodesToAdd_reduced != 0)
     {
         for (int j = 0; j < prof_expl; j++) //(int j=prof_expl-1;j >= 0 ;j--)
@@ -371,19 +374,19 @@ inline void RRT::RRT_Generation()
 #ifdef OPENCV_DRAW
             cv::ellipse(image_Ptraj, cv::Point(Img(vdr.TP[j][0]), Img(vdr.TP[j][1])), cv::Size(scale * vdr.R[j][0], scale * vdr.R[j][1]), rad_to_deg(vdr.angles[j][0]), 0, 360, Colors[j], 1, 8);
 #endif
-            double num_nodes_to_add = double(NumNodesToAdd_reduced);
-            if (j>0&&j <= 4)
-                num_nodes_to_add *= 1.7;
+            num_nodes_to_add = double(NumNodesToAdd_reduced);
+            if (j >= 0 && j <= 4)
+                num_nodes_to_add *= 2.0;
 
             num_requests += Add_Node(j, num_nodes_to_add); //agrega N nodos cada vez
         }
     }
-   // Print("Nodes feeding time", ArmModel.toc(ticA).count());
-   // auto tic = std::chrono::high_resolution_clock::now();
+    // Print("Nodes feeding time", ArmModel.toc(ticA).count());
+    // auto tic = std::chrono::high_resolution_clock::now();
     RetrieveNodes(num_requests);
     //Print("Retrieving time", ArmModel.toc(tic).count());
 
-    Print("NodesOld size, new size", oldSize, nodes.N);
+    //  Print("NodesOld size, new size", oldSize, nodes.N);
     //Stretch_the_Cord();
     Draw_RRT();
 
@@ -760,6 +763,31 @@ VectorDbl RRT::steer(VectorDbl qr, VectorDbl qn, double min_ndist, double EPS)
     return A;
 }
 
+control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal goal)
+{
+    double JointEPS = 10 * EPS;
+    auto joints = ArmModel.getCurrentJoints();
+    int ReqJointsSize = goal.trajectory.points[0].positions.size();
+    int CurrentJointsSize = joints.size();
+    if (CurrentJointsSize != ReqJointsSize)
+        Print("Joints sizes are not the same RRT funstions line 772");
+    else
+    {
+        int joint_cn = 0;
+        double diff;
+        for (auto req_joint : goal.trajectory.points[0].positions)
+        {
+            diff = req_joint - joints[joint_cn];
+            if (diff < -EPS)
+                diff = -EPS;
+            if (diff > EPS)
+                diff = EPS;
+            req_joint = req_joint + diff;
+            joint_cn++;
+        }
+    }
+}
+
 void RRT::Draw_RRT()
 {
     //Print("size",nodes.coord.size(),nodes.N);
@@ -1001,8 +1029,8 @@ void RRT::RRT_SequenceB() //extraer vecindad
     //tic();
     //Print("//-----RRt6 RRTGEN-----------------");
     RRT_Generation();
-    Print("RT Generation    time", ArmModel.toc(tic).count());
-    
+    //  Print("RT Generation    time", ArmModel.toc(tic).count());
+
     //Print("//-------RRt7 Finish-----------------");
     //Print("BBtiempo RRT Gen",toc().count());
     finish = true;

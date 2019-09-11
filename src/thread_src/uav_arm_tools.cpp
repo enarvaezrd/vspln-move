@@ -178,15 +178,15 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_full()
     cx = xc1;
     cy = yc1;
 
-    MinMax_Correction(cx, corg);
-    MinMax_Correction(cy, corg);
+    num.MinMax_Correction(cx, corg);
+    num.MinMax_Correction(cy, corg);
 
     ArmPoseReqFull.position.x += cx;
     ArmPoseReqFull.position.y -= cy;
 
     float max_rectangle = 0.4;
-    MinMax_Correction(ArmPoseReqFull.position.x, max_rectangle); //limitaciones rectangulares
-    MinMax_Correction(ArmPoseReqFull.position.y, max_rectangle);
+    num.MinMax_Correction(ArmPoseReqFull.position.x, max_rectangle); //limitaciones rectangulares
+    num.MinMax_Correction(ArmPoseReqFull.position.y, max_rectangle);
 
     double cat1, cat2, offx, offy;
     offx = 0.0;
@@ -371,13 +371,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (rad <= (rad_int + 0.02))
     {
         minArmAltitude += 0.0015;
-        MinMax_Correction(minArmAltitude, minArm_Altitude_Limit+0.13);
+        num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit+0.13);
     }
     else
     {
         minArmAltitude -= 0.001;
         if(minArmAltitude<=minArm_Altitude_Limit) minArmAltitude = minArm_Altitude_Limit;
-        MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+        num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
     }
 
     /* 
@@ -396,7 +396,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     if (rad >= rad_ext)
     { //Circulo externo
-        PID_ArmReq = ExternalCircle_Corrections(PID_ArmReq, OldArmPoseReq);
+        PID_ArmReq = ExternalCircle_Corrections(PID_ArmReq);
     }
 
     if (rad <= rad_int)
@@ -444,8 +444,8 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     PIDdata.integraly += errory * PIDdata.time;
     double Ioutx = PIDdata.Ki * PIDdata.integralx;
     double Iouty = PIDdata.Ki * PIDdata.integraly;
-    MinMax_Correction(Ioutx, 0.01); //as we dont want large corrections
-    MinMax_Correction(Iouty, 0.01);
+    num.MinMax_Correction(Ioutx, 0.01); //as we dont want large corrections
+    num.MinMax_Correction(Iouty, 0.01);
     double pid_outputx = Poutx + Ioutx + Doutx;
     double pid_outputy = Pouty + Iouty + Douty;
     // Restrict to max/min
@@ -458,7 +458,7 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     return;
 }
 
-Pose_msg uav_arm_tools::ExternalCircle_Corrections(Pose_msg CurrentPoseReq, Pose_msg OldPoseReq)
+Pose_msg uav_arm_tools::ExternalCircle_Corrections(Pose_msg CurrentPoseReq)
 {
     double theta = 0;
     if (CurrentPoseReq.position.x < 0.0)
@@ -569,8 +569,8 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     // if (dy>0&&corry<0) corry=0.0;
     //if (dy<0&&corry>0) corry=0.0;
 
-    MinMax_Correction(corrx, max_correction);
-    MinMax_Correction(corry, max_correction);
+    num.MinMax_Correction(corrx, max_correction);
+    num.MinMax_Correction(corry, max_correction);
 
     Pose_msg Result_poseReq = CurrentPoseReq;
     Result_poseReq.position.x += corrx;

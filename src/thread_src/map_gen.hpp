@@ -6,13 +6,14 @@
 class ObstacleMapGen
 {
 public:
-    ObstacleMapGen(int map_size_, float scale_, int image_size_, float rad_int_, float rad_ext_) : MapSize(map_size_ + 1),
-                                                                                                   max_dimm(scale_),
-                                                                                                   x_offset(0.23),
-                                                                                                   k(20),
-                                                                                                   image_size(image_size_),
-                                                                                                   rad_ext(rad_ext_),
-                                                                                                   rad_int(rad_int_)
+    ObstacleMapGen(int map_size_, float scale_, int image_size_, float rad_int_, float rad_ext_, std::string laser_topic_) : MapSize(map_size_ + 1),
+                                                                                                                             max_dimm(scale_),
+                                                                                                                             x_offset(0.23),
+                                                                                                                             k(22),
+                                                                                                                             image_size(image_size_),
+                                                                                                                             rad_ext(rad_ext_),
+                                                                                                                             rad_int(rad_int_),
+                                                                                                                             laser_topic(laser_topic_)
     {
         toDegrees = 180.0 / 3.141593;
         HalfMapSize = (MapSize - 1) / 2;
@@ -28,10 +29,14 @@ public:
                 ObstacleMapV[i][j] = 0;
         ObstacleMap = ObstacleMapV;
         //  /opt/ros/kinetic/share/robotnik_sensors/urdf/hokuyo_ust10lx.urdf.xacro  //To modify frecuency
-        sub_Laser = nh_map_gen.subscribe("/scan", 1, &ObstacleMapGen::Laser_Handler, this); ///robot1/front_laser/scan. REAL
+        //sub_Laser = nh_map_gen.subscribe("/scan", 1, &ObstacleMapGen::Laser_Handler, this); ///robot1/front_laser/scan. REAL
 
-        //sub_Laser = nh_map_gen.subscribe("/robot1/front_laser/scan", 1, &ObstacleMapGen::Laser_Handler, this);   ///robot1/front_laser/scan SIMM
-        map_img_factor = (double)(image_size) / (float)(MapSize);
+        sub_Laser = nh_map_gen.subscribe(laser_topic, 1, &ObstacleMapGen::Laser_Handler, this); ///robot1/front_laser/scan SIMM
+        map_img_factor = (double)(image_size) / (double)(MapSize); //real size in m of each pixel 
+        start_time = std::chrono::high_resolution_clock::now();
+        ObstacleMap_Global = ObstacleMapV;
+        ObstacleOldMaps.push_back(ObstacleMapV);
+        ObstacleOldMaps.push_back(ObstacleMapV);
     }
 
     void Thicken_Map();
@@ -74,8 +79,22 @@ public:
 
     void Expand_Obstacle(double radius, double angle, std::vector<VectorInt> &ObstacleMapT);
 
+    void AccumulateObstacleMaps(std::vector<VectorInt> Obs_Map);
+
+    void Load_UGV_state(RobotState_ ugv_st)
+    {
+        ugv_state_mtx.lock();
+        UGV_state = ugv_st;
+        
+        end_time = std::chrono::high_resolution_clock::now();
+        map_build_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        ugv_state_mtx.unlock();
+        start_time = std::chrono::high_resolution_clock::now();
+        return;
+    }
     Printer Print;
-    std::vector<VectorInt> ObstacleMap, ObstacleMapV;
+    std::vector<VectorInt> ObstacleMap, ObstacleMapV,ObstacleMap_Global;
+    std::deque<std::vector<VectorInt>> ObstacleOldMaps;
     float max_dimm;
     ros::NodeHandle nh_map_gen;
     ros::Subscriber sub_Laser; //Marker pose
@@ -93,6 +112,12 @@ public:
     std::vector<Position> Obstacle_Points;
     float rad_ext, rad_int;
     double toDegrees;
+    std::string laser_topic;
+    RobotState_ UGV_state;
+    std::mutex ugv_state_mtx;
+    double map_build_milliseconds;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
+    NumberCorrection num;
 };
 
 #endif

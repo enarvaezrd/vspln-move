@@ -74,6 +74,8 @@ public:
     void Check_Recover_Trajectory(bool);
     void Check_Recover_Trajectory_tendency();
     Etraj Tr_to_Cells(Etraj tr);
+
+    Position_ RealPosition_to_Cells(Position_ Pos);
     double Cell_to_Real(int point_cell);
     bool Check_Map_Coord(int x, int y);
     void SmoothTrajectory();
@@ -97,6 +99,8 @@ public:
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
     void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose); //extraer vecindad
+
+    geometry_msgs::Pose NoTarget_Sequence(geometry_msgs::Pose Marker_Abs_Pose); //No quad
     //const Nodes Get_Nodes(){return nodes;}
     void Load_Nodes(Nodes nds, Vicinity vdr)
     {
@@ -193,6 +197,7 @@ private:
     bool PathPlanning_Available;
     int PathPlanningAdvancing_Index;
     geometry_msgs::Pose Marker_Pose_Manipulator_Coords;
+    NumberCorrection num;
 };
 } // namespace PredNs
 

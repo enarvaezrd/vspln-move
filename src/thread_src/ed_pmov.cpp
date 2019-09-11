@@ -162,6 +162,72 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
     }
     return fk;
 }
+
+control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
+{
+    ros::Duration tiempo_traj(0.0);
+    //CheckandFixPoseRequest(pose_req);
+
+    control_msgs::FollowJointTrajectoryGoal goale;
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.01);
+
+    if (fk)
+    {
+        std::vector<double> joints_result(6);
+        kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result);
+
+        std::vector<double> joints_result_pos(6);
+        geometry_msgs::Pose TPoseTemp = pose_req;
+        TPoseTemp.orientation.w = 0.0;
+        TPoseTemp.orientation.x = 1.0;
+        TPoseTemp.orientation.y = 0.0;
+        TPoseTemp.orientation.z = 0.0;
+        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 2, 0.01);
+        if (found_ikO)
+        {
+            kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result_pos); //de jv saco posicion de joints 0 a 5
+            joints_result[0] = joints_result_pos[0];
+            joints_result[1] = joints_result_pos[1];
+            joints_result[2] = joints_result_pos[2];
+            joints_result[3] = joints_result_pos[3];
+            joints_result[4] = joints_result_pos[4];
+            //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
+            //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
+        }
+
+        //std::cout<<"joints : "<<jv[0]<<" "<<jv[1]<<" "<<jv[2]<<" "<<jv[3]<<" "<<jv[4]<<" "<<jv[5]<<std::endl;
+        goale = arm.makeArmUpTrajectory(joints_result);
+
+        //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
+        tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
+        delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
+        int delay_time_usecs = delay_time.count();
+        if (delay_time_usecs > 50000)
+        {
+            Print("Delay time", delay_time_usecs);
+            delay_time_usecs = 50000;
+        }
+    }
+    else
+    {
+
+        PrintPose("NO solution for pose request!", pose_req);
+    }
+    return goale;
+}
+
+bool Ed_Pmov::Request_Movement_byJointsTrajectory(control_msgs::FollowJointTrajectoryGoal goal)
+{
+    if (goal.trajectory.points.size()>1 )
+    {
+         arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
+         return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
 //type - 1 para solo posicion y 2 para posicion y orientacion juntas
 {
@@ -272,6 +338,12 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
     return currentPoseT;
 }
 
+std::vector< double > Ed_Pmov::getCurrentJoints()
+{
+    currentJoints = group.getCurrentJointValues();
+    auto currentJointsT = currentJoints;
+    return currentJointsT;
+}
 void Ed_Pmov::PrintCurrentPose(std::string workspace)
 {
     currentPose = group.getCurrentPose().pose;

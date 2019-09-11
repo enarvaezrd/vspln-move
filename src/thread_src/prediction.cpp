@@ -652,8 +652,8 @@ Etraj Prediction::Tr_to_Cells(Etraj tr)
     Etraj Traj_Cells = tr;
     for (int i = 0; i < tr.xval.size(); i++)
     {
-        MinMax_Correction(tr.xval[i], max_dimm);
-        MinMax_Correction(tr.yval[i], max_dimm);
+        num.MinMax_Correction(tr.xval[i], max_dimm);
+        num.MinMax_Correction(tr.yval[i], max_dimm);
 
         // cout<<Traj_Cells.xval[i] <<", "<<tr.xval[i] <<", "<<MapResolution<<", "<<HalfMapSize +  round(tr.xval[i]*MapResolution)<<endl;
         Traj_Cells.xval[i] = HalfMapSize + round(tr.xval[i] * MapResolution); //now between 0 and MapSize
@@ -661,6 +661,19 @@ Etraj Prediction::Tr_to_Cells(Etraj tr)
         Traj_Cells.zval[i] = HalfMapSize + round(tr.zval[i] * MapResolution);
     }
     return Traj_Cells;
+}
+Position_ Prediction::RealPosition_to_Cells(Position_ Pos)
+{
+    Position_ Position_Cells;
+
+    num.MinMax_Correction(Pos.x, max_dimm);
+    num.MinMax_Correction(Pos.y, max_dimm);
+
+    Position_Cells.x = HalfMapSize + round(Pos.x * MapResolution); //now between 0 and MapSize
+    Position_Cells.y = HalfMapSize + round(Pos.y * MapResolution);
+    Position_Cells.z = HalfMapSize + round(Pos.z * MapResolution);
+
+    return Position_Cells;
 }
 double Prediction::Cell_to_Real(int point_cell)
 {
@@ -1112,7 +1125,6 @@ void Prediction::RRT_Path_Generation()
                 //  Print("Tree",road_index_T,nodes.parent[road_index_T]);
             }
             PathPlanning_Indexes = RoadIndexes;
-            PathPlanning_Available = true;
             PathPlanningAdvancing_Index = 0;
         }
         else
@@ -1120,26 +1132,15 @@ void Prediction::RRT_Path_Generation()
             Print("fail finding nodes", nodes.N);
         }
 
+        PathPlanning_Available = true;
+        //New_Nodes_from_RRT = false;
         NodesAvailable = false;
+
+#ifdef STREAMING
         Text_Stream_Path->write_TimeStamp();
         Text_Stream_Path->write_Data(nodes.coord[RoadIndexes[0]]);
         Text_Stream_Path->jump_line();
-        for (int i = 0; i < RoadIndexes.size() - 1; i++)
-        {
-            int iR = RoadIndexes[i];
-            int iRN = RoadIndexes[i + 1];
-
-#ifdef OPENCV_DRAW
-            if (i == RoadIndexes.size() - 2)
-                cv::circle(image_Ptraj, cv::Point((nodes.coord[iR][0] + maxsc) * scale, (nodes.coord[iR][1] + maxsc) * scale), 5, Colors[5], CV_FILLED, 3, 8);
-            cv::line(image_Ptraj, cv::Point((nodes.coord[iR][0] + maxsc) * scale, (nodes.coord[iR][1] + maxsc) * scale),
-                     cv::Point((nodes.coord[iRN][0] + maxsc) * scale, (nodes.coord[iRN][1] + maxsc) * scale),
-                     cv::Scalar(00, 230, 50), 2, 8);
-
 #endif
-            Text_Stream_Path->write_Data(nodes.coord[iRN]);
-            Text_Stream_Path->jump_line();
-        }
 
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
@@ -1149,7 +1150,7 @@ void Prediction::RRT_Path_Generation()
         //Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
 
         // cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
-
+#ifdef STREAMING
         Text_Stream_TR->write_TimeStamp();
         for (int i = 0; i < Tr.xval.size(); i++)
         {
@@ -1159,14 +1160,35 @@ void Prediction::RRT_Path_Generation()
             Text_Stream_TR->jump_line();
         }
         //Draw vicinity here
-
+#endif
         for (int j = 0; j < rrt_vicinity.R.size(); j++)
         {
             cv::ellipse(image_Ptraj, cv::Point(Img(rrt_vicinity.TP[j][0]), Img(rrt_vicinity.TP[j][1])),
                         cv::Size(scale * rrt_vicinity.R[j][0], scale * rrt_vicinity.R[j][1]),
                         rad_to_deg(rrt_vicinity.angles[j][0]), 0, 360, Colors[j], 1, 8);
         }
+
+        int pplan_indx = PathPlanning_Indexes.size();
+        for (int i = 0; i < pplan_indx - 1; i++)
+        {
+            int iR = PathPlanning_Indexes[i];
+            int iRN = PathPlanning_Indexes[i + 1];
+
+#ifdef OPENCV_DRAW
+            if (i == pplan_indx - 2)
+                cv::circle(image_Ptraj, cv::Point((nodes.coord[iR][0] + maxsc) * scale, (nodes.coord[iR][1] + maxsc) * scale), 5, Colors[5], CV_FILLED, 3, 8);
+            cv::line(image_Ptraj, cv::Point((nodes.coord[iR][0] + maxsc) * scale, (nodes.coord[iR][1] + maxsc) * scale),
+                     cv::Point((nodes.coord[iRN][0] + maxsc) * scale, (nodes.coord[iRN][1] + maxsc) * scale),
+                     cv::Scalar(00, 230, 50), 2, 8);
+
+#endif
+#ifdef STREAMING
+            Text_Stream_Path->write_Data(nodes.coord[iRN]);
+            Text_Stream_Path->jump_line();
+#endif
+        }
     }
+
     return;
 }
 
@@ -1175,6 +1197,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
     //  Print("AVAILABILITY", PathPlanning_Available, Stop_RRT_flag);
     if (PathPlanning_Available && !Stop_RRT_flag)
     {
+        
         VectorDbl Visual_Servoing_position{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]};
         double minDistance = 100000.0;
         int VS_Index_in_PPath = PathPlanning_Indexes.size() - 1;
@@ -1191,6 +1214,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
                 Road_VS_Result_Indx = i;
             }
         }
+       
         //   Print("VS index in path, path size", VS_Index_in_PPath, PathPlanning_Indexes.size());
 
         if (trust_index > 0.8)
@@ -1207,7 +1231,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
         }
 
         Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
-
+      
         if (Road_VS_Result_Indx < 0)
             Road_VS_Result_Indx = 0;
         int Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
@@ -1219,6 +1243,7 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
         NextRobotRequest.position.x = nodes.coord[Final_VSPP_Index][0]; //Then copy position
         NextRobotRequest.position.y = nodes.coord[Final_VSPP_Index][1];
         NextRobotRequest.position.z = nodes.coord[Final_VSPP_Index][2];
+      
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
@@ -1240,24 +1265,16 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
 void Prediction::Draw_Map()
 {
 #ifdef OPENCV_DRAW
-    int obs_thick_size  = Obstacle_Points_thick.size();
-    int obs_size  = Obstacle_Points.size();
-     int major_size =obs_thick_size;
+    int obs_thick_size = Obstacle_Points_thick.size();
+    int obs_size = Obstacle_Points.size();
+    int major_size = obs_thick_size;
     if (obs_size >= major_size)
     {
         major_size = obs_size;
     }
 
-
     for (int i = 0; i < major_size; i++)
     {
-        if (i < obs_thick_size)
-        {
-            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points_thick[i].yval, Obstacle_Points_thick[i].xval);
-            color[0] = 190;
-            color[1] = 190;
-            color[2] = 190;
-        }
         if (i < obs_size)
         {
             cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points[i].yval, Obstacle_Points[i].xval);
@@ -1265,11 +1282,116 @@ void Prediction::Draw_Map()
             color[1] = 70;
             color[2] = 70;
         }
-        //cv::circle(image_Ptraj, cv::Point(Obstacle_Points_thick[i].xval, Obstacle_Points_thick[i].yval), 1, cv::Scalar(190, 190, 190), 1);
+        if (i < obs_thick_size)
+        {
+            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points_thick[i].yval, Obstacle_Points_thick[i].xval);
+            color[0] = 190;
+            color[1] = 190;
+            color[2] = 190;
+        }
     }
-    
+   // Print("MAP SIZES", Obstacle_Points.size(), Obstacle_Points_thick.size(), ObstacleMap.size());
+
 #endif
     return;
+}
+
+geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs_Pose) //No quad
+{
+    geometry_msgs::Pose Final_EEFF_Pose = Marker_Abs_Pose;
+    int max_iter = 200;
+    Position_ CurrentRealPoint;
+    CurrentRealPoint.x = Marker_Abs_Pose.position.x;
+    CurrentRealPoint.y = Marker_Abs_Pose.position.y;
+    CurrentRealPoint.z = Marker_Abs_Pose.position.z;
+    Position_ CurrentPoint_Cells = RealPosition_to_Cells(CurrentRealPoint);
+
+    bool horiz = false;
+
+    int x = CurrentPoint_Cells.x;
+    int y = CurrentPoint_Cells.y;
+
+    if (ObstacleMap[x][y] > 0)
+    {
+        Print("Obstacle");
+        int inc = 0;
+        float ch = 1;
+        bool found_better = false;
+        int xchk, ychk;
+        for (int j = 0; j < max_iter; j++)
+        {
+            if (Check_Map_Coord(x + inc, y))
+            {
+                xchk = x + inc;
+                ychk = y; //right
+                found_better = true;
+                break;
+            }
+
+            if (Check_Map_Coord(x - inc, y))
+            {
+                xchk = x - inc;
+                ychk = y; //left
+                found_better = true;
+                break;
+            }
+
+            if (Check_Map_Coord(x, y + inc))
+            {
+                xchk = x;
+                ychk = y + inc; //top
+                found_better = true;
+                break;
+            }
+
+            if (Check_Map_Coord(x, y - inc))
+            {
+                xchk = x;
+                ychk = y - inc; //bottom
+                found_better = true;
+                break;
+            }
+            inc++;
+        }
+
+        if (found_better)
+        {
+            Final_EEFF_Pose.position.x = (xchk - ((MapSize - 1) / 2)) / MapResolution;
+            Final_EEFF_Pose.position.y = (ychk - ((MapSize - 1) / 2)) / MapResolution;
+        }
+    }
+    double cat1, cat2;
+    cat1 = Final_EEFF_Pose.position.x;
+    cat2 = Final_EEFF_Pose.position.y;
+    double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
+
+    if (rad >= rad_ext - 0.05)
+    {
+        double theta = 0;
+        if (Final_EEFF_Pose.position.x < 0.0)
+        {
+            theta = PI + atan(Final_EEFF_Pose.position.y / Final_EEFF_Pose.position.x);
+        }
+        else
+        {
+            theta = atan(Final_EEFF_Pose.position.y / Final_EEFF_Pose.position.x);
+        }
+
+        Final_EEFF_Pose.position.y = (rad_ext - 0.01) * sin(theta);
+        Final_EEFF_Pose.position.x = (rad_ext - 0.01) * cos(theta);
+    }
+
+#ifdef OPENCV_DRAW
+   // Print("Prev-FINAL EEFF", Marker_Abs_Pose.position.x, Marker_Abs_Pose.position.y, Final_EEFF_Pose.position.x, Final_EEFF_Pose.position.y, ((Final_EEFF_Pose.position.x + maxsc) * scale));
+    //  cv::circle(image_Ptraj, cv::Point((int)((Final_EEFF_Pose.position.x + maxsc) * scale), (int)((Final_EEFF_Pose.position.y + maxsc) * scale)), 6, Colors[0], CV_FILLED, 3, 8);
+    int x_point = (Final_EEFF_Pose.position.x + maxsc) * scale;
+    int y_point = (Final_EEFF_Pose.position.y + maxsc) * scale;
+    cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(y_point, x_point);
+    color[0] = 0;
+    color[1] = 9;
+    color[2] = 20;
+#endif
+    return Final_EEFF_Pose;
 }
 
 void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose) //extraer vecindad
