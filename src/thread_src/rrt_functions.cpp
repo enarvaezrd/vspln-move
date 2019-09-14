@@ -763,29 +763,36 @@ VectorDbl RRT::steer(VectorDbl qr, VectorDbl qn, double min_ndist, double EPS)
     return A;
 }
 
-control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal goal)
+control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal &goal)
 {
-    double JointEPS = 10 * EPS;
-    auto joints = ArmModel.getCurrentJoints();
-    int ReqJointsSize = goal.trajectory.points[0].positions.size();
-    int CurrentJointsSize = joints.size();
-    if (CurrentJointsSize != ReqJointsSize)
-        Print("Joints sizes are not the same RRT funstions line 772");
-    else
+    if (goal.trajectory.points.size() > 0)
     {
-        int joint_cn = 0;
-        double diff;
-        for (auto req_joint : goal.trajectory.points[0].positions)
+        double JointEPS = 10 * EPS;
+        auto joints = ArmModel.getCurrentJoints();
+        int ReqJointsSize = goal.trajectory.points[0].positions.size();
+        int CurrentJointsSize = joints.size();
+        if (CurrentJointsSize != ReqJointsSize)
+            Print("Joints sizes are not the same RRT functions line 773");
+        else
         {
-            diff = req_joint - joints[joint_cn];
-            if (diff < -EPS)
-                diff = -EPS;
-            if (diff > EPS)
-                diff = EPS;
-            req_joint = req_joint + diff;
-            joint_cn++;
+            int joint_cn = 0;
+            double diff;
+            for (auto req_joint : goal.trajectory.points[0].positions)
+            {
+                auto req_jointT = req_joint;
+                diff = req_joint - joints[joint_cn];
+                if (diff < -EPS)
+                    diff = -EPS;
+                if (diff > EPS)
+                    diff = EPS;
+                req_joint = req_joint + diff;
+
+                Print("Joint", goal.trajectory.points[0].positions[joint_cn], req_joint, req_jointT);
+                joint_cn++;
+            }
         }
     }
+    return goal;
 }
 
 void RRT::Draw_RRT()

@@ -218,7 +218,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
 
 bool Ed_Pmov::Request_Movement_byJointsTrajectory(control_msgs::FollowJointTrajectoryGoal goal)
 {
-    if (goal.trajectory.points.size()>1 )
+    if (goal.trajectory.points.size()>0 )
     {
          arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
          return true;

@@ -20,17 +20,14 @@ int main(int argc, char **argv)
     double rad_int = 0.25;
     double rad_ext = 0.425;
     double armMinAltitude = 0.52;
-    #ifdef REAL_ROBOTS
+#ifdef REAL_ROBOTS
 
-    string odom_str = "/robot1/odom";                ///robot1/robotnik_base_control/odom  ;   /robot1/odom
-    string laser_topic = "/scan"; ///robot1/front_laser/scan SIMM ;  /scan REAL
-    #else
+    string odom_str = "/robot1/odom"; ///robot1/robotnik_base_control/odom  ;   /robot1/odom
+    string laser_topic = "/scan";     ///robot1/front_laser/scan SIMM ;  /scan REAL
+#else
     string odom_str = "/robot1/odom";                ///robot1/robotnik_base_control/odom  ;   /robot1/odom
     string laser_topic = "/robot1/front_laser/scan"; ///robot1/front_laser/scan SIMM ;  /scan REAL
-    #endif
-
-
-
+#endif
 
     //==================================================================================
 
@@ -38,7 +35,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nodle_handle;
     ros::Rate loop_rate(30);
     Printer Print;
-     std::vector<double> joint_valuesT(6);
+    std::vector<double> joint_valuesT(6);
     std::mutex m;
     cout << "start" << endl;
     joint_valuesT[0] = 0.0;
@@ -47,9 +44,9 @@ int main(int argc, char **argv)
     joint_valuesT[3] = 0.0; // PI/2;
     joint_valuesT[4] = 0.0;
     joint_valuesT[5] = 0.0; // PI/2;
-rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region);
+    rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region);
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
-    
+
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, scale, rrt_extension, rad_int, rad_ext);
     ObstacleMapGen ObstacleMap(Map_size, scale, image_size, rad_int, rad_ext, laser_topic);
     RobotCommands Robot_Commands(odom_str);
@@ -58,7 +55,7 @@ rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes
     sleep(1.0);
 
     RRT_model.ArmModel.PrintModelInfo();
-   
+
     sleep(1.0);
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
     float alturap = armMinAltitude; //0.21
@@ -215,8 +212,8 @@ rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes
                 TrackingState = 0;
                 UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                 UavArm_tools.counter = 0;
-             //   NextArmRequest.position.x=0.2;
-              //  NextArmRequest.position.y=0.25;
+                //   NextArmRequest.position.x=0.2;
+                //  NextArmRequest.position.y=0.25;
                 NextArmRequest = Predict_B.NoTarget_Sequence(NextArmRequest);
             }
             if (TrackingState > 1)
@@ -234,7 +231,7 @@ rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes
                 Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
                 Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                 Predict_B.Charge_Nodes();
-               
+
                 Predict_B.RRT_Path_Generation();
                 NextArmRequest = Predict_B.Selection_Function(0.4);
                 RRT_model.loop_start();
@@ -253,9 +250,13 @@ rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes
             //RRT_model.ArmModel.ReqMovement_byPose_Moveit(NextArmRequest);
 
             //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest);
-            auto goal=RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentRequest_Thread);
-            goal = RRT_model.SteerJoints(goal);
-            RRT_model.ArmModel.Request_Movement_byJointsTrajectory(goal);
+            auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentRequest_Thread);
+            if (ArmGoal.trajectory.points.size() > 0)
+            {
+                Print("GoalFound");
+                ArmGoal = RRT_model.SteerJoints(ArmGoal);
+                RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
+            }
 
             //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(CurrentRequest_Thread); // CurrentRequest_Thread   NextArmRequest
 
