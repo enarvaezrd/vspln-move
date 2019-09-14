@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     std::vector<double> joint_valuesT(6);
     std::mutex m;
     cout << "start" << endl;
-    joint_valuesT[0] = 0.0;
+    joint_valuesT[0] = -PI/2+0.1;
     joint_valuesT[1] = 2.0; //PI/2;
     joint_valuesT[2] = 2.0; //PI/2;
     joint_valuesT[3] = 0.0; // PI/2;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
     RRT_model.ArmModel.PrintModelInfo();
 
-    sleep(1.0);
+    sleep(2.0);
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
     float alturap = armMinAltitude; //0.21
 
@@ -70,14 +70,14 @@ int main(int argc, char **argv)
     target_pose.orientation.y = 1.0;
     target_pose.orientation.z = 0.0;*/
 
-    target_pose.position.x = 0.28; //0.1
-    target_pose.position.y = 0.01;
+    target_pose.position.x = 0.17; //0.1
+    target_pose.position.y = 0.2;
     target_pose.position.z = alturap;
 
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(1.0);
+    sleep(2.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -215,6 +215,7 @@ int main(int argc, char **argv)
                 //   NextArmRequest.position.x=0.2;
                 //  NextArmRequest.position.y=0.25;
                 NextArmRequest = Predict_B.NoTarget_Sequence(NextArmRequest);
+                CurrentRequest_Thread = target_posea;
             }
             if (TrackingState > 1)
             {

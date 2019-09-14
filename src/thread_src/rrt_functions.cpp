@@ -763,11 +763,11 @@ VectorDbl RRT::steer(VectorDbl qr, VectorDbl qn, double min_ndist, double EPS)
     return A;
 }
 
-control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal &goal)
+control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal goal)
 {
     if (goal.trajectory.points.size() > 0)
     {
-        double JointEPS = 10 * EPS;
+        double JointEPS =  50*EPS;
         auto joints = ArmModel.getCurrentJoints();
         int ReqJointsSize = goal.trajectory.points[0].positions.size();
         int CurrentJointsSize = joints.size();
@@ -781,13 +781,13 @@ control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJoi
             {
                 auto req_jointT = req_joint;
                 diff = req_joint - joints[joint_cn];
-                if (diff < -EPS)
-                    diff = -EPS;
-                if (diff > EPS)
-                    diff = EPS;
-                req_joint = req_joint + diff;
-
-                Print("Joint", goal.trajectory.points[0].positions[joint_cn], req_joint, req_jointT);
+                if (diff < -JointEPS)
+                    diff = -JointEPS;
+                if (diff > JointEPS)
+                    diff = JointEPS;
+                req_joint = joints[joint_cn] + diff;
+                goal.trajectory.points[0].positions[joint_cn]=req_joint;
+                Print("Joint", joints[joint_cn],req_jointT,req_joint );
                 joint_cn++;
             }
         }

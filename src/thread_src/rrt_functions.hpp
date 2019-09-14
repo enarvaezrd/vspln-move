@@ -168,7 +168,7 @@ public:
     void Push_Nodes_Elem_in_Nodes(Nodes &nodesR, int);
     bool getLoopState() { return sequence_loop; }
     void reset_nodes_reordered() { nodes_reordered = 0; }
-    control_msgs::FollowJointTrajectoryGoal SteerJoints(control_msgs::FollowJointTrajectoryGoal &goal);
+    control_msgs::FollowJointTrajectoryGoal SteerJoints(control_msgs::FollowJointTrajectoryGoal goal);
 
     void PrintNode(cv::Mat, VectorDbl);
     void loop_start();
