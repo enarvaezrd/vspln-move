@@ -787,7 +787,7 @@ control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJoi
                     diff = JointEPS;
                 req_joint = joints[joint_cn] + diff;
                 goal.trajectory.points[0].positions[joint_cn]=req_joint;
-                Print("Joint", joints[joint_cn],req_jointT,req_joint );
+              //  Print("Joint", joints[joint_cn],req_jointT,req_joint );
                 joint_cn++;
             }
         }

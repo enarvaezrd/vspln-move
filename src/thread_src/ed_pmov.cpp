@@ -150,7 +150,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         int delay_time_usecs = delay_time.count();
         if (delay_time_usecs > 50000)
         {
-            Print("Delay time", delay_time_usecs);
+           // Print("Delay time", delay_time_usecs);
             delay_time_usecs = 50000;
         }
         //usleep(delay_time_usecs);
@@ -201,17 +201,17 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         joints_result[1] *=-1;
         joints_result[4] *=-1;
         joints_result[5] *=-1;
-        //std::cout<<"joints : "<<jv[0]<<" "<<jv[1]<<" "<<jv[2]<<" "<<jv[3]<<" "<<jv[4]<<" "<<jv[5]<<std::endl;
+        std::cout<<"joints : "<<joints_result[0]<<" "<<joints_result[1]<<" "<<joints_result[2]<<" "<<joints_result[3]<<" "<<joints_result[4]<<" "<<joints_result[5]<<std::endl;
         goale = arm.makeArmUpTrajectory(joints_result);
 
         //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
         tiempo_traj = goale.trajectory.points[0].time_from_start; //tiempo del punto final
         delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
      
-        if (delay_time.count() > 20000)
+        if (delay_time.count() > 30000)
         {
-            Print("Delay time", delay_time.count());
-            delay_time=std::chrono::microseconds(20000);
+           // Print("Delay time", delay_time.count());
+            delay_time=std::chrono::microseconds(30000);
         }
     }
     else

@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(20.0);
+    sleep(2.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -97,8 +97,8 @@ int main(int argc, char **argv)
     //cv::resizeWindow(window_name, image_size, image_size);
     auto rrt_threadB = std::thread([&]() {
         string window_name_B = "Prediction + RRT Image";
-        ros::Rate loop_rate_thread(25);
-        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+        ros::Rate loop_rate_thread(30);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         bool sequence_loop_th = false;
         //sleep(6.0);
         auto clB = std::chrono::high_resolution_clock::now();
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
                 NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
 
             }
-            if (TrackingState > 1)
+            if (TrackingState > 0)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
@@ -234,12 +234,13 @@ int main(int argc, char **argv)
                 Predict_B.Charge_Nodes();
 
                 Predict_B.RRT_Path_Generation();
-                NextArmRequest = Predict_B.Selection_Function(0.4);
                 RRT_model.loop_start();
+                NextArmRequest = Predict_B.Selection_Function(0.4);
+                
             }
 
             //CurrentRequest = UavArm_tools.getArmPoseReq();
-            //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
+            RRT_model.ArmModel.PrintPose("Req",NextArmRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
 
             // RRT_model.loop_end();
