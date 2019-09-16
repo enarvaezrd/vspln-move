@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(2.0);
+    sleep(20.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -214,8 +214,8 @@ int main(int argc, char **argv)
                 UavArm_tools.counter = 0;
                 //   NextArmRequest.position.x=0.2;
                 //  NextArmRequest.position.y=0.25;
-                NextArmRequest = Predict_B.NoTarget_Sequence(NextArmRequest);
-                CurrentRequest_Thread = target_posea;
+                NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
+
             }
             if (TrackingState > 1)
             {
@@ -238,7 +238,6 @@ int main(int argc, char **argv)
                 RRT_model.loop_start();
             }
 
-            CurrentRequest_Thread = Predict_B.NoTarget_Sequence(CurrentRequest_Thread);
             //CurrentRequest = UavArm_tools.getArmPoseReq();
             //RRT_model.ArmModel.PrintPose("Req",CurrentRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
@@ -251,7 +250,7 @@ int main(int argc, char **argv)
             //RRT_model.ArmModel.ReqMovement_byPose_Moveit(NextArmRequest);
 
             //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest);
-            auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentRequest_Thread);
+            auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(NextArmRequest);
             if (ArmGoal.trajectory.points.size() > 0)
             {
                 Print("GoalFound");

@@ -767,7 +767,7 @@ control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJoi
 {
     if (goal.trajectory.points.size() > 0)
     {
-        double JointEPS =  50*EPS;
+        double JointEPS =  80*EPS;
         auto joints = ArmModel.getCurrentJoints();
         int ReqJointsSize = goal.trajectory.points[0].positions.size();
         int CurrentJointsSize = joints.size();

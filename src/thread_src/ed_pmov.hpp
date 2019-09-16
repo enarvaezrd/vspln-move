@@ -68,7 +68,7 @@ public:
     {
         num_IK_requests = 5;
         index_ks = 0;
-        group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
+       // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);                  //0.004
         group.setGoalOrientationTolerance(0.008);       //0.008
         group.setPlanningTime(0.1);

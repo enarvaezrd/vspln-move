@@ -149,7 +149,7 @@ control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTraject
 
 double FollowTrajectoryClient::wait_time_calc(std::vector<double> joints)
 {
-  double tempdiff = -1000, tempdiff1 = 0; //diferencias de posicion entre links (temporales)
+  double tempdiff = -100000000.0, tempdiff1 = 0.0; //diferencias de posicion entre links (temporales)
   int num_maxJoint = 0;
   for (int i = 0; i < 6; i++)
   {
@@ -163,10 +163,17 @@ double FollowTrajectoryClient::wait_time_calc(std::vector<double> joints)
   double Ttimer;
   float JVelA, JVelB;
 
-  JVelA = ((30 * 2 * PI) / 60); //joints 1 2 3 velocity per second 30 rpm se usa lo maximo regresar a 60
-  JVelB = ((35 * 2 * PI) / 60); //joints 4 5 6 velocity per second 35 rpm
+  //JVelA = ((30 * 2 * PI) / 60); //joints 1 2 3 velocity per second 30 rpm se usa lo maximo regresar a 60
+  JVelB = ((35.0 * 2.0 * PI) / 60.0); //joints 4 5 6 velocity per second 35 rpm
 
   Ttimer = tempdiff / JVelB;
+  if(Ttimer<0.0){
+    Ttimer=0.001;
+  }
+  else if(Ttimer>1.0)
+  {
+    Ttimer=1.0;
+  }
   return Ttimer;
 }
 
