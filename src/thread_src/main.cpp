@@ -14,8 +14,8 @@ int main(int argc, char **argv)
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
     int prof_expl = 11; // Profundidad de exploracion  Esz=prof_f
     int Map_size = 400;
-    float scale = 1;
-    double rrt_extension = 0.39; //extension of each rrt step for regression 0.38
+    float scale = 1.0;
+    double rrt_extension = 0.32; //extension of each rrt step for regression 0.38
     int num_nodes_per_region = prof_expl + 11;
     double rad_int = 0.25;
     double rad_ext = 0.425;
@@ -37,8 +37,8 @@ int main(int argc, char **argv)
     Printer Print;
     std::vector<double> joint_valuesT(6);
     std::mutex m;
-    cout << "start" << endl;
-    joint_valuesT[0] = -PI/2+0.1;
+    cout << "Start sending positions" << endl;
+    joint_valuesT[0] = -PI / 2 + 0.1;
     joint_valuesT[1] = 2.0; //PI/2;
     joint_valuesT[2] = 2.0; //PI/2;
     joint_valuesT[3] = 0.0; // PI/2;
@@ -65,10 +65,10 @@ int main(int argc, char **argv)
     Angles IAngleMark = UavArm_tools.ConvPosetoAngles(target_pose);
     Print("PET ANGLES yaw,roll,pitch", IAngleMark.yaw, IAngleMark.roll, IAngleMark.pitch);
 
-    /*target_pose.orientation.w = 0.0;//0.1
-    target_pose.orientation.x = 0.0;//0.1
+    target_pose.orientation.w = 0.0; //0.1
+    target_pose.orientation.x = 0.0; //0.10
     target_pose.orientation.y = 1.0;
-    target_pose.orientation.z = 0.0;*/
+    target_pose.orientation.z = 0.0;
 
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = 0.2;
@@ -77,7 +77,20 @@ int main(int argc, char **argv)
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(2.0);
+    sleep(3.0);
+    target_pose.position.x = -0.17; //0.1
+    target_pose.position.y = 0.2;
+     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    sleep(3.0);
+    target_pose.position.x = -0.17; //0.1
+    target_pose.position.y = -0.2;
+     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    sleep(3.0);
+    target_pose.position.x = 0.17; //0.1
+    target_pose.position.y = -0.2;
+     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    sleep(3.0);
+
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -128,7 +141,7 @@ int main(int argc, char **argv)
                     Predict_B.Load_Nodes(RRT_model.GetNodes(), RRT_model.GetVicinity());
                 }
 
-                /* else 
+                /* else
                 {
                     Print("RRT not applied, Traj too short or RRT flag stop");
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -186,12 +199,16 @@ int main(int argc, char **argv)
 
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
+            RRT_model.ArmModel.PrintPose("CurrentArmPose", CurrentArmPose);
             //RRT_model.ArmModel.tic();
-            //cout<<"Estado de marker: "<<UavArm_tools.getTrackingState() <<endl;
+            Print("ESTADO de marker: ", UavArm_tools.getTrackingState());
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             { //Tracking OK
 
                 geometry_msgs::Pose LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
+
+                RRT_model.ArmModel.PrintPose("UAV LOCAL", LocalUAVPose);
+
                 Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose);
                 TrackingState++;
                 //Publicar aqui la pose absoluta del UAV para su control, tracking system
@@ -215,13 +232,14 @@ int main(int argc, char **argv)
                 //   NextArmRequest.position.x=0.2;
                 //  NextArmRequest.position.y=0.25;
                 NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
-
             }
             if (TrackingState > 0)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
                 //UavArm_tools.uavPose_to_ArmPoseReq_full(); // for rrt process
+                CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
+                UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
                 UavArm_tools.uavPose_to_ArmPoseReq_arm(); // for visual servoing
                 //m.unlock();
 
@@ -229,18 +247,20 @@ int main(int argc, char **argv)
 
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
+
+                RRT_model.ArmModel.PrintPose("Previous Sel Request", CurrentRequest_Thread);
                 Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
                 Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                 Predict_B.Charge_Nodes();
-
-                Predict_B.RRT_Path_Generation();
                 RRT_model.loop_start();
+                Predict_B.RRT_Path_Generation();
+
                 NextArmRequest = Predict_B.Selection_Function(0.4);
-                
+                Print("New sel");
             }
 
             //CurrentRequest = UavArm_tools.getArmPoseReq();
-            RRT_model.ArmModel.PrintPose("Req",NextArmRequest);
+            RRT_model.ArmModel.PrintPose("Req", NextArmRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
 
             // RRT_model.loop_end();

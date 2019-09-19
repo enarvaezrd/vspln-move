@@ -26,7 +26,7 @@ bool Ed_Pmov::ReqMovement_byJointsValues(std::vector<double> joints_values)
 
 bool Ed_Pmov::ReqMovement_byPose_Moveit(geometry_msgs::Pose pose_req)
 {
-    bool state=false;
+    bool state = false;
     group.setPoseTarget(pose_req);
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = (group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -90,13 +90,15 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req)
         std::vector<double> jv(6);
         control_msgs::FollowJointTrajectoryGoal goale;
         kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], jv);
-        jv[1]*=-1;
+        //jv[1] *= -1;
+        //jv[5] *= -1;
+        //jv[4] *= -1;
         goale = arm.makeArmUpTrajectory(jv);
         // tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
         //delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
         //usleep(1000000*(delay_time));
-        
-        Print("Joints",jv[0],jv[1],jv[2],jv[3],jv[4],jv[5]);
+
+        Print("Joints", jv[0], jv[1], jv[2], jv[3], jv[4], jv[5]);
         arm.startTrajectory(goale); //Inicio de trayectoria en GAZEBO
     }
     else
@@ -140,7 +142,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
             //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
             //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
         }
-        joints_result[1] *=-1;
+        //joints_result[1] *= -1;
         //std::cout<<"joints : "<<jv[0]<<" "<<jv[1]<<" "<<jv[2]<<" "<<jv[3]<<" "<<jv[4]<<" "<<jv[5]<<std::endl;
         goale = arm.makeArmUpTrajectory(joints_result);
 
@@ -150,7 +152,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         int delay_time_usecs = delay_time.count();
         if (delay_time_usecs > 50000)
         {
-           // Print("Delay time", delay_time_usecs);
+            // Print("Delay time", delay_time_usecs);
             delay_time_usecs = 50000;
         }
         //usleep(delay_time_usecs);
@@ -194,29 +196,29 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
             joints_result[2] = joints_result_pos[2];
             joints_result[3] = joints_result_pos[3];
             joints_result[4] = joints_result_pos[4];
+            joints_result[5] = joints_result_pos[5];
             //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
             //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
         }
 
-        joints_result[1] *=-1;
-        joints_result[4] *=-1;
-        joints_result[5] *=-1;
-        std::cout<<"joints : "<<joints_result[0]<<" "<<joints_result[1]<<" "<<joints_result[2]<<" "<<joints_result[3]<<" "<<joints_result[4]<<" "<<joints_result[5]<<std::endl;
+      ////  joints_result[1] *= -1;
+      //  joints_result[4] *= -1;
+      //  joints_result[5] *= -1;
+        Print("joints", joints_result[0], joints_result[1], joints_result[2], joints_result[3], joints_result[4], joints_result[5]);
         goale = arm.makeArmUpTrajectory(joints_result);
 
         //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
         tiempo_traj = goale.trajectory.points[0].time_from_start; //tiempo del punto final
         delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
-     
-        if (delay_time.count() > 30000)
+
+        if (delay_time.count() > 200000)
         {
-           // Print("Delay time", delay_time.count());
-            delay_time=std::chrono::microseconds(30000);
+            // Print("Delay time", delay_time.count());
+            delay_time = std::chrono::microseconds(200000);
         }
     }
     else
     {
-
         PrintPose("NO solution for pose request!", pose_req);
     }
     return goale;
@@ -224,13 +226,13 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
 
 bool Ed_Pmov::Request_Movement_byJointsTrajectory(control_msgs::FollowJointTrajectoryGoal goal)
 {
-    if (goal.trajectory.points.size()>0 )
+    if (goal.trajectory.points.size() > 0)
     {
-         arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
-         
-        Print("delay time ",delay_time.count());
-          std::this_thread::sleep_for(delay_time);
-         return true;
+        arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
+
+        Print("delay time ", delay_time.count());
+        std::this_thread::sleep_for(delay_time);
+        return true;
     }
     else
     {
@@ -280,7 +282,7 @@ void Ed_Pmov::FeedCollisionCheck_Queue(VectorDbl eeff_point, VectorDbl eeff_poin
     position.Position_Only_T = eeff_point_traslation;
     position.region = region;
     //Print("feeding values",eeff_point.size(),eeff_point_traslation.size(),region);
-    
+
     eeff_positions_input_queue.push(position);
     return;
 }
@@ -347,7 +349,7 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
     return currentPoseT;
 }
 
-std::vector< double > Ed_Pmov::getCurrentJoints()
+std::vector<double> Ed_Pmov::getCurrentJoints()
 {
     currentJoints = group.getCurrentJointValues();
     auto currentJointsT = currentJoints;

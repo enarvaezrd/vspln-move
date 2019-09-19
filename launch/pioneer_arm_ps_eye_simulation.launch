@@ -22,8 +22,8 @@
 		<arg name="debug" value="$(arg debug)"/>
 	</include>
 
-
-    <!--  ROBOT1 -->
+	<!--<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
+      ROBOT1 -->
 
 	<group ns="robot1">
 		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
