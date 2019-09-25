@@ -1,6 +1,6 @@
 <launch>
 
-	<arg name="altitude" default="1.5"/>
+	<arg name="altitude" default="1.2"/>
     <!-- GAZEBO-->
 	<arg name="paused" default="false"/>
 	<arg name="use_sim_time" default="true"/>
@@ -48,7 +48,7 @@
 		<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch">
 			<arg name="z" default="5.0"/>
 			<arg name="x" default="0.3"/>
-			<arg name="y" default="0.0"/>
+			<arg name="y" default="0.2"/>
 		</include>
 	</group>
 

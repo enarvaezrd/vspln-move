@@ -12,10 +12,10 @@ int main(int argc, char **argv)
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 11; // Profundidad de exploracion  Esz=prof_f
+    int prof_expl = 10; // Profundidad de exploracion  Esz=prof_f
     int Map_size = 400;
     float scale = 1.0;
-    double rrt_extension = 0.32; //extension of each rrt step for regression 0.38
+    double rrt_extension = 0.27; //extension of each rrt step for regression 0.38
     int num_nodes_per_region = prof_expl + 11;
     double rad_int = 0.25;
     double rad_ext = 0.425;
@@ -70,15 +70,15 @@ int main(int argc, char **argv)
     target_pose.orientation.y = 1.0;
     target_pose.orientation.z = 0.0;
 
-    target_pose.position.x = 0.17; //0.1
-    target_pose.position.y = 0.2;
+    target_pose.position.x = 0.0; //0.1
+    target_pose.position.y = 0.27;
     target_pose.position.z = alturap;
 
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
-    target_pose.position.x = -0.17; //0.1
+    sleep(5.0);
+   /* target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
     sleep(3.0);
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = -0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    sleep(3.0);*/
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 

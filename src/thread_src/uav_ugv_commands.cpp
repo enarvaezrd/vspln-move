@@ -54,7 +54,7 @@ void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_po
         y_error_uav = -max_uav_correction;
 
     geometry_msgs::Twist uav_command;
-    uav_command.linear.x = y_error_uav; 
+    uav_command.linear.x = y_error_uav;
     uav_command.linear.y = -x_error_uav;
     std::cout << "UAV ERRORS: x: " << uav_command.linear.x << ", y: " << uav_command.linear.y << std::endl;
     uav_command.linear.z = uav_altitude; //just sending the altitude info, needs to be recalculated in a_control side

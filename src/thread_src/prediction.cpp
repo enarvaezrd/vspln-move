@@ -106,7 +106,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
             // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i] = zvalue;
         }
-        double sationary_step_dist = 0.0018; //0.0016
+        double sationary_step_dist = 0.002; //0.0016
         flagMtx.lock();
         if (abs(acum_x[d_prv] - acum_x[d_prv - 1]) <= sationary_step_dist && abs(acum_y[d_prv] - acum_y[d_prv - 1]) <= sationary_step_dist)
         {

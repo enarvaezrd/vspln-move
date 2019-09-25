@@ -86,17 +86,18 @@ void RRT::Initialize_VicinityRRT()
         if (vdr.R[j][1] <= 0.0002)
             vdr.R[j][1] = 0.0002;
 
-        if (j < prof_expl / 2 && UAV_Velocity < 0.4)
+        double static_UAV_vel=0.5;
+        if (j < prof_expl / 2 && UAV_Velocity < static_UAV_vel)
         {
             vdr.R[j][1] *= 1.1;
         }
-        if (j < prof_expl / 3 && UAV_Velocity < 0.4)
+        if (j < prof_expl / 3 && UAV_Velocity < static_UAV_vel)
         {
             vdr.R[j][1] *= 1.3;
         }
-        if (j < 3 && UAV_Velocity < 0.4)
+        if (j < 3 && UAV_Velocity < static_UAV_vel)
         {
-            vdr.R[j][1] = 0.05;
+            vdr.R[j][1] = 0.04;
         }
 
         // mtxA.lock();
