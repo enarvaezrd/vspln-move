@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = 0.2;
     target_pose.position.z = alturap;
-sleep(3.0);
+sleep(2.0);
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
@@ -81,15 +81,15 @@ sleep(3.0);
     target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
-    /*target_pose.position.x = -0.17; //0.1
+    sleep(4.0);
+    target_pose.position.x = -0.17; //0.1
     target_pose.position.y = -0.2;
     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(5.0);
+    sleep(6.0);
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = -0.2;
     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(8.0);*/
+    sleep(8.0);
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 

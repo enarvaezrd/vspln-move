@@ -324,6 +324,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose);
     Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw);
+    cout<<"Angles: ARM: "<<AnglesCurrent.yaw <<", MARKER: "<<IAngleMark.yaw<<endl;
     //Print("MARK yaw, ArmYaw",IAngleMark.yaw, AnglesCurrent.yaw);
 
     //AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
@@ -351,7 +352,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //corg=0.15;
  num.MinMax_Correction(x_correction, 0.002);
  num.MinMax_Correction(y_correction, 0.002);
-    cout<<"PID x: "<<x_correction<<", y"<<y_correction<<endl;
+    //cout<<"PID x: "<<x_correction<<", y"<<y_correction<<endl;
    // PID_Calculation(x_correction, y_correction);
 
     Pose_msg PID_ArmReq = ArmPoseReq;
@@ -359,8 +360,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     Print("Corrections", x_correction,y_correction);
     PID_ArmReq.position.x += x_correction;
     PID_ArmReq.position.y += y_correction;
+    
     cout<<"PID x: "<<PID_ArmReq.position.x<<", y"<<PID_ArmReq.position.y<<endl;
-
     cout<<"PID cor x: "<<x_correction<<", y"<<y_correction<<endl;
 
     // float max_rectangle = 0.4;
