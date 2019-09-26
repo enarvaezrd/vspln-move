@@ -21,7 +21,7 @@ public:
     {
         bool state = false;
         this->mutex_.lock();
-        if (this->queue_.size()>0)
+        if (this->queue_.size() > 0)
         {
             t = this->queue_.front();
             this->queue_.pop();
@@ -51,7 +51,34 @@ public:
         return check;
     }
 };
+class Arm_Joint_State
+{
+public:
+    Arm_Joint_State(string mx_joints_state_topic_, string pro_joints_state_topic_) : mx_joints_state_topic(mx_joints_state_topic_),
+                                                                                     pro_joints_state_topic(pro_joints_state_topic_)
+    {
+        sub_mx_joints_state = nh_arm_joint_state.subscribe(mx_joints_state_topic, 1, &Arm_Joint_State::Mx_Joints_State_Handler, this);
+        sub_pro_joints_state = nh_arm_joint_state.subscribe(pro_joints_state_topic, 1, &Arm_Joint_State::Pro_Joints_State_Handler, this);
+        arm_joints_state.resize(6);
+        for (int i = 0; i < 6; i++)
+        {
+            arm_joints_state[i] = 0.0;
+        }
+    }
+    void Mx_Joints_State_Handler(const sensor_msgs::JointState &joints_state);
+    void Pro_Joints_State_Handler(const sensor_msgs::JointState &joints_state);
 
+    std::vector<double> GetCurrentArmJoints();
+
+    sensor_msgs::JointState Mx_Joints_State;
+    sensor_msgs::JointState Pro_Joints_State;
+    ros::NodeHandle nh_arm_joint_state;
+    string mx_joints_state_topic;
+    string pro_joints_state_topic;
+    ros::Subscriber sub_mx_joints_state;
+    ros::Subscriber sub_pro_joints_state;
+    std::vector<double> arm_joints_state;
+};
 class Ed_Pmov
 {
 
@@ -59,18 +86,20 @@ public:
     edArm_trajectory::FollowTrajectoryClient arm;
     moveit::planning_interface::MoveGroupInterface group;
 
-    Ed_Pmov() : group("pro_arm"),
-                robot_model_loader("robot1/robot_description"),
-                robot_model_loader_aux1("robot1/robot_description_aux1"),
-                robot_model_loader_aux2("robot1/robot_description_aux2"),
-                robot_model_loader_aux3("robot1/robot_description_aux3"),
-                robot_model_loader_aux4("robot1/robot_description_aux4")
+    Ed_Pmov(bool load_joint_states_sub_) : group("pro_arm"),
+                                           robot_model_loader("robot1/robot_description"),
+                                           robot_model_loader_aux1("robot1/robot_description_aux1"),
+                                           robot_model_loader_aux2("robot1/robot_description_aux2"),
+                                           robot_model_loader_aux3("robot1/robot_description_aux3"),
+                                           robot_model_loader_aux4("robot1/robot_description_aux4"),
+                                           load_joint_states_sub(load_joint_states_sub_)
     {
+        
         num_IK_requests = 5;
         index_ks = 0;
-       // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group.setGoalTolerance(0.005);                  //0.004
-        group.setGoalOrientationTolerance(0.008);       //0.008
+        // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
+        group.setGoalTolerance(0.005);            //0.004
+        group.setGoalOrientationTolerance(0.008); //0.008
         group.setPlanningTime(0.1);
 
         for (int ith = 0; ith <= num_IK_requests; ith++)
@@ -88,8 +117,9 @@ public:
         }
 
         for (int i = 0; i <= num_IK_requests; i++)
+        {
             kinematic_states_[i]->setToDefaultValues();
-
+        }
         // joint_model_group = kinematic_model->getJointModelGroup("pro_arm");
         joint_model_groups_.push_back(kinematic_models_[0]->getJointModelGroup("pro_arm"));
 
@@ -105,10 +135,15 @@ public:
         }
         Print("Computing Threads Created", computing_thread_.size());
         // joints_pub = nh_.advertise< control_msgs::FollowJointTrajectoryGoal>("/joints_data", 1);    //uncomment if necessary
+        if (load_joint_states_sub)
+        {
+            ArmJointsState = new Arm_Joint_State("/dynamixel_workbench_mx/joint_states", "/dynamixel_workbench_pro/joint_states");
+       }
+       group.setEndEffectorLink("link_motor_mx282");
     }
 
     geometry_msgs::Pose getCurrentPose();
-    std::vector< double > getCurrentJoints();
+    std::vector<double> getCurrentJoints();
 
     void CheckandFixPoseRequest(geometry_msgs::Pose &pose_req);
     bool ReqMovement_byJointsValues(VectorDbl);
@@ -162,7 +197,7 @@ public:
     typedef moveit::planning_interface::MoveItErrorCode ErrorCode;
     typedef moveit_msgs::MoveItErrorCodes MoveitCodes;
 
-    RobotModelLoader robot_model_loader, robot_model_loader_aux1, robot_model_loader_aux2,robot_model_loader_aux3,robot_model_loader_aux4;
+    RobotModelLoader robot_model_loader, robot_model_loader_aux1, robot_model_loader_aux2, robot_model_loader_aux3, robot_model_loader_aux4;
 
     Printer Print;
     std::vector<robot_model::RobotModelPtr> kinematic_models_;
@@ -171,11 +206,12 @@ public:
 
     BlockingQueue<PositionResults> eeff_positions_input_queue;
     BlockingQueue<std::pair<bool, PositionResults>> eeff_positions_results;
+    Arm_Joint_State *ArmJointsState;
 
 private:
     std::chrono::microseconds delay_time;
     geometry_msgs::Pose currentPose;
-    std::vector< double > currentJoints;
+    std::vector<double> currentJoints;
     ros::Publisher joints_pub;
     ros::NodeHandle nh_;
     std::mutex positions_mtx, results_mtx, process_mtx;
@@ -183,7 +219,7 @@ private:
     int index_ks;
     int num_IK_requests;
     GroupPlan my_plan;
-
+    bool load_joint_states_sub;
     std::chrono::time_point<std::chrono::high_resolution_clock> tic_clock_time;
 };
 

@@ -20,13 +20,15 @@ int main(int argc, char **argv)
     double rad_int = 0.25;
     double rad_ext = 0.425;
     double armMinAltitude = 0.52;
+    bool load_joints_state_sub;
 #ifdef REAL_ROBOTS
-
+    load_joints_state_sub=true;
     string odom_str = "/robot1/odom"; ///robot1/robotnik_base_control/odom  ;   /robot1/odom
     string laser_topic = "/scan";     ///robot1/front_laser/scan SIMM ;  /scan REAL
 #else
     string odom_str = "/robot1/odom";                ///robot1/robotnik_base_control/odom  ;   /robot1/odom
     string laser_topic = "/robot1/front_laser/scan"; ///robot1/front_laser/scan SIMM ;  /scan REAL
+    load_joints_state_sub=false;
 #endif
 
     //==================================================================================
@@ -44,7 +46,7 @@ int main(int argc, char **argv)
     joint_valuesT[3] = 0.0; // PI/2;
     joint_valuesT[4] = 0.0;
     joint_valuesT[5] = 0.0; // PI/2;
-    rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region);
+    rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region,load_joints_state_sub);
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
 
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, scale, rrt_extension, rad_int, rad_ext);
@@ -77,19 +79,19 @@ int main(int argc, char **argv)
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(5.0);
-   /* target_pose.position.x = -0.17; //0.1
+    sleep(7.0);
+    target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    sleep(4.0);
     target_pose.position.x = -0.17; //0.1
     target_pose.position.y = -0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    sleep(8.0);
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = -0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);*/
+    sleep(5.0);
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
@@ -198,6 +200,7 @@ int main(int argc, char **argv)
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
 
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
+            //auto joints1 = RRT_model.ArmModel.getCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             RRT_model.ArmModel.PrintPose("CurrentArmPose", CurrentArmPose);
             //RRT_model.ArmModel.tic();

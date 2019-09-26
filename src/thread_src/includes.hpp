@@ -16,6 +16,10 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <queue>
 
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
+#include <eigen_conversions/eigen_msg.h>
+#include <Eigen/Core>
 //traj_client
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
