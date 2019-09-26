@@ -196,7 +196,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
             joints_result[2] = joints_result_pos[2];
             joints_result[3] = joints_result_pos[3];
             joints_result[4] = joints_result_pos[4];
-            joints_result[5] = joints_result_pos[5];
+          // joints_result[5] = joints_result_pos[5];
             //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
             //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
         }

@@ -9,7 +9,7 @@ public:
     ObstacleMapGen(int map_size_, float scale_, int image_size_, float rad_int_, float rad_ext_, std::string laser_topic_) : MapSize(map_size_ + 1),
                                                                                                                              max_dimm(scale_),
                                                                                                                              x_offset(0.23),
-                                                                                                                             k(20),
+                                                                                                                             k(18),
                                                                                                                              image_size(image_size_),
                                                                                                                              rad_ext(rad_ext_),
                                                                                                                              rad_int(rad_int_),

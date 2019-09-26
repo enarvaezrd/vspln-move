@@ -73,23 +73,23 @@ int main(int argc, char **argv)
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = 0.2;
     target_pose.position.z = alturap;
-
+sleep(3.0);
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    sleep(6.0);
     target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
-     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
     sleep(3.0);
-    target_pose.position.x = -0.17; //0.1
+    /*target_pose.position.x = -0.17; //0.1
     target_pose.position.y = -0.2;
-     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    sleep(5.0);
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = -0.2;
-     reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
+    sleep(8.0);*/
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
@@ -185,6 +185,7 @@ int main(int argc, char **argv)
         //std::unique_lock<std::mutex> lck(mtx_main);
         auto clA = std::chrono::high_resolution_clock::now();
         geometry_msgs::Pose CurrentArmPose;
+        int NoMarker_count = 0;
         while (ros::ok())
         {
 
@@ -231,10 +232,17 @@ int main(int argc, char **argv)
                 UavArm_tools.counter = 0;
                 //   NextArmRequest.position.x=0.2;
                 //  NextArmRequest.position.y=0.25;
-                NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
+                
+                if (NoMarker_count>=30)
+                {
+                    NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
+                    
+                }
+                NoMarker_count++;
             }
             if (TrackingState > 0)
             {
+                NoMarker_count=0;
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
                 //UavArm_tools.uavPose_to_ArmPoseReq_full(); // for rrt process

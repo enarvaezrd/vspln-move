@@ -15,10 +15,10 @@ public:
     float uav_altitude;
     float max_uav_correction;
 
-    RobotCommands(std::string odometry_str_) : uav_xpos(0.2),
-                                          uav_ypos(0.25), //0.22-0.4
+    RobotCommands(std::string odometry_str_) : uav_xpos(0.18),
+                                          uav_ypos(0.15), //0.22-0.4
                                           uav_altitude(1.5),
-                                          max_uav_correction(0.5),
+                                          max_uav_correction(0.4),
                                           odometry_str(odometry_str_)
     {
         uav_msg_pub = nh_uav_ugv_comm.advertise<geometry_msgs::Twist>("/robot2/visual_local_guidance/uav_msg", 1); //commands for the UAV
