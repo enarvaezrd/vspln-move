@@ -200,7 +200,7 @@ int main(int argc, char **argv)
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
 
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
-            //auto joints1 = RRT_model.ArmModel.getCurrentJoints();
+            auto joints1 = RRT_model.ArmModel.getCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             RRT_model.ArmModel.PrintPose("CurrentArmPose", CurrentArmPose);
             //RRT_model.ArmModel.tic();

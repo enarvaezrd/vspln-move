@@ -397,6 +397,7 @@ std::vector<double> Ed_Pmov::getCurrentJoints()
     else
     {
         currentJoints = group.getCurrentJointValues();
+        cout<<"JOINT : "<<currentJoints[1]<<endl; 
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
         Eigen::Affine3d end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
 
