@@ -97,7 +97,7 @@ control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTraject
 {
   const size_t NUM_TRAJ_POINTS = 1;
   std::vector<double> req_positions(NUM_JOINTS);
-  std::vector<double> mid_positions(NUM_JOINTS);
+  //std::vector<double> mid_positions(NUM_JOINTS);
   double maxval = 2.35619449;
   /*boundValue(joints_obj[1],maxval,-maxval );
         boundValue(joints_obj[2],maxval,-maxval );

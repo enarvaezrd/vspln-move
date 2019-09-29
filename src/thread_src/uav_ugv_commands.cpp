@@ -38,7 +38,7 @@ void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_po
     Angles UAV_yaw_Angle = ConvPosetoAngles(uav_local_pose);     //tal vez es necesario sacar el angulo del uav desde marker pose
     float x_error_local = uav_local_pose.position.x - uav_xpos; //Error calculation in local coordinates
     float y_error_local = uav_local_pose.position.y - uav_ypos;
-    std::cout<<"UAV LOCAL ERRORS: "<< x_error_local<<", y: "<< y_error_local<<std::endl;
+   // std::cout<<"UAV LOCAL ERRORS: "<< x_error_local<<", y: "<< y_error_local<<std::endl;
     //UAV_yaw_Angle.yaw *= -1; //Inverse rotation
     UAV_yaw_Angle.yaw = fmod(UAV_yaw_Angle.yaw, PI);
     float x_error_uav = x_error_local * sin(UAV_yaw_Angle.yaw) + y_error_local * cos(UAV_yaw_Angle.yaw); //Rotation to UAV coordinates
@@ -56,7 +56,7 @@ void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_po
     geometry_msgs::Twist uav_command;
     uav_command.linear.x = y_error_uav;
     uav_command.linear.y = -x_error_uav;
-    std::cout << "UAV ERRORS: x: " << uav_command.linear.x << ", y: " << uav_command.linear.y << std::endl;
+  //  std::cout << "UAV ERRORS: x: " << uav_command.linear.x << ", y: " << uav_command.linear.y << std::endl;
     uav_command.linear.z = uav_altitude; //just sending the altitude info, needs to be recalculated in a_control side
     uav_command.angular.x = 0.0;
     uav_command.angular.y = 0.0;

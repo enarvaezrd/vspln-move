@@ -94,7 +94,7 @@ public:
                                            robot_model_loader_aux4("robot1/robot_description_aux4"),
                                            load_joint_states_sub(load_joint_states_sub_)
     {
-        
+        eeffLink = "link_motor_mx282";
         num_IK_requests = 5;
         index_ks = 0;
         // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
@@ -221,6 +221,7 @@ private:
     GroupPlan my_plan;
     bool load_joint_states_sub;
     std::chrono::time_point<std::chrono::high_resolution_clock> tic_clock_time;
+    string eeffLink ;
 };
 
 #endif
