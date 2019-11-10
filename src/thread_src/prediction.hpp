@@ -50,14 +50,21 @@ public:
         PathPlanning_Available = false;
         PathPlanningAdvancing_Index = 0;
         first_tr = true;
-        Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
-        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
+        Text_Stream_RRTData = new TextStream("/home/edd/catkin_ws/src/ed_pmov/rrtdata_v1.txt");
+        Text_Stream_RRTData->write_Data("x");
+        Text_Stream_RRTData->write_Data("y");
+        Text_Stream_RRTData->write_Data("z");
+        Text_Stream_RRTData->write_Data("index");
+        Text_Stream_RRTData->write_Data("type");
+        Text_Stream_RRTData->write_TimeStamp();
+
+
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
         ugv_state_factor = 0.5; //40%
         UAV_Velocity = 0.0;
     }
-
+    void Average_OldTrajectory();
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose);
     void Regression(VectorDbl x, VectorDbl y, int ndatos, int it, int order, VectorDbl &coeffs);
     void CheckandFix_Boundaries(VectorDbl &x, VectorDbl &y, int &prof_e);
@@ -162,7 +169,7 @@ private:
 
     cv::Mat White_Imag, image_Ptraj;
     Vicinity rrt_vicinity, rrt_vicinity_copy;
-    Etraj Tr;
+    Etraj Tr,Tr_Original;
     Etraj Tr_old, Tr_temp;
     std::mutex TP_Mtx;
     int image_size;
@@ -178,8 +185,7 @@ private:
     mutex NodesMtx, flagMtx;
     bool NodesAvailable;
     bool NodesCharged;
-    TextStream *Text_Stream_TR;
-    TextStream *Text_Stream_Path;
+    TextStream *Text_Stream_RRTData;
 
     float max_dimm;
     int MapSize;

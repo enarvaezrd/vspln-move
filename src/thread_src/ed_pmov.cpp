@@ -3,6 +3,32 @@
 
 #include "ed_pmov.hpp"
 
+void Arm_Joint_State::Mx_Joints_State_Handler(const sensor_msgs::JointState &joints_state)
+{
+    Mx_Joints_State = joints_state;
+}
+void Arm_Joint_State::Pro_Joints_State_Handler(const sensor_msgs::JointState &joints_state)
+{
+    Pro_Joints_State = joints_state;
+}
+
+std::vector<double> Arm_Joint_State::GetCurrentArmJoints()
+{
+    int joint_count = 0.0;
+    for (auto pro_joint : Pro_Joints_State.position)
+    {
+        arm_joints_state[joint_count] = pro_joint;
+        joint_count++;
+    }
+    for (auto mx_joint : Mx_Joints_State.position)
+    {
+        arm_joints_state[joint_count] = mx_joint;
+        joint_count++;
+    }
+
+    return arm_joints_state;
+}
+
 bool Ed_Pmov::ReqMovement_byJointsValues(std::vector<double> joints_values)
 {
     bool state = false;
@@ -196,14 +222,14 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
             joints_result[2] = joints_result_pos[2];
             joints_result[3] = joints_result_pos[3];
             joints_result[4] = joints_result_pos[4];
-            joints_result[5] = joints_result_pos[5];
+            //joints_result[5] = joints_result_pos[5];
             //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
             //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
         }
 
-      ////  joints_result[1] *= -1;
-      //  joints_result[4] *= -1;
-      //  joints_result[5] *= -1;
+        ////  joints_result[1] *= -1;
+        //  joints_result[4] *= -1;
+        //  joints_result[5] *= -1;
         Print("joints", joints_result[0], joints_result[1], joints_result[2], joints_result[3], joints_result[4], joints_result[5]);
         goale = arm.makeArmUpTrajectory(joints_result);
 
@@ -344,18 +370,49 @@ std::pair<bool, PositionResults> Ed_Pmov::RetrieveResults()
 
 geometry_msgs::Pose Ed_Pmov::getCurrentPose()
 {
-    currentPose = group.getCurrentPose().pose;
+     Eigen::Affine3d end_effector_state;
+    if (load_joint_states_sub)
+    {//real
+        currentJoints = ArmJointsState->GetCurrentArmJoints();
+        kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
+        end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
+    }
+    else
+    {//simm
+        currentPose = group.getCurrentPose("link_motor_mx282").pose;
+        //cout<<"CURRENTORIG Position: x: "<<currentPose.position.x<<", y: "<<currentPose.position.y<<", z: "<<currentPose.position.z<<"\n";
+        //cout<<"CURRENTORIG Rotation: x: "<<currentPose.orientation.x<<", y: "<<currentPose.orientation.y<<", z: "<<currentPose.orientation.z<<", w: "<<currentPose.orientation.w<<"\n";
+    }
+
     auto currentPoseT = currentPose;
     return currentPoseT;
 }
 
 std::vector<double> Ed_Pmov::getCurrentJoints()
 {
-    currentJoints = group.getCurrentJointValues();
+    if (load_joint_states_sub)
+    {//real
+        currentJoints = ArmJointsState->GetCurrentArmJoints();
+    }
+    else
+    { //simm
+        currentJoints = group.getCurrentJointValues();
+       // cout<<"JOINT : "<<currentJoints[1]<<endl; 
+        kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
+        Eigen::Affine3d end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
+
+        Eigen::Quaterniond q_pos(end_effector_state.rotation());
+        auto tr = end_effector_state.translation();
+
+       // ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation() << "\n");
+        //ROS_INFO_STREAM("Rotation: \n" << end_effector_state.rotation() << "\n");
+        //cout<<"Rotation: x: "<<q_pos.x()<<", y: "<<q_pos.y()<<", z: "<<q_pos.z()<<", w: "<<q_pos.w()<<"\n";
+    }
+
     auto currentJointsT = currentJoints;
     return currentJointsT;
 }
-void Ed_Pmov::PrintCurrentPose(std::string workspace)
+void Ed_Pmov::PrintCurrentPose(std::string workspace=">>")
 {
     currentPose = group.getCurrentPose().pose;
     Print(workspace + ", Crrnt Position x,y,z: ", currentPose.position.x, currentPose.position.y, currentPose.position.z);

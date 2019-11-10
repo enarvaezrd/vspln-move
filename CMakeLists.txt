@@ -78,5 +78,8 @@ add_dependencies(ed_ik_solver ${catkin_EXPORTED_TARGETS})
 #add_dependencies(thrtest ${catkin_EXPORTED_TARGETS})
 
 
+
+
+
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 

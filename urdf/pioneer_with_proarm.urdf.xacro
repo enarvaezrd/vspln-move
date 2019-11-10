@@ -27,12 +27,14 @@
 
     <xacro:arg name="prefix" default="pioneer_proarm_"/>
 
-    <xacro:pro_arm parent="$(arg prefix)base_link">
+
+
+
+    <xacro:pioneer3dx prefix="$(arg prefix)"/>  
+
+  <xacro:pro_arm parent="$(arg prefix)base_link">
     	<origin xyz="-0.0 0 0.24" /><!--slightly above pioneer plattform-->
     </xacro:pro_arm>
-
-
-    <xacro:pioneer3dx prefix="$(arg prefix)"/>
 <!--laser
 -->
    <xacro:sick_lms_1xx name="laser" ros_topic="front_laser/scan" parent="$(arg prefix)base_link">

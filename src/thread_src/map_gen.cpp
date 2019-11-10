@@ -33,7 +33,6 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
                 // cout << "value for " << i << ": " << LaserData.ranges[i] << ", angle: " << angle << ", intensities: " << LaserData.intensities[i] << endl;
                 //image_test.at<int>(xc, yc) = 1;
             }
-
         }
         // Print("MAP ZERO",ObstacleMapT[HalfMapSize][HalfMapSize]  ,ObstacleMapT[HalfMapSize+1][HalfMapSize+1],ObstacleMapT[HalfMapSize+1][HalfMapSize]  );
         AccumulateObstacleMaps(ObstacleMapT);

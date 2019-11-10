@@ -241,18 +241,24 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
         }
         fixed_dist = rrt_extension;
     }
+    Tr_Original = Tr;
+
     ////Print("Check recover tr");
     Check_Recover_Trajectory(true);
-    SmoothTrajectory_Average(7, 2);
-    Check_Recover_Trajectory(false);
-    SmoothTrajectory_Average(5, 2);
-    for (int k = 0; k < 5; k++)
+    SmoothTrajectory_Average(3, 2);
+    //Check_Recover_Trajectory(false);
+    SmoothTrajectory_Average(3, 2);
+// Average_OldTrajectory();
+    for (int k = 0; k < 2; k++)
     {
-        Check_Recover_Trajectory(false);
+        //Check_Recover_Trajectory(false);
+        
         SmoothTrajectory_Average(3, 2);
-        Check_Recover_Trajectory(false);
-        SmoothTrajectory_Average(3, 1);
+       // Check_Recover_Trajectory(false);
+      
     }
+    
+    //SmoothTrajectory_Average(3, 1);
     // Print("smooth tr");
 
     //SmoothTrajectory();
@@ -393,8 +399,8 @@ void Prediction::Check_Recover_Trajectory_tendency() //should be executed in seq
                 Tr.xval[i] = point_correction_x + 3 * global_tr_correction_x / Tr_Cells.xval.size();
                 Tr.yval[i] = point_correction_y + 3 * global_tr_correction_y / Tr_Cells.xval.size();
 
-                global_tr_correction_x += point_correction_x;
-                global_tr_correction_y += point_correction_y;
+                //  global_tr_correction_x += point_correction_x;
+                // global_tr_correction_y += point_correction_y;
             }
         }
     }
@@ -410,7 +416,7 @@ void Prediction::Check_Recover_Trajectory(bool add_global) //should be executed 
     int max_iter = 200;
     std::string tendency_v("none");
     std::string tendency_h("none");
-    int overshot = 7;
+    int overshot = 0;
 
     double global_tr_correction_x = 0.0;
     double global_tr_correction_y = 0.0;
@@ -538,6 +544,23 @@ void Prediction::Check_Recover_Trajectory(bool add_global) //should be executed 
     Tr_old = Tr;
 
     return;
+}
+
+void Prediction::Average_OldTrajectory()
+{
+    for (int i = 1; i < Tr.xval.size() - 2; i++)
+    {
+        double x_acum = 0.0;
+        double y_acum = 0.0;
+        x_acum = Tr.xval[i] + Tr_old.xval[i];
+        y_acum = Tr.yval[i] + Tr_old.yval[i];
+
+        x_acum /= 2;
+        y_acum /= 2;
+
+        Tr.xval[i] = x_acum;
+        Tr.yval[i] = y_acum;
+    }
 }
 
 void Prediction::SmoothTrajectory_Average(int neighbours, int iterations)
@@ -1034,7 +1057,7 @@ void Prediction::RRT_Path_Generation()
 {
     if (New_Nodes_from_RRT && NodesCharged && !Stop_RRT_flag)
     {
-Print("Generating Path");
+        Print("Generating Path");
 #ifdef OPENCV_DRAW
         for (int j = 0; j < nodes.N; j++)
         {
@@ -1136,11 +1159,9 @@ Print("Generating Path");
         //New_Nodes_from_RRT = false;
         NodesAvailable = false;
 
-#ifdef STREAMING
-        Text_Stream_Path->write_TimeStamp();
-        Text_Stream_Path->write_Data(nodes.coord[RoadIndexes[0]]);
-        Text_Stream_Path->jump_line();
-#endif
+        //#ifdef STREAMING
+
+        //#endif
 
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
@@ -1150,17 +1171,29 @@ Print("Generating Path");
         //Print ("coords tree",VS_Node_Indx,RRTVS_Indx);
 
         // cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
-#ifdef STREAMING
-        Text_Stream_TR->write_TimeStamp();
+        //#ifdef STREAMING
+        Text_Stream_RRTData->write_TimeStamp();
         for (int i = 0; i < Tr.xval.size(); i++)
         {
-            Text_Stream_TR->write_Data(Tr.xval[i]);
-            Text_Stream_TR->write_Data(Tr.yval[i]);
-            Text_Stream_TR->write_Data(Tr.zval[i]);
-            Text_Stream_TR->jump_line();
+            Text_Stream_RRTData->write_Data(Tr.xval[i]);
+            Text_Stream_RRTData->write_Data(Tr.yval[i]);
+            Text_Stream_RRTData->write_Data(Tr.zval[i]);
+            Text_Stream_RRTData->write_Data(i);
+            Text_Stream_RRTData->write_Data(1);
+            Text_Stream_RRTData->jump_line();
         }
+        for (int i = 0; i < Tr_Original.xval.size(); i++)
+        {
+            Text_Stream_RRTData->write_Data(Tr_Original.xval[i]);
+            Text_Stream_RRTData->write_Data(Tr_Original.yval[i]);
+            Text_Stream_RRTData->write_Data(Tr_Original.zval[i]);
+            Text_Stream_RRTData->write_Data(i);
+            Text_Stream_RRTData->write_Data(2);
+            Text_Stream_RRTData->jump_line();
+        }
+
         //Draw vicinity here
-#endif
+        //#endif
         for (int j = 0; j < rrt_vicinity.R.size(); j++)
         {
             cv::ellipse(image_Ptraj, cv::Point(Img(rrt_vicinity.TP[j][0]), Img(rrt_vicinity.TP[j][1])),
@@ -1169,6 +1202,11 @@ Print("Generating Path");
         }
 
         int pplan_indx = PathPlanning_Indexes.size();
+
+        Text_Stream_RRTData->write_Data(nodes.coord[RoadIndexes[0]]);
+        Text_Stream_RRTData->write_Data(0);
+        Text_Stream_RRTData->write_Data(3);
+        Text_Stream_RRTData->jump_line();
         for (int i = 0; i < pplan_indx - 1; i++)
         {
             int iR = PathPlanning_Indexes[i];
@@ -1182,22 +1220,24 @@ Print("Generating Path");
                      cv::Scalar(00, 230, 50), 2, 8);
 
 #endif
-#ifdef STREAMING
-            Text_Stream_Path->write_Data(nodes.coord[iRN]);
-            Text_Stream_Path->jump_line();
-#endif
+            //#ifdef STREAMING
+            Text_Stream_RRTData->write_Data(nodes.coord[iRN]);
+            Text_Stream_RRTData->write_Data(iRN);
+            Text_Stream_RRTData->write_Data(3);
+            Text_Stream_RRTData->jump_line();
+            //#endif
         }
     }
-
     return;
 }
 
 geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
 {
     //  Print("AVAILABILITY", PathPlanning_Available, Stop_RRT_flag);
+    int Final_VSPP_Index;
+    geometry_msgs::Pose NextRobotRequest;
     if (PathPlanning_Available && !Stop_RRT_flag)
     {
-        
         VectorDbl Visual_Servoing_position{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]};
         double minDistance = 100000.0;
         int VS_Index_in_PPath = PathPlanning_Indexes.size() - 1;
@@ -1214,53 +1254,60 @@ geometry_msgs::Pose Prediction::Selection_Function(double trust_index)
                 Road_VS_Result_Indx = i;
             }
         }
-       
+
         //   Print("VS index in path, path size", VS_Index_in_PPath, PathPlanning_Indexes.size());
 
         if (trust_index > 0.8)
         {
-            Road_VS_Result_Indx -= 2;
+            Road_VS_Result_Indx -= 3;
         }
         if (trust_index > 0.6)
         {
-            Road_VS_Result_Indx -= 2;
+            Road_VS_Result_Indx -= 3;
         }
         if (trust_index > 0.5)
         {
-            Road_VS_Result_Indx -= 2;
+            Road_VS_Result_Indx -= 3;
         }
 
         Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
-      
+
         if (Road_VS_Result_Indx < 0)
             Road_VS_Result_Indx = 0;
-        int Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
+        Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
         //  Print("Road VS index, FINAL node Index", Road_VS_Result_Indx, Final_VSPP_Index);
         //Add more cases here
 
-        geometry_msgs::Pose NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
+        NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
 
         NextRobotRequest.position.x = nodes.coord[Final_VSPP_Index][0]; //Then copy position
         NextRobotRequest.position.y = nodes.coord[Final_VSPP_Index][1];
         NextRobotRequest.position.z = nodes.coord[Final_VSPP_Index][2];
-      
+
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
         PathPlanningAdvancing_Index++;
-        return NextRobotRequest;
     }
     else
     {
-        geometry_msgs::Pose NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
+        NextRobotRequest = Marker_Pose_Manipulator_Coords; //copying orientation
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((Tr.xval[adv] + maxsc) * scale, (Tr.yval[adv] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
         NextRobotRequest.position.x = Tr.xval[adv]; //Then copy position
         NextRobotRequest.position.y = Tr.yval[adv];
         NextRobotRequest.position.z = Tr.zval[adv];
-        return NextRobotRequest;
+        Final_VSPP_Index = adv;
     }
+
+    Text_Stream_RRTData->write_Data(NextRobotRequest.position.x);
+    Text_Stream_RRTData->write_Data(NextRobotRequest.position.y);
+    Text_Stream_RRTData->write_Data(NextRobotRequest.position.z);
+    Text_Stream_RRTData->write_Data(Final_VSPP_Index);
+    Text_Stream_RRTData->write_Data(4);
+    Text_Stream_RRTData->jump_line();
+    return NextRobotRequest;
 }
 void Prediction::Draw_Map()
 {
@@ -1290,7 +1337,7 @@ void Prediction::Draw_Map()
             color[2] = 190;
         }
     }
-   // Print("MAP SIZES", Obstacle_Points.size(), Obstacle_Points_thick.size(), ObstacleMap.size());
+    // Print("MAP SIZES", Obstacle_Points.size(), Obstacle_Points_thick.size(), ObstacleMap.size());
 
 #endif
     return;
@@ -1382,7 +1429,7 @@ geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs
     }
 
 #ifdef OPENCV_DRAW
-   // Print("Prev-FINAL EEFF", Marker_Abs_Pose.position.x, Marker_Abs_Pose.position.y, Final_EEFF_Pose.position.x, Final_EEFF_Pose.position.y, ((Final_EEFF_Pose.position.x + maxsc) * scale));
+    // Print("Prev-FINAL EEFF", Marker_Abs_Pose.position.x, Marker_Abs_Pose.position.y, Final_EEFF_Pose.position.x, Final_EEFF_Pose.position.y, ((Final_EEFF_Pose.position.x + maxsc) * scale));
     //  cv::circle(image_Ptraj, cv::Point((int)((Final_EEFF_Pose.position.x + maxsc) * scale), (int)((Final_EEFF_Pose.position.y + maxsc) * scale)), 6, Colors[0], CV_FILLED, 3, 8);
     int x_point = (Final_EEFF_Pose.position.x + maxsc) * scale;
     int y_point = (Final_EEFF_Pose.position.y + maxsc) * scale;

@@ -33,4 +33,5 @@ simm
 githubkey
 githubkey.pub
 src/standalone/simm
+*.bag
 

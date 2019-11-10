@@ -82,7 +82,7 @@ void RRT::Initialize_VicinityRRT()
         if (acDist == 0)
             acDist = 0.01; //Quitar o revisar valor
         double factorA = ((double(j) * double(j)) / (30 * double(prof_expl) * double(prof_expl)));
-        vdr.R[j][1] = 0.01 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
+        vdr.R[j][1] = 0.04 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
         if (vdr.R[j][1] <= 0.0002)
             vdr.R[j][1] = 0.0002;
 
@@ -364,7 +364,7 @@ inline void RRT::RRT_Generation()
             NumNodesToAdd_reduced = 0; //Control of number of nodes after filtering and before rrt generation
         }
     }*/
-    //Text_Stream->write_TimeStamp();
+    Text_Stream->write_TimeStamp();
     int num_requests = 0;
     auto ticA = std::chrono::high_resolution_clock::now();
     double num_nodes_to_add = double(NumNodesToAdd_reduced);

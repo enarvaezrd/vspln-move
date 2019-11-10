@@ -1,0 +1,14 @@
+<?xml version="1.0" ?><sdf version="1.5">
+  <model name="41h12_10">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://41h12_10/meshes/41h12_10.dae</uri>
+          <scale>0.06 0.06 0.06</scale></mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

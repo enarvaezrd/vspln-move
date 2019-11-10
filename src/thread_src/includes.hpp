@@ -7,6 +7,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/Joy.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 
@@ -16,6 +17,10 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <queue>
 
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
+#include <eigen_conversions/eigen_msg.h>
+#include <Eigen/Core>
 //traj_client
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
@@ -44,7 +49,7 @@
 #define OPENCV_DRAW
 #define PI 3.141592654
 #define PRINT_
-#define SREAMING_
+#define SREAMING
 using namespace std;
 struct Position_
 {
@@ -226,13 +231,14 @@ public:
     bool activated;
 
     TextStream(string text_file) : limiter(-110),
-                                   activated(false)
+                                   activated(true)
     {
         outputfile.open(text_file);
+        start_time= std::chrono::system_clock::now();
     }
-    /* ~TextStream(){
+    ~TextStream(){
         outputfile.close();
-    }*/
+    }
 
     void write_Data(double data)
     {
@@ -255,13 +261,12 @@ public:
         if (activated)
         {
             auto time_point = std::chrono::system_clock::now();
-            std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
-            std::stringstream ss;
-            ss << now_c;
-            outputfile << to_string(now_c) << ";";
+            std::chrono::duration<double> diff = time_point-start_time;
+            
+            outputfile << diff.count()<< ";";
 
             auto tse = time_point.time_since_epoch();
-            auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+            auto now_ms = std::chrono::duration_cast<std::chrono::microseconds>(tse);
             auto now_s = std::chrono::duration_cast<std::chrono::seconds>(tse);
             auto jst_ms = now_ms - now_s;
 
@@ -275,6 +280,7 @@ public:
             outputfile << "\n";
     }
     ofstream outputfile;
+    std::chrono::system_clock::time_point start_time;
 };
 
 #endif

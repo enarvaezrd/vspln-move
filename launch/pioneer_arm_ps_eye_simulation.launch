@@ -1,6 +1,6 @@
 <launch>
 
-	<arg name="altitude" default="1.2"/>
+	<arg name="altitude" default="1.0"/>
     <!-- GAZEBO-->
 	<arg name="paused" default="false"/>
 	<arg name="use_sim_time" default="true"/>
@@ -11,10 +11,12 @@
 	<arg name="ros_planar_move_plugin" default="false"/>
 	<arg name="launch_robot_localization" default="true"/>
 
+ <arg name="record_rosbag" default="true" />
+
 	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
 
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
-		<arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit.world"/>
+		<arg name="world_name" value="$(find ed_pmov)/worlds/pioneer_building_wheel.world"/>
 		<arg name="paused" value="$(arg paused)"/>
 		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
 		<arg name="gui" value="$(arg gui)"/>
@@ -56,7 +58,7 @@
 
 	<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
 		<arg name="camera_name" value="/robot1/cam"/>   <!--/robot1/cam-->
-		<arg name="camera_frame" value="/cam_optical_frame"/>  <!--/robot1/cam-->
+		<arg name="camera_frame" value="/robot1/cam_optical_frame"/>  <!--/robot1/cam-->
 		<arg name="image_topic" value="image_raw"/>
 	</include>
 
@@ -67,7 +69,9 @@
 	<node name="joystick_node" pkg="joy" type="joy_node"/>
 
 
-
+ <node pkg="rosbag" type="record" name="record_rosbag"
+       args="record -o /home/edd/catkin_ws/src/ed_pmov/bags/rosbag  /tag_detections /robot1/odom /robot2/ground_truth/state /robot1/joint_states /robot2/command/motor /robot2/motor_status"
+       if="$(arg record_rosbag)" />
 
 
 </launch>

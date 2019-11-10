@@ -25,14 +25,38 @@ struct Positions2D
     std::vector<double> x, y;
 };
 
+class ControllerCommands
+{
+public:
+    ControllerCommands(string controller_topic)
+    {
+        sub_control_msg = nh_controller.subscribe(controller_topic.c_str(), 1, &ControllerCommands::Controller_Handler, this);
+        docking_process = false;
+        tracking_process = false;
+    }
+
+    void Controller_Handler(const sensor_msgs::Joy &controller_msg);
+
+    bool docking_process;
+    bool tracking_process;
+
+private:
+    ros::NodeHandle nh_controller;
+    ros::Subscriber sub_control_msg;
+};
+
 class uav_arm_tools
 {
 public:
     PIDarm PIDdata;
+    ControllerCommands Controller_Commands;
     int counter;
 
-    uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_) : rad_ext(rad_ext_),
-                                                                            rad_int(rad_int_), minArmAltitude(minArmAltitude_)
+    uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_, string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_) : rad_ext(rad_ext_),
+                                                                                                                                                rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                                                                                                                                Controller_Commands(cntrl_topic_),
+                                                                                                                                                Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                                                                                                                                DockingFactor(DockingFactor_)
 
     {
         PIDdata.ex = 0;
@@ -46,6 +70,9 @@ public:
         PIDdata.Ki = 0.0000;
         counter = 0;
         minArm_Altitude_Limit = minArmAltitude;
+
+        DockingAltitude = minArm_Altitude_Limit;
+
         // rad_ext = 0.45;
         //rad_int = 0.24;
 
@@ -63,6 +90,20 @@ public:
         oldPos_ciFull = oldPos_ci; //initialize in zeros
         armDelay = 0.02;           //.035
         state = 0;
+        DockingIteration = 0;
+
+        Text_Stream_eeff_uav_relative = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_eeff_uavrelativepose_v1.txt");
+        Text_Stream_eeff_uav_relative->write_Data("x");
+        Text_Stream_eeff_uav_relative->write_Data("y");
+        Text_Stream_eeff_uav_relative->write_Data("z");
+        Text_Stream_eeff_uav_relative->write_Data("yaw");
+        Text_Stream_eeff_uav_relative->write_Data("roll");
+        Text_Stream_eeff_uav_relative->write_Data("pitch");
+        Text_Stream_eeff_uav_relative->write_Data("type");
+        Text_Stream_eeff_uav_relative->write_Data("time");
+        Text_Stream_eeff_uav_relative->write_Data("ms");
+        Text_Stream_eeff_uav_relative->write_Data("delimiter");
+        Text_Stream_eeff_uav_relative->write_TimeStamp();
     }
 
     void Marker_Handler(const AprilTagPose &apriltag_marker_detections);
@@ -87,9 +128,12 @@ public:
     }
     void setAltitudeRequest(float altitude)
     {
+        minArmAltitude = minArm_Altitude_Limit;
         ArmPoseReq.position.z = altitude;
         ArmPoseReqFull.position.z = altitude;
     }
+    void CalculateDockingAltitude();
+    double getEEFFAltitude() { return DockingAltitude; }
 
     struct Quat ArmOrientReq_toQuaternion(double, Pose_msg);
     struct Quat Angles_toQuaternion(double, double, double);
@@ -106,7 +150,13 @@ public:
     Pose_msg ExternalCircle_Corrections(Pose_msg);
     Pose_msg InnerCircle_Corrections(Pose_msg, Pose_msg, int);
 
-    float Load_PID_time(double time) { PIDdata.time = time; }
+    void Load_PID_time(double time)
+    {
+        PID_data_mtx.lock();
+        PIDdata.time = time;
+        PID_data_mtx.unlock();
+        return;
+    }
     float getArmDelay() { return armDelay; }
     Pose_msg getMarkerPose() { return marker_pose; }
     int getTrackingState() { return state; }
@@ -116,6 +166,7 @@ public:
 private:
     ros::Subscriber sub_UAVmark; //Marker pose
     Printer Print;
+    TextStream *Text_Stream_eeff_uav_relative;
     int state;
     float minArmAltitude;
     Pose_msg marker_pose;
@@ -129,11 +180,16 @@ private:
     ros::NodeHandle nh_ua;
     mutex m_uatools;
     float minArm_Altitude_Limit;
-
+    std::mutex PID_data_mtx;
     Positions2D oldPos_ci;
     Positions2D oldPos_ciFull;
     NumberCorrection num;
+    double DockingAltitude;
+    int DockingIteration;
+    double Docking_Altitude_Limit;
+    double DockingFactor;
 };
+
 } // namespace ua_ns
 
 #endif
