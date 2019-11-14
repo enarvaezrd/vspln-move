@@ -15,9 +15,9 @@ public:
     float uav_altitude;
     float max_uav_correction;
 
-    RobotCommands(std::string odometry_str_) : uav_xpos(-0.00),
-                                          uav_ypos(0.32), //0.22-0.4
-                                          uav_altitude(1.1), //0.94
+    RobotCommands(std::string odometry_str_) : uav_xpos(-0.18),
+                                          uav_ypos(0.20), //0.22-0.4
+                                          uav_altitude(0.93), //0.94; 1.1 for non contact
                                           max_uav_correction(0.6),
                                           odometry_str(odometry_str_)
     {
@@ -35,6 +35,7 @@ public:
     RobotState_ ugv_state;
     std::string odometry_str;
     geometry_msgs::Twist old_uav_command;
+    double uav_speed;
 };
 
 #endif

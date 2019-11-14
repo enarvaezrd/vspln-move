@@ -277,8 +277,8 @@ bool Ed_Pmov::Check_Collision_TypeB(std::vector<double> Position)
     CheckPose.orientation.x = Position[4];
     CheckPose.orientation.y = Position[5];
     CheckPose.orientation.z = Position[6];
-    //tic();
-    //  process_mtx.lock();
+    // tic();
+    // process_mtx.lock();
     bool found_ik = kinematic_states_[0]->setFromIK(joint_model_groups_[0], CheckPose, 1, 0.0008);
     //process_mtx.unlock();
     //Print("check pose",found_ik,toc().count());
@@ -302,7 +302,6 @@ inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int inde
 
 void Ed_Pmov::FeedCollisionCheck_Queue(VectorDbl eeff_point, VectorDbl eeff_point_traslation, int region)
 {
-
     PositionResults position;
     position.Position = eeff_point;
     position.Position_Only_T = eeff_point_traslation;
@@ -376,16 +375,17 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
         currentJoints = ArmJointsState->GetCurrentArmJoints();
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
         end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
+        tf::poseEigenToMsg(end_effector_state, currentPose);
     }
     else
     {//simm
+    
         currentPose = group.getCurrentPose("link_motor_mx282").pose;
         //cout<<"CURRENTORIG Position: x: "<<currentPose.position.x<<", y: "<<currentPose.position.y<<", z: "<<currentPose.position.z<<"\n";
         //cout<<"CURRENTORIG Rotation: x: "<<currentPose.orientation.x<<", y: "<<currentPose.orientation.y<<", z: "<<currentPose.orientation.z<<", w: "<<currentPose.orientation.w<<"\n";
     }
 
-    auto currentPoseT = currentPose;
-    return currentPoseT;
+    return currentPose;
 }
 
 std::vector<double> Ed_Pmov::getCurrentJoints()

@@ -34,6 +34,7 @@ void RRT::Initialize_VicinityRRT()
         UAV_vel += sqrt((Old_Positions.xval[j] * Old_Positions.xval[j]) + (Old_Positions.xval[j + 1] * Old_Positions.xval[j + 1]));
     }
     UAV_Velocity = UAV_vel;
+    //cout<<"==================================>UAV VELOCITY RRT "<<UAV_Velocity<<endl;
 
     for (int j = 0; j < prof_expl; j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
     {
@@ -82,7 +83,7 @@ void RRT::Initialize_VicinityRRT()
         if (acDist == 0)
             acDist = 0.01; //Quitar o revisar valor
         double factorA = ((double(j) * double(j)) / (30 * double(prof_expl) * double(prof_expl)));
-        vdr.R[j][1] = 0.04 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
+        vdr.R[j][1] = 0.03 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
         if (vdr.R[j][1] <= 0.0002)
             vdr.R[j][1] = 0.0002;
 

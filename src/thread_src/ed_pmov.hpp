@@ -88,10 +88,6 @@ public:
 
     Ed_Pmov(bool load_joint_states_sub_) : group("pro_arm"),
                                            robot_model_loader("robot1/robot_description"),
-                                           robot_model_loader_aux1("robot1/robot_description_aux1"),
-                                           robot_model_loader_aux2("robot1/robot_description_aux2"),
-                                           robot_model_loader_aux3("robot1/robot_description_aux3"),
-                                           robot_model_loader_aux4("robot1/robot_description_aux4"),
                                            load_joint_states_sub(load_joint_states_sub_)
     {
         
@@ -101,15 +97,17 @@ public:
         group.setGoalTolerance(0.005);            //0.004
         group.setGoalOrientationTolerance(0.008); //0.008
         group.setPlanningTime(0.1);
+        group.setEndEffectorLink("link_motor_mx282");
 
-        for (int ith = 0; ith <= num_IK_requests; ith++)
+        kinematic_models_.push_back(robot_model_loader.getModel()); //First model for basic operation
+        for (int ith = 1; ith <= num_IK_requests; ith++)
         {
-            kinematic_models_.push_back(robot_model_loader.getModel());
+            std::string description_name = "robot1/robot_description_aux";
+            description_name += std::to_string(ith);
+            robot_model_loader_aux.push_back( RobotModelLoader(description_name.c_str()));
+            kinematic_models_.push_back(robot_model_loader_aux[ith-1].getModel());
         }
-        kinematic_models_[1] = robot_model_loader_aux1.getModel();
-        kinematic_models_[2] = robot_model_loader_aux2.getModel();
-        kinematic_models_[3] = robot_model_loader_aux3.getModel();
-        kinematic_models_[4] = robot_model_loader_aux4.getModel();
+
         for (int i = 0; i <= num_IK_requests; i++)
         {
             robot_state::RobotStatePtr kA(new robot_state::RobotState(kinematic_models_[i]));
@@ -197,7 +195,8 @@ public:
     typedef moveit::planning_interface::MoveItErrorCode ErrorCode;
     typedef moveit_msgs::MoveItErrorCodes MoveitCodes;
 
-    RobotModelLoader robot_model_loader, robot_model_loader_aux1, robot_model_loader_aux2, robot_model_loader_aux3, robot_model_loader_aux4;
+    RobotModelLoader robot_model_loader;
+    std::vector<RobotModelLoader> robot_model_loader_aux;
 
     Printer Print;
     std::vector<robot_model::RobotModelPtr> kinematic_models_;

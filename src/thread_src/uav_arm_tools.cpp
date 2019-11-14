@@ -362,6 +362,9 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     Pose_msg PID_ArmReq = ArmPoseReq;
 
+
+    num.MinMax_Correction(x_correction, 0.01);
+    num.MinMax_Correction(y_correction, 0.01);
     Print("Corrections", x_correction, y_correction);
     PID_ArmReq.position.x -= x_correction;
     PID_ArmReq.position.y += y_correction;
@@ -384,7 +387,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     //------agregar flag de contacto-------
 
-    if (rad <= (rad_int + 0.02))
+    if (rad <= (rad_int + 0.025))
     {
         minArmAltitude += 0.0015;
         num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.13);

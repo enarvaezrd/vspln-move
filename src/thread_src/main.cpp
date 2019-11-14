@@ -12,11 +12,11 @@ int main(int argc, char **argv)
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 12; // Profundidad de exploracion  Esz=prof_f
+    int prof_expl = 11; // Profundidad de exploracion  Esz=prof_f
     int Map_size = 400;
     float scale = 1.0;
-    double rrt_extension = 0.32; //extension of each rrt step for regression 0.38
-    int num_nodes_per_region = prof_expl + 10;
+    double rrt_extension = 0.28; //extension of each rrt step for regression 0.38
+    int num_nodes_per_region = prof_expl + 15;
     double rad_int = 0.26;
     double rad_ext = 0.425;
     double armMinAltitude = 0.55;
@@ -162,8 +162,8 @@ int main(int argc, char **argv)
                 //cv::waitKey(1);
                 //openCV_mutex.unlock();
 #endif
-                //std::cout<<"Seq B time: "<<RRT_modelB.ArmModel.toc(clB).count()<<std::endl;
-                Print("==========SEQUENCE B TIME ", RRT_model.ArmModel.toc(clB).count());
+                //std::cout << "========>SEQUENCE B TIME: " << RRT_model.ArmModel.toc(clB).count() << std::endl;
+                // Print("==========SEQUENCE B TIME ", RRT_model.ArmModel.toc(clB).count());
                 clB = std::chrono::high_resolution_clock::now();
                 // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
@@ -194,22 +194,25 @@ int main(int argc, char **argv)
         //std::unique_lock<std::mutex> lck(mtx_main);
         auto clA = std::chrono::high_resolution_clock::now();
         geometry_msgs::Pose CurrentArmPose;
-        int NoVisualContact_count=0;
+        int NoVisualContact_count = 0;
         while (ros::ok())
         {
+
             Predict_B.ClearImage_Ptraj();
             Predict_B.Load_Map(ObstacleMap.get_Map(), ObstacleMap.get_Obs_Points(), ObstacleMap.get_Obs_Points_Thick()); //Load Obstacle Map
-            Predict_B.Draw_Map();
+           // Predict_B.Draw_Map();
             ObstacleMap.Load_UGV_state(Robot_Commands.ugv_state);
             //CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
 
+            auto timeStep = std::chrono::high_resolution_clock::now();
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             // auto joints1 = RRT_model.ArmModel.getCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             //RRT_model.ArmModel.PrintPose("CurrentArmPose", CurrentArmPose);
             //RRT_model.ArmModel.tic();
             //  Print("ESTADO de marker: ", UavArm_tools.getTrackingState());
+
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             { //Tracking OK
                 //RRT_model.ArmModel.PrintPose("UAV LOCAL", LocalUAVPose);
@@ -234,19 +237,18 @@ int main(int argc, char **argv)
                 TrackingState = 0;
                 UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                 UavArm_tools.counter = 0;
-                if (NoVisualContact_count>10)
+                if (NoVisualContact_count > 10)
                 {
-                      
-                      NextArmRequest.position.x=-0.08;
-                      NextArmRequest.position.y=0.2;
-                      CurrentRequest_Thread=NextArmRequest;
-                      NoVisualContact_count=0;
+
+                    NextArmRequest.position.x = -0.08;
+                    NextArmRequest.position.y = 0.2;
+                    CurrentRequest_Thread = NextArmRequest;
+                    NoVisualContact_count = 0;
                 }
-                // 
+                //
                 //NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
-               
             }
-            if (TrackingState > 0&& UavArm_tools.Controller_Commands.tracking_process)
+            if (TrackingState > 0 && UavArm_tools.Controller_Commands.tracking_process)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
@@ -258,19 +260,28 @@ int main(int argc, char **argv)
 
                 //UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude()); //change ArmPoseReq z value
                 UavArm_tools.CalculateDockingAltitude();
+                float trust_factor = 0.5;
+                if (UavArm_tools.Controller_Commands.docking_process)
+                {
+                    trust_factor = 0.0;
+                }
+                else
+                {
+                    trust_factor = 0.5;
+                }
 
                 UavArm_tools.setAltitudeRequest(UavArm_tools.getEEFFAltitude());
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
 
                 // RRT_model.ArmModel.PrintPose("Previous Sel Request", CurrentRequest_Thread);
-                Predict_B.Load_UGV_State(Robot_Commands.ugv_state);
+                Predict_B.Load_UGV_State(Robot_Commands.ugv_state); //sequential
                 Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                 Predict_B.Charge_Nodes();
                 RRT_model.loop_start();
                 Predict_B.RRT_Path_Generation();
 
-                NextArmRequest = Predict_B.Selection_Function(0.6);
+                NextArmRequest = Predict_B.Selection_Function(trust_factor);
                 //Print("New sel");
             }
             arm_control_msg_mtx.lock();
@@ -299,7 +310,7 @@ int main(int argc, char **argv)
             // openCV_mutex.unlock();
             //std::this_thread::sleep_for(std::chrono::milliseconds(35));
             // loop_rate.sleep();
-            cout << "=====> SEQUENCE A TIME: " << RRT_model.ArmModel.toc(clA).count() << endl;
+            // cout << "=====> SEQUENCE A TIME: " << RRT_model.ArmModel.toc(clA).count() << endl;
             Print("===--->SEQUENCE A TIME ", RRT_model.ArmModel.toc(clA).count());
             clA = std::chrono::high_resolution_clock::now();
         }
@@ -308,19 +319,38 @@ int main(int argc, char **argv)
     //========================CONTROL THREAD===========================================================
 
     auto threadControl = std::thread([&]() {
-
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        ros::Rate loop_rateControl(30);
-        double non_tracking_height_corr=0.2;
-        double y_correction=0.0;
+        ros::Rate loop_rateControl(40);
+        double non_tracking_height_corr = 0.2;
+        double y_correction = 0.0;
+        geometry_msgs::Pose OldLocalUAVPose = target_posea;
+        deque<double> localUAV_Vel;
         while (ros::ok())
         {
 
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             {
                 geometry_msgs::Pose LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
-                Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose,non_tracking_height_corr,y_correction);
-                y_correction=0.0;
+                Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
+                y_correction = 0.0;
+
+                localUAV_Vel.push_back(sqrt(((OldLocalUAVPose.position.x - LocalUAVPose.position.x) * (OldLocalUAVPose.position.x - LocalUAVPose.position.x)) +
+                                            ((OldLocalUAVPose.position.y - LocalUAVPose.position.y) * (OldLocalUAVPose.position.y - LocalUAVPose.position.y))));
+
+                double accumm_UAV_vel = 0.0;
+                int uav_vel_size = localUAV_Vel.size();
+                for (int i = 0; i < uav_vel_size; i++)
+                {
+                    accumm_UAV_vel += localUAV_Vel[i];
+                }
+                accumm_UAV_vel /= uav_vel_size;
+                if (uav_vel_size > 5)
+                {
+                    localUAV_Vel.pop_front();
+                }
+                Predict_B.Set_UAV_Velocity(accumm_UAV_vel);
+
+                OldLocalUAVPose = LocalUAVPose;
             }
 
             arm_control_msg_mtx.lock();
@@ -328,14 +358,13 @@ int main(int argc, char **argv)
             bool fresh_request_local = fresh_request;
             fresh_request = false;
             arm_control_msg_mtx.unlock();
-            
-            y_correction=CurrentArmRequest.position.y;
 
+            y_correction = CurrentArmRequest.position.y;
 
             if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process)
             {
 
-                non_tracking_height_corr=0.0;
+                non_tracking_height_corr = 0.0;
                 auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
 
                 if (ArmGoal.trajectory.points.size() > 0)
@@ -349,27 +378,26 @@ int main(int argc, char **argv)
                 //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(CurrentRequest_Thread); // CurrentRequest_Thread   NextArmRequest
 
                 UavArm_tools.Load_PID_time(RRT_model.ArmModel.getDelayTime().count() / 1000000);
-
-            }
-            else 
-            {if (!UavArm_tools.Controller_Commands.tracking_process)
-            {
-                non_tracking_height_corr=0.1;
-                auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
-
-                if (ArmGoal.trajectory.points.size() > 0)
-                {
-                    //Print("GoalFound");
-                    ArmGoal = RRT_model.SteerJoints(ArmGoal);
-
-                    RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
-                }
             }
             else
             {
-                non_tracking_height_corr=0.0;
-            }
-            
+                if (!UavArm_tools.Controller_Commands.tracking_process)
+                {
+                    non_tracking_height_corr = 0.1;
+                    auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
+
+                    if (ArmGoal.trajectory.points.size() > 0)
+                    {
+                        //Print("GoalFound");
+                        ArmGoal = RRT_model.SteerJoints(ArmGoal);
+
+                        RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
+                    }
+                }
+                else
+                {
+                    non_tracking_height_corr = 0.0;
+                }
             }
             loop_rateControl.sleep();
         }

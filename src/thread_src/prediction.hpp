@@ -58,11 +58,25 @@ public:
         Text_Stream_RRTData->write_Data("type");
         Text_Stream_RRTData->write_TimeStamp();
 
-
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
         ugv_state_factor = 0.5; //40%
         UAV_Velocity = 0.0;
+        int cn = 0;
+        for (int i = 0; i < prof_expl + adv; i++)
+        {
+            tr_order_indexes.push_back(1+round(prof_expl / 2) + cn);
+
+            if (i % 2 == 0)
+            {
+                cn++;
+            }
+            cn *= -1;
+        }
+        for (int i = 0; i < prof_expl + adv; i++)
+        {
+            cout << "NUMBERS " << tr_order_indexes[i] << endl;
+        }
     }
     void Average_OldTrajectory();
     void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose);
@@ -96,6 +110,14 @@ public:
         Velocity_mtx.unlock();
         return vel;
     }
+    void Set_UAV_Velocity(double vel)
+    {
+        Velocity_mtx.lock();
+        UAV_Velocity = vel;
+        Velocity_mtx.unlock();
+        return;
+    }
+
     const Etraj Get_TR()
     {
         TP_Mtx.lock();
@@ -116,6 +138,7 @@ public:
         rrt_vicinity_copy = vdr;
         NodesAvailable = true;
         New_Nodes_from_RRT = true;
+        PathPlanningAdvancing_Index = 0;
         NodesMtx.unlock();
         return;
     } //Called by B loop
@@ -137,7 +160,7 @@ public:
     double Distance(VectorDbl P0, VectorDbl P1);
     void RRT_Path_Generation();
 
-    geometry_msgs::Pose Selection_Function(double);
+    geometry_msgs::Pose Selection_Function(float);
 
     bool get_Stop_RRT_Flag()
     {
@@ -169,7 +192,7 @@ private:
 
     cv::Mat White_Imag, image_Ptraj;
     Vicinity rrt_vicinity, rrt_vicinity_copy;
-    Etraj Tr,Tr_Original;
+    Etraj Tr, Tr_Original;
     Etraj Tr_old, Tr_temp;
     std::mutex TP_Mtx;
     int image_size;
@@ -204,6 +227,7 @@ private:
     int PathPlanningAdvancing_Index;
     geometry_msgs::Pose Marker_Pose_Manipulator_Coords;
     NumberCorrection num;
+    VectorInt tr_order_indexes;
 };
 } // namespace PredNs
 
