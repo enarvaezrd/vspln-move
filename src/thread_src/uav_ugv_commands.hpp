@@ -15,9 +15,9 @@ public:
     float uav_altitude;
     float max_uav_correction;
 
-    RobotCommands(std::string odometry_str_) : uav_xpos(0.0),
-                                          uav_ypos(0.32), //0.22-0.4
-                                          uav_altitude(1.0),
+    RobotCommands(std::string odometry_str_,float x_pos_,float y_pos_,float z_pos_) : uav_xpos(x_pos_),
+                                          uav_ypos(y_pos_), //0.22-0.4
+                                          uav_altitude(z_pos_),
                                           max_uav_correction(0.5),
                                           odometry_str(odometry_str_)
     {

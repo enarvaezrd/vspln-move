@@ -351,8 +351,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //PID implementation
     //Error calculation
     //corg=0.15;
- num.MinMax_Correction(x_correction, 0.01);
- num.MinMax_Correction(y_correction, 0.01);//0.002
+ num.MinMax_Correction(x_correction, 0.1);
+ num.MinMax_Correction(y_correction, 0.1);//0.002
    // cout<<"PID x: "<<x_correction<<", y"<<y_correction<<endl;
    // PID_Calculation(x_correction, y_correction);
 
@@ -406,7 +406,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 */
     //-------------------------------------
 
-    if (rad >= rad_ext)
+   /* if (rad >= rad_ext)
     { //Circulo externo
         PID_ArmReq = ExternalCircle_Corrections(PID_ArmReq);
     }
@@ -414,7 +414,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (rad <= rad_int)
     { //Circulo interno
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
-    }
+    }*/
     //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
     //Print("DifferenceB", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
