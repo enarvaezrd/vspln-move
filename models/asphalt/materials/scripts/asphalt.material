@@ -1,0 +1,14 @@
+material asphalt/Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture asphalt.jpg
+	scale 0.1 0.1
+      }
+    }
+  }
+}
