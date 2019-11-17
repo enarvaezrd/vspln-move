@@ -34,4 +34,6 @@ githubkey
 githubkey.pub
 src/standalone/simm
 *.bag
-
+*.mp4
+*.wma
+*.mkv

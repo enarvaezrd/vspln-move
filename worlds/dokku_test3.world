@@ -346,172 +346,7 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
-      <model name='ladder_60deg_2rails'>
-        <pose frame=''>14.5022 -6.62659 0 0 0 -3.12814</pose>
-        <scale>1 1 1</scale>
-        <link name='landing'>
-          <pose frame=''>14.5249 -8.31208 2.4 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_landing_top'>
-          <pose frame=''>14.9749 -8.30603 3.61244 1.5708 -0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_landing_upright_0'>
-          <pose frame=''>14.9708 -8.00605 3.00622 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_landing_upright_1'>
-          <pose frame=''>14.9789 -8.606 3.00622 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_long'>
-          <pose frame=''>14.9568 -6.96333 1.80622 -0.523599 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_upright0'>
-          <pose frame=''>14.9485 -6.3456 0.15875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_upright1'>
-          <pose frame=''>14.9547 -6.80744 0.95875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_upright2'>
-          <pose frame=''>14.9609 -7.26928 1.75875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_railing_upright3'>
-          <pose frame=''>14.9671 -7.73112 2.55875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='left_side_wall'>
-          <pose frame=''>14.9615 -7.3133 1.2 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_landing_top'>
-          <pose frame=''>14.075 -8.31813 3.61244 1.5708 -0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_landing_upright_0'>
-          <pose frame=''>14.0709 -8.01816 3.00622 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_landing_upright_1'>
-          <pose frame=''>14.079 -8.6181 3.00622 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_long'>
-          <pose frame=''>14.0569 -6.97543 1.80622 -0.523599 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_upright0'>
-          <pose frame=''>14.0486 -6.35771 0.15875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_upright1'>
-          <pose frame=''>14.0548 -6.81954 0.95875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_upright2'>
-          <pose frame=''>14.061 -7.28138 1.75875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_railing_upright3'>
-          <pose frame=''>14.0672 -7.74322 2.55875 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='right_side_wall'>
-          <pose frame=''>14.0616 -7.3254 1.2 1.0472 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step0'>
-          <pose frame=''>14.5043 -6.78054 0.266667 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step1'>
-          <pose frame=''>14.5064 -6.93448 0.533333 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step2'>
-          <pose frame=''>14.5084 -7.08843 0.8 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step3'>
-          <pose frame=''>14.5105 -7.24238 1.06667 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step4'>
-          <pose frame=''>14.5126 -7.39632 1.33333 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step5'>
-          <pose frame=''>14.5147 -7.55027 1.6 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step6'>
-          <pose frame=''>14.5167 -7.70421 1.86667 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='step7'>
-          <pose frame=''>14.5188 -7.85816 2.13333 0 0 -3.12814</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
+      
       <model name='my_building'>
         <pose frame=''>0 0 0.02 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -2421,6 +2256,10 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
+
+
+
+
       <link name='right_railing_landing_upright_1'>
         <pose frame=''>0.45 1.98564 3.00622 0 -0 0</pose>
         <collision name='collision'>
@@ -2578,6 +2417,10 @@
       </link>
       <pose frame=''>12 -15.4792 0 0 -0 0</pose>
     </model>
+
+
+
+
     <model name='Lamp Post_clone_4'>
       <static>1</static>
       <link name='link'>
@@ -2847,27 +2690,7 @@
     <model name='Lamp Post_clone_3_clone_0'>
       <static>1</static>
       <link name='link'>
-        <collision name='collision'>
-          <geometry>
-            <mesh>
-              <uri>model://lamp_post/meshes/lamp_post.dae</uri>
-              <scale>1 1 1</scale>
-            </mesh>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
+       
         <visual name='visual'>
           <geometry>
             <mesh>
@@ -2878,34 +2701,13 @@
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
-        <gravity>1</gravity>
+        <gravity>0</gravity>
       </link>
       <pose frame=''>-0.589153 -14.3149 -0.391548 0 -0 0</pose>
     </model>
     <model name='Construction Cone'>
       <static>1</static>
-      <link name='link'>
-        <collision name='collision'>
-          <geometry>
-            <mesh>
-              <scale>1 1 1</scale>
-              <uri>model://construction_cone/meshes/construction_cone.dae</uri>
-            </mesh>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
+      <link name='link'>       
         <visual name='visual'>
           <geometry>
             <mesh>
@@ -2916,7 +2718,7 @@
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
-        <gravity>1</gravity>
+        <gravity>0</gravity>
       </link>
       <pose frame=''>27.7307 -7.91992 0 0 -0 0</pose>
     </model>

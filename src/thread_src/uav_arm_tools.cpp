@@ -362,7 +362,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     Pose_msg PID_ArmReq = ArmPoseReq;
 
-
     num.MinMax_Correction(x_correction, 0.01);
     num.MinMax_Correction(y_correction, 0.01);
     Print("Corrections", x_correction, y_correction);
@@ -605,7 +604,6 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
 geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 {
     geometry_msgs::Pose quad_pose;
- 
 
     //Absolute pose from camera to manip coord mantaining the same z value or altitude
     Angles IAngleMark1 = ConvPosetoAngles(marker_pose); //UAV angles
@@ -620,9 +618,9 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.yaw);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.roll);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.pitch);
-    Text_Stream_eeff_uav_relative->write_Data(1);   
-     Text_Stream_eeff_uav_relative->write_TimeStamp();  
-     
+    Text_Stream_eeff_uav_relative->write_Data(1);
+    Text_Stream_eeff_uav_relative->write_TimeStamp();
+
     Quat quaternion_angles = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark1.yaw);
 
     AnglesCurrent.yaw += PI / 2;
@@ -644,12 +642,10 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     Text_Stream_eeff_uav_relative->write_Data(IAngleMark1.pitch);
     Text_Stream_eeff_uav_relative->write_Data(2);
     Text_Stream_eeff_uav_relative->write_TimeStamp();
-  //  cout << "ANGLES: uav: " << IAngleMark1.yaw << ", EEFF" << AnglesCurrent.yaw << " corrx: " << xc11 << ", corry: " << yc11 << endl;
-//   cout << "QUAD POSE: x" << quad_pose.position.x << ", y" << quad_pose.position.y << endl;
-  //  cout << "EEFF POSE: x" << CurrentArmPose.position.x << ", y" << CurrentArmPose.position.y << endl;
+    //  cout << "ANGLES: uav: " << IAngleMark1.yaw << ", EEFF" << AnglesCurrent.yaw << " corrx: " << xc11 << ", corry: " << yc11 << endl;
+    //   cout << "QUAD POSE: x" << quad_pose.position.x << ", y" << quad_pose.position.y << endl;
+    //  cout << "EEFF POSE: x" << CurrentArmPose.position.x << ", y" << CurrentArmPose.position.y << endl;
 
-    
-   
     return quad_pose;
 }
 void uav_arm_tools::PIDReset()
@@ -704,9 +700,13 @@ void uav_arm_tools::CalculateDockingAltitude()
     }
     return;
 }
-void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &controller_msg)
+void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_Msg)
 {
-    if (controller_msg.buttons[4] == 1)
+    sensor_msgs::Joy controller_msg = Controller_Msg;
+#ifndef WIRELESS_CONTROLLER
+    controller_msg.buttons[4] = controller_msg.buttons[3];
+#endif
+    if (controller_msg.buttons[4] == 1.0)
     {
         if (docking_process)
         {
@@ -718,7 +718,7 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &controller_m
         }
     }
 
-    if (controller_msg.buttons[0] == 1)
+    if (controller_msg.buttons[0] == 1.0)
     {
         if (tracking_process)
         {
@@ -729,7 +729,6 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &controller_m
             tracking_process = true;
         }
     }
-    return;
 }
 
 #endif

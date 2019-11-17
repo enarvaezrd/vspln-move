@@ -120,13 +120,14 @@
       </camera>
     </gui>
     <model name='woodenfloor'>
+      <static>1</static>
       <link name='link'>
 	<collision name='collision'>
           <geometry>
-            <mesh>
-              <uri>model://ed_pmov/models/woodenfloor/woodenfloor1.dae</uri>
-              <scale>1 1 1</scale>
-            </mesh>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>200 200</size>
+            </plane>
           </geometry>
           <surface>
             <friction>
@@ -162,9 +163,9 @@
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
-        <gravity>0</gravity>
+        <gravity>1</gravity>
       </link>
-      <pose frame=''>13.1 -5.45 0.04 0 0 0</pose>
+      <pose frame=''>13.1 -5.45 0.03 -0.01 0 0</pose>
     </model>
     <model name='my_building'>
       <pose frame=''>0 0 0.0 0.5 -0 0</pose>
@@ -193,6 +194,29 @@
     <model name='cement_plane'>
       <static>1</static>
       <link name='link'>
+      <collision name='collision'>
+          <geometry>
+            <box>
+              <size>44 30 0.02</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
         <visual name='visual'>
           <cast_shadows>0</cast_shadows>
           <geometry>
@@ -360,6 +384,7 @@
       </link>
       <pose frame=''>30 -18 0 0 -0 0</pose>
     </model>
+   
     <model name='Lamp Post_clone_2_clone'>
       <static>1</static>
       <link name='link'>
@@ -512,8 +537,8 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <scale>1 1 1</scale>
               <uri>model://construction_cone/meshes/construction_cone.dae</uri>
+	      <scale>10 10 10</scale>
             </mesh>
           </geometry>
         </visual>
@@ -521,7 +546,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>27.7307 -7.91992 0 0 -0 0</pose>
+      <pose frame=''>34.1932 -9.71106 0.05 0 -0 0</pose>
     </model>
 
   <model name='cardboard_box_clone_clone_0'>
@@ -782,6 +807,296 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
+    </model>
+<model name='truss_1'>
+        <pose frame=''>5.26928 -0.004147 0.173304 0 1.2e-05 -0.070241</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>5.26928 -0.004147 0.173304 0 1.2e-05 -0.070241</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>4.05318 -0.285146 0.653626 0.724628 -1.1664 -3.14103</acceleration>
+          <wrench>84.0253 -5.91127 13.5501 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='truss_clone'>
+        <pose frame=''>29.5868 -3.07062 0.173306 4e-06 2.7e-05 0.235328</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>29.5868 -3.07062 0.173306 4e-06 2.7e-05 0.235328</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-0.479175 -0.748691 1.78676 2.24103 -1.5234 -0.005236</acceleration>
+          <wrench>-9.93363 -15.5209 37.0407 0 -0 0</wrench>
+        </link>
+      </model>
+<model name='unit_box_0'>
+      <pose frame=''>6.1 -0.081105 1.230146 0 5e-06 -0.038269</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.166667</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.166667</iyy>
+            <iyz>0</iyz>
+            <izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>2.0662 1.89441 0.08</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>2.0662 1.89441 0.100302</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+    </model>
+    <model name='truss_clone'>
+      <link name='link'>
+        <inertial>
+          <mass>20.7307</mass>
+          <inertia>
+            <ixx>4.7978</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4699</iyy>
+            <iyz>-0.002</iyz>
+            <izz>4.7978</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <bounce>
+              <restitution_coefficient>0</restitution_coefficient>
+              <threshold>100000</threshold>
+            </bounce>
+            <friction>
+              <ode>
+                <mu>10</mu>
+                <mu2>10</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <pose frame=''>30.33309 -3.12478 0.173303 -3e-06 1e-06 3.22163</pose>
+    </model>
+    <model name='truss_1'>
+      <link name='link'>
+        <inertial>
+          <mass>20.7307</mass>
+          <inertia>
+            <ixx>4.7978</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4699</iyy>
+            <iyz>-0.002</iyz>
+            <izz>4.7978</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <bounce>
+              <restitution_coefficient>0</restitution_coefficient>
+              <threshold>100000</threshold>
+            </bounce>
+            <friction>
+              <ode>
+                <mu>10</mu>
+                <mu2>10</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <pose frame=''>5.53518 0.000491 0 0 -0 1.0</pose>
+    </model>
+    <model name='truss_0'>
+      <link name='link'>
+        <inertial>
+          <mass>20.7307</mass>
+          <inertia>
+            <ixx>4.7978</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4699</iyy>
+            <iyz>-0.002</iyz>
+            <izz>4.7978</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <bounce>
+              <restitution_coefficient>0</restitution_coefficient>
+              <threshold>100000</threshold>
+            </bounce>
+            <friction>
+              <ode>
+                <mu>10</mu>
+                <mu2>10</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <pose frame=''>4.48507 0.134943 0 0 -0 0</pose>
+    </model>
+    
+    
+    <model name='truss'>
+      <link name='link'>
+        <inertial>
+          <mass>20.7307</mass>
+          <inertia>
+            <ixx>4.7978</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4699</iyy>
+            <iyz>-0.002</iyz>
+            <izz>4.7978</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <bounce>
+              <restitution_coefficient>0</restitution_coefficient>
+              <threshold>100000</threshold>
+            </bounce>
+            <friction>
+              <ode>
+                <mu>10</mu>
+                <mu2>10</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://drc_practice_truss/meshes/truss.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <pose frame=''>31.2552 -2.90428 0 0 -2.0 4.0</pose>
     </model>
   </world>
 </sdf>
