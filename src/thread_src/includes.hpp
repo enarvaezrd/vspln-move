@@ -50,6 +50,7 @@
 #define PI 3.141592654
 #define PRINT_
 #define SREAMING
+#define WIRELESS_CONTROLLER_
 using namespace std;
 struct Position_
 {

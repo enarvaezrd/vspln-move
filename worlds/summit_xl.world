@@ -35,5 +35,16 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
+<model name="my_building">
+      <pose>0 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="building">
+        <visual name="visual">
+          <geometry>
+            <mesh><uri>model://ed_pmov/worlds/models/building/building.dae</uri></mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>

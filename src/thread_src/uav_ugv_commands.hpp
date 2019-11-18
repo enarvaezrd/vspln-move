@@ -15,20 +15,20 @@ public:
     float uav_altitude;
     float max_uav_correction;
 
-    RobotCommands(std::string odometry_str_) : uav_xpos(-0.18),
-                                          uav_ypos(0.20), //0.22-0.4
-                                          uav_altitude(0.93), //0.94; 1.1 for non contact
-                                          max_uav_correction(0.6),
-                                          odometry_str(odometry_str_)
+    RobotCommands(std::string odometry_str_, double uav_x, double uav_y) : uav_xpos(uav_x),
+                                                                           uav_ypos(uav_y),    //0.22-0.4
+                                                                           uav_altitude(1.1), //0.94; 1.1 for non contact
+                                                                           max_uav_correction(0.6),
+                                                                           odometry_str(odometry_str_)
     {
         uav_msg_pub = nh_uav_ugv_comm.advertise<geometry_msgs::Twist>("/robot2/visual_local_guidance/uav_msg", 1); //commands for the UAV
-        sub_ugv_Odom = nh_uav_ugv_comm.subscribe(odometry_str.c_str(), 1, &RobotCommands::UGV_Odom_Handler, this);       ///robot1/robotnik_base_control/odom
-        old_uav_command.linear.x=uav_xpos;
-        old_uav_command.linear.x=uav_xpos;
+        sub_ugv_Odom = nh_uav_ugv_comm.subscribe(odometry_str.c_str(), 1, &RobotCommands::UGV_Odom_Handler, this); ///robot1/robotnik_base_control/odom
+        old_uav_command.linear.x = uav_xpos;
+        old_uav_command.linear.x = uav_xpos;
     }
 
     void UGV_Odom_Handler(const nav_msgs::Odometry &ugv_odom);
-    void Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction,double x_corection);
+    void Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double x_corection);
     void Send_Empty_Commands();
     Angles ConvPosetoAngles(geometry_msgs::Pose pose);
     Printer Print;

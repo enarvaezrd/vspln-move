@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     int num_nodes_per_region = prof_expl + 15;
     double rad_int = 0.26;
     double rad_ext = 0.425;
-    double armMinAltitude = 0.55;
+    double armMinAltitude = 0.47;
     bool load_joints_state_sub;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.83;
@@ -34,6 +34,8 @@ int main(int argc, char **argv)
     load_joints_state_sub = false;
 #endif
 
+    double UAV_position_x = -0.18;
+    double UAV_position_y = 0.22;
     //==================================================================================
 
     ros::init(argc, argv, "arm_program");
@@ -54,14 +56,12 @@ int main(int argc, char **argv)
 
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, scale, rrt_extension, rad_int, rad_ext);
     ObstacleMapGen ObstacleMap(Map_size, scale, image_size, rad_int, rad_ext, laser_topic);
-    RobotCommands Robot_Commands(odom_str);
+    RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y);
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor);
-    sleep(1.0);
 
     RRT_model.ArmModel.PrintModelInfo();
 
-    sleep(2.0);
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
     float alturap = armMinAltitude; //0.21
 
@@ -75,14 +75,14 @@ int main(int argc, char **argv)
     target_pose.orientation.y = 1.0;
     target_pose.orientation.z = 0.0;
 
-    target_pose.position.x = -0.12; //0.1
-    target_pose.position.y = 0.18;
+    target_pose.position.x = UAV_position_x; //0.1
+    target_pose.position.y = UAV_position_y;
     target_pose.position.z = alturap;
 
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(3.0);
+    sleep(2.0);
     /* target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 
             Predict_B.ClearImage_Ptraj();
             Predict_B.Load_Map(ObstacleMap.get_Map(), ObstacleMap.get_Obs_Points(), ObstacleMap.get_Obs_Points_Thick()); //Load Obstacle Map
-           // Predict_B.Draw_Map();
+                                                                                                                         // Predict_B.Draw_Map();
             ObstacleMap.Load_UGV_state(Robot_Commands.ugv_state);
             //CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
@@ -239,9 +239,9 @@ int main(int argc, char **argv)
                 UavArm_tools.counter = 0;
                 if (NoVisualContact_count > 10)
                 {
-
-                    NextArmRequest.position.x = -0.08;
-                    NextArmRequest.position.y = 0.2;
+                    NextArmRequest.position.x = UAV_position_x;
+                    NextArmRequest.position.y = UAV_position_y;
+                    NextArmRequest.position.z = alturap;
                     CurrentRequest_Thread = NextArmRequest;
                     NoVisualContact_count = 0;
                 }
@@ -325,8 +325,13 @@ int main(int argc, char **argv)
         double y_correction = 0.0;
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
         deque<double> localUAV_Vel;
+
         while (ros::ok())
         {
+            if (UavArm_tools.Controller_Commands.docking_process && UavArm_tools.Controller_Commands.tracking_process)
+            {
+                non_tracking_height_corr = -0.2;
+            }
 
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             {
@@ -359,12 +364,12 @@ int main(int argc, char **argv)
             fresh_request = false;
             arm_control_msg_mtx.unlock();
 
-            y_correction = CurrentArmRequest.position.y;
+          //  y_correction = CurrentArmRequest.position.y;
 
-            if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process)
+            if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process) //tracking
             {
 
-                non_tracking_height_corr = 0.0;
+                non_tracking_height_corr = -0.0;
                 auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
 
                 if (ArmGoal.trajectory.points.size() > 0)
@@ -381,9 +386,9 @@ int main(int argc, char **argv)
             }
             else
             {
-                if (!UavArm_tools.Controller_Commands.tracking_process)
+                if (!UavArm_tools.Controller_Commands.tracking_process) //no tracking
                 {
-                    non_tracking_height_corr = 0.1;
+                    non_tracking_height_corr = 0.2;
                     auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
 
                     if (ArmGoal.trajectory.points.size() > 0)

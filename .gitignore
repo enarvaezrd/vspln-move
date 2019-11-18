@@ -37,4 +37,6 @@ src/standalone/simm
 data_eeff_uavrelativepose_v1.txt
 data_rrt.txt
 rrtdata_v1.txt
-
+*.mp4
+*.wma
+*.mkv

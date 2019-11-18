@@ -1,0 +1,14 @@
+material grass/Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture grass1.jpg
+	scale 0.09 0.05
+      }
+    }
+  }
+}

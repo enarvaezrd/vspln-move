@@ -16,7 +16,7 @@
 	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
 
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
-		<arg name="world_name" value="$(find ed_pmov)/worlds/pioneer_building_wheel_obstacles.world"/>
+		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_test.world"/>
 		<arg name="paused" value="$(arg paused)"/>
 		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
 		<arg name="gui" value="$(arg gui)"/>
