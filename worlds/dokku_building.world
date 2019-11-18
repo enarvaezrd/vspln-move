@@ -492,6 +492,7 @@
               <ode/>
             </contact>
             <bounce/>
+
             <friction>
               <torsional>
                 <ode/>
@@ -499,7 +500,7 @@
               <ode/>
             </friction>
           </surface>
-        </collision>
+        </collision>.
         <visual name='visual'>
           <cast_shadows>0</cast_shadows>
           <geometry>
