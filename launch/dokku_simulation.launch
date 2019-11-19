@@ -1,5 +1,5 @@
 <launch>
-
+    <node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
 	<arg name="altitude" default="1.0"/>
     <!-- GAZEBO-->
 	<arg name="paused" default="false"/>
@@ -11,7 +11,7 @@
 	<arg name="ros_planar_move_plugin" default="false"/>
 	<arg name="launch_robot_localization" default="true"/>
 
- <arg name="record_rosbag" default="true" />
+    <arg name="record_rosbag" default="true" />
 
 	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
 

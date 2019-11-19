@@ -330,7 +330,7 @@ int main(int argc, char **argv)
         {
             if (UavArm_tools.Controller_Commands.docking_process && UavArm_tools.Controller_Commands.tracking_process)
             {
-                non_tracking_height_corr = -0.2;
+                non_tracking_height_corr = -0.16;
             }
 
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
@@ -369,7 +369,7 @@ int main(int argc, char **argv)
             if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process) //tracking
             {
 
-                non_tracking_height_corr = -0.0;
+                non_tracking_height_corr = -0.1;
                 auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
 
                 if (ArmGoal.trajectory.points.size() > 0)
@@ -388,20 +388,19 @@ int main(int argc, char **argv)
             {
                 if (!UavArm_tools.Controller_Commands.tracking_process) //no tracking
                 {
-                    non_tracking_height_corr = 0.2;
+                    non_tracking_height_corr = 0.1;
                     auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
 
                     if (ArmGoal.trajectory.points.size() > 0)
                     {
                         //Print("GoalFound");
                         ArmGoal = RRT_model.SteerJoints(ArmGoal);
-
                         RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
                     }
                 }
                 else
                 {
-                    non_tracking_height_corr = 0.0;
+                    non_tracking_height_corr = -0.1;
                 }
             }
             loop_rateControl.sleep();
