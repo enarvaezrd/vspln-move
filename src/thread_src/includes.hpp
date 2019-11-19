@@ -48,7 +48,7 @@
 
 #define OPENCV_DRAW
 #define PI 3.141592654
-#define PRINT_
+#define PRINT
 #define SREAMING
 #define WIRELESS_CONTROLLER
 using namespace std;
@@ -68,7 +68,7 @@ struct Orientation_
 struct RobotState_
 {
     Position_ position;
-    Orientation_ orientation;
+    Orientation_ orientation; 
     Velocity_ velocity_linear;
     Velocity_ velocity_angular;
 };
@@ -185,11 +185,23 @@ class Printer
 {
 public:
     Printer() {}
-    void operator()(std::string str, double a = -1111, double b = -1111, double c = -1111, double d = -1111, double e = -1111, double f = -1111, double g = -1111)
+    void operator()(std::string str_namespace, bool debug=true,
+                    double a = -1111, double b = -1111,
+                    double c = -1111, double d = -1111,
+                    double e = -1111, double f = -1111,
+                    double g = -1111)
     {
 #ifndef PRINT
         return;
 #endif
+
+#ifndef DEBUG
+        if (debug)
+        {
+            return;
+        }
+#endif
+
         std::vector<double> input;
         input.push_back(a);
         input.push_back(b);
@@ -199,9 +211,9 @@ public:
         input.push_back(f);
         input.push_back(g);
         int strSize = 0;
-        std::cout << "> " << str << ": ";
+        std::cout << "> " << str_namespace << ": ";
         strSize += 4;
-        strSize += str.size();
+        strSize += str_namespace.size();
         for (auto i : input)
         {
             //std::cout<<i;
@@ -235,9 +247,10 @@ public:
                                    activated(true)
     {
         outputfile.open(text_file);
-        start_time= std::chrono::system_clock::now();
+        start_time = std::chrono::system_clock::now();
     }
-    ~TextStream(){
+    ~TextStream()
+    {
         outputfile.close();
     }
 
@@ -262,9 +275,9 @@ public:
         if (activated)
         {
             auto time_point = std::chrono::system_clock::now();
-            std::chrono::duration<double> diff = time_point-start_time;
-            
-            outputfile << diff.count()<< ";";
+            std::chrono::duration<double> diff = time_point - start_time;
+
+            outputfile << diff.count() << ";";
 
             auto tse = time_point.time_since_epoch();
             auto now_ms = std::chrono::duration_cast<std::chrono::microseconds>(tse);

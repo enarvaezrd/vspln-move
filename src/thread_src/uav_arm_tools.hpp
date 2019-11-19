@@ -52,11 +52,12 @@ public:
     ControllerCommands Controller_Commands;
     int counter;
 
-    uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_, string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_) : rad_ext(rad_ext_),
-                                                                                                                                                rad_int(rad_int_), minArmAltitude(minArmAltitude_),
-                                                                                                                                                Controller_Commands(cntrl_topic_),
-                                                                                                                                                Docking_Altitude_Limit(Docking_Alt_Lim_),
-                                                                                                                                                DockingFactor(DockingFactor_)
+    uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_,
+                  string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_) : rad_ext(rad_ext_),
+                                                                                        rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                                                                        Controller_Commands(cntrl_topic_),
+                                                                                        Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                                                                        DockingFactor(DockingFactor_)
 
     {
         PIDdata.ex = 0;
@@ -104,6 +105,7 @@ public:
         Text_Stream_eeff_uav_relative->write_Data("ms");
         Text_Stream_eeff_uav_relative->write_Data("delimiter");
         Text_Stream_eeff_uav_relative->write_TimeStamp();
+        tracking_ok=false;
     }
 
     void Marker_Handler(const AprilTagPose &apriltag_marker_detections);
@@ -188,6 +190,7 @@ private:
     int DockingIteration;
     double Docking_Altitude_Limit;
     double DockingFactor;
+    bool tracking_ok;
 };
 
 } // namespace ua_ns

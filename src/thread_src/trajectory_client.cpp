@@ -70,11 +70,9 @@ void FollowTrajectoryClient::startTrajectory(control_msgs::FollowJointTrajectory
   }
   if (big_diff)
   {
-    Print("CURRENT JOINTS", current_joint_state_[0],current_joint_state_[1],
          current_joint_state_[2],current_joint_state_[3],
           current_joint_state_[4], current_joint_state_[5]);
 
-    Print("GOAL JOINTS", goal.trajectory.points[1].positions[0], goal.trajectory.points[1].positions[1],
           goal.trajectory.points[1].positions[2], goal.trajectory.points[1].positions[3],
           goal.trajectory.points[1].positions[4], goal.trajectory.points[1].positions[5]);
   }*/

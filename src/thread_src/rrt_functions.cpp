@@ -14,9 +14,9 @@ void RRT::Initialize_VicinityRRT()
         vdr.TP[j][1] = Tr.yval[j + adv];
         vdr.TP[j][2] = Tr.zval[j + adv];
         // mtxA.lock();
-#ifdef OPENCV_DRAW
-        cv::circle(image_Ptraj, cv::Point((Tr.xval[j + adv] + maxsc) * scale, (Tr.yval[j + adv] + maxsc) * scale), 4, Colors[0], 3, 8);
-#endif
+//#ifdef OPENCV_DRAW
+      //  cv::circle(image_Ptraj, cv::Point((Tr.xval[j + adv] + maxsc) * scale, (Tr.yval[j + adv] + maxsc) * scale), 4, Colors[0], 3, 8);
+//#endif
         //mtxA.unlock();
     }
     for (int j = 0; j < 4; j++)
@@ -34,7 +34,6 @@ void RRT::Initialize_VicinityRRT()
         UAV_vel += sqrt((Old_Positions.xval[j] * Old_Positions.xval[j]) + (Old_Positions.xval[j + 1] * Old_Positions.xval[j + 1]));
     }
     UAV_Velocity = UAV_vel;
-    //cout<<"==================================>UAV VELOCITY RRT "<<UAV_Velocity<<endl;
 
     for (int j = 0; j < prof_expl; j++) //desde tr_brk hasta el ultmo valor de prof_e (7 que es el octavo valor), ultimo valor de trajectoria predicha
     {
@@ -100,13 +99,8 @@ void RRT::Initialize_VicinityRRT()
         {
             vdr.R[j][1] = 0.04;
         }
-
-        // mtxA.lock();
-        // cv::circle(image_Ptraj, cv::Point((vdr.TP[j][0] + maxsc) * scale, (vdr.TP[j][1] + maxsc) * scale), 4, Colors[0], CV_FILLED, 3, 8);
-        //  mtxA.unlock();
     }
 
-    //Print("UAV VELOCITY", UAV_Velocity);
     vdr.L = prof_expl;
     return;
 }
@@ -120,12 +114,6 @@ void RRT::Node_Filter()
         int cn_Old;
         std::vector<int> del_List;
         double xo, yo, zo, rx, ry, rz, tm;
-        /* for(int i = 0; i < prof_expl; i++)
-        {
-            mtxA.lock();
-            cv::circle( image_Ptraj, cv::Point( (nodes.coord[i][0] +maxsc)*scale,(nodes.coord[i][1]+maxsc)*scale ),3, Colors[nodes.region[i]],CV_FILLED,  1, 8 );
-            mtxA.unlock();
-        }*/
         int allowednodes = 0;
 
         VectorDbl T1;
@@ -133,13 +121,6 @@ void RRT::Node_Filter()
         for (int i = 2; i < nodes.N; i++) //from prof_expl
         {
             cn_Old = 0;
-            /*if (nodes.parent[i]<0 )
-            {
-                allowed=0;
-                Print("node pointing  ", i,nodes.parent[i]);
-            }*/
-            //  else
-            // {
             for (int k = prof_expl - 1; k >= 1; k--)
             {
                 Initialize_Inv_Transf_Matrices(Rpitch, Rroll, Ryaw, k);
@@ -157,7 +138,6 @@ void RRT::Node_Filter()
                 {
                     allowed = 1; //Si es permitido, pasar a analizar otro punto
                     allowednodes++;
-                    //Print("Adding to oldnode",i);
                     Push_Nodes_Elem_in_Nodes(OldNodes, i);
 
                     // mtxA.lock();
@@ -193,9 +173,7 @@ void RRT::Node_Filter()
         //     delete_branch(del_List[i]);
         // }
 
-        //Print("Nodes size", nodes.N);
         //Draw_RRT();
-        //Print("TIEMPO FILTER A1",toc(temp_tic).count());
     }
     return;
 }
@@ -279,7 +257,6 @@ inline void RRT::delete_branch(int indx)
             }
         }
     }
-    //Print(" ----DB 4---- #nodos al entrar y salir de deletebranch: ",ln,Fin_Nodes.N);
     nodes = Fin_Nodes; //Fin_nodes seria el arreglo de nodos filtrado
     return;
 }
@@ -303,9 +280,7 @@ void RRT::Nodes_Reorder()
         }
         else
         {
-            //Print("reorder init j no 00",0);
             nodes.parent[j] = j - 1;
-            //Print("nodes reorder cost",double(j), nodes.cost[j-1]);
             nodes.costParent[j] = Distance(vdr.TP[j - 1], vdr.TP[j]);
             nodes.cost[j] = nodes.costParent[j] + nodes.cost[j - 1]; //Aqui tiene que calcularse en funcion de la pose actual del eeff.tambien se puede calcular acumulando paso a paso
         }
@@ -352,7 +327,6 @@ inline void RRT::RRT_Generation()
 {
     int oldSize = nodes.N;
     int NumNodesToAdd_reduced = NumNodesToAdd;
-    //Print("********//Nodes size Start", nodes.N);
     /* if (oldSize > 350)
     {
         NumNodesToAdd_reduced /= 5;
@@ -399,7 +373,6 @@ inline void RRT::RRT_Generation()
 
 int RRT::Add_Node(int It, int num_nodes)
 {
-    //Print("ADD nodes region", It);
     double rx = vdr.R[It][0]; //revisar
     double ry = vdr.R[It][1];
     double rz = vdr.R[It][2];
@@ -553,7 +526,7 @@ void RRT::RRT_AddOldCoords()
     double rx, ry, rz, ON_x, ON_y, ON_z;
     int region;
     int old = 0;
-    Print("add old nodes");
+    //Print("add old nodes");
     for (int i = 0; i < prof_expl; i++)
         Old_Nodes_Added_Reg[i] = 0;
 
@@ -592,7 +565,7 @@ void RRT::RRT_AddOldCoords()
                 break;
             }
         }
-        Print("lets add", on, allowed, region);
+        //Print("lets add", on, allowed, region);
         if (allowed)
         {
             //Print("test2");
@@ -604,7 +577,7 @@ void RRT::RRT_AddOldCoords()
         }
         //}
     }
-    Print("old nodes added", old);
+   // Print("old nodes added", old);
     return;
 }
 inline void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T, int It)

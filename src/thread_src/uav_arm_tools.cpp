@@ -17,7 +17,6 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
     if (state >= 1)
     {
         marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
-        // Print("==State marker ",state,  apriltag_marker_detections.detections[0].pose.header.seq, marker_pose.position.x );
     }
     else
     {
@@ -323,7 +322,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose);
     Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw);
-    //Print("MARK yaw, ArmYaw",IAngleMark.yaw, AnglesCurrent.yaw);
 
     AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
@@ -338,9 +336,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         ArmPoseReq.orientation.z = quaternion.z;
         ArmPoseReq.orientation.w = quaternion.w;
         counter = 0;
-        //Print("ORIENT REQ x,y,z,w",ArmPoseReq.orientation.x,ArmPoseReq.orientation.y,ArmPoseReq.orientation.z,ArmPoseReq.orientation.w);
-        //Print("ANGLES REQ roll, pitch, yaw",IAngleMark.roll,IAngleMark.pitch,IAngleMark.yaw);
-    }
+      }
 
     float corg;
     corg = 0.008; //0.0065
@@ -364,7 +360,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     num.MinMax_Correction(x_correction, 0.01);
     num.MinMax_Correction(y_correction, 0.01);
-    Print("Corrections", x_correction, y_correction);
     PID_ArmReq.position.x -= x_correction;
     PID_ArmReq.position.y += y_correction;
     // cout << "PID x: " << PID_ArmReq.position.x << ", y" << PID_ArmReq.position.y << endl;
@@ -382,8 +377,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
-    // Print("DifferenceA", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
-
+   
     //------agregar flag de contacto-------
 
     if (rad <= (rad_int + 0.025))
@@ -424,7 +418,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
     //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
-    //Print("DifferenceB", ArmPoseReq.position.x, PID_ArmReq.position.x, ArmPoseReq.position.y, PID_ArmReq.position.y, difference_x, difference_y);
     ArmPoseReq = PID_ArmReq;
     ArmPoseReqFull = ArmPoseReq;
     //  float factor = 0.005;
@@ -472,7 +465,6 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     // Restrict to max/min
     // num.MinMax_Correction(pid_outputx, 0.05); //as we dont want large corrections
     //num.MinMax_Correction(pid_outputy, 0.05);
-    Print("second corrections", pid_outputx, pid_outputy);
     PIDdata.ex = errorx; //old values for next iteration
     PIDdata.ey = errory;
 
@@ -543,7 +535,6 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     oldPos_ci.y[5] = dy;
     double dxa = (oldPos_ci.x[0] + oldPos_ci.x[1] + oldPos_ci.x[2] + oldPos_ci.x[3] + oldPos_ci.x[4] + oldPos_ci.x[5]) / 6.0;
     double dya = (oldPos_ci.y[0] + oldPos_ci.y[1] + oldPos_ci.y[2] + oldPos_ci.y[3] + oldPos_ci.y[4] + oldPos_ci.y[5]) / 6.0;
-    // Print("RADIO",rad);
     dx = dxa;
     dy = dya;
 
@@ -678,7 +669,7 @@ void uav_arm_tools::UpdateArmCurrentPose(geometry_msgs::Pose currentpose)
 }
 void uav_arm_tools::CalculateDockingAltitude()
 {
-    if (Controller_Commands.docking_process)
+    if (Controller_Commands.docking_process && state >= 1)
     {
         DockingIteration++;
 
@@ -690,6 +681,7 @@ void uav_arm_tools::CalculateDockingAltitude()
     }
     else
     {
+        Controller_Commands.docking_process = false;
         DockingIteration = 0;
         minArmAltitude -= 0.001;
         if (minArmAltitude <= minArm_Altitude_Limit)

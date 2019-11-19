@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     bool load_joints_state_sub;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.83;
-    double DockingFactor = 0.06;
+    double DockingFactor = 0.061;
 #ifdef REAL_ROBOTS
     load_joints_state_sub = true;
     string odom_str = "/robot1/odom"; ///robot1/robotnik_base_control/odom  ;   /robot1/odom
@@ -44,7 +44,6 @@ int main(int argc, char **argv)
     Printer Print;
     std::vector<double> joint_valuesT(6);
     std::mutex m;
-    cout << "Start sending positions" << endl;
     joint_valuesT[0] = -PI / 2 + 0.1;
     joint_valuesT[1] = 2.0; //PI/2;
     joint_valuesT[2] = 2.0; //PI/2;
@@ -123,7 +122,7 @@ int main(int argc, char **argv)
         while (ros::ok())
         {
             while (sequence_loop_th && ros::ok())
-            { //Print("=====Step=====");
+            { 
                 //Ed_Pmov ARMMdl=RRT_modelA.Get_ArmModel();
                 //RRT_modelB.Load_ArmModel(ARMMdl);
                 RRT_model.Load_Adv(Predict_B.Get_Adv());
@@ -131,7 +130,6 @@ int main(int argc, char **argv)
                 RRT_model.Load_TRbr(Predict_B.Get_TRbr());
                 RRT_model.Load_UAV_Velocity(Predict_B.Get_UAV_Velocity());
                 RRT_model.ResetImagePtraj();
-                //  Print("stop flag",Predict_B.get_Stop_RRT_Flag(),RRT_model.get_TR_Size());
                 if (RRT_model.get_TR_Size() > 0 && !Predict_B.get_Stop_RRT_Flag()) //trajA.xval.size()>0 &&
                 {
                     try
@@ -146,24 +144,8 @@ int main(int argc, char **argv)
                     Predict_B.Load_Nodes(RRT_model.GetNodes(), RRT_model.GetVicinity());
                 }
 
-                /* else
-                {
-                    Print("RRT not applied, Traj too short or RRT flag stop");
-                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                }*/
                 sequence_loop_th = RRT_model.getLoopState();
-                //Print("b33",sequence_loop_th);
-#ifdef OPENCV_DRAW
-                //openCV_mutex.lock();
-                //  cv::Mat image_B =  cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));//RRT_model.getImage_Ptraj();
 
-                // cv::imshow(window_name_B, image_B);
-
-                //cv::waitKey(1);
-                //openCV_mutex.unlock();
-#endif
-                //std::cout << "========>SEQUENCE B TIME: " << RRT_model.ArmModel.toc(clB).count() << std::endl;
-                // Print("==========SEQUENCE B TIME ", RRT_model.ArmModel.toc(clB).count());
                 clB = std::chrono::high_resolution_clock::now();
                 // RRT_modelB.ArmModel.getDelayTime();
                 //std::this_thread::sleep_for(std::chrono::milliseconds(80));
@@ -173,7 +155,6 @@ int main(int argc, char **argv)
             }
             while (!sequence_loop_th && ros::ok())
             {
-                //Print("RRT paused ");
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 sequence_loop_th = RRT_model.getLoopState();
                 //ros::spinOnce();
@@ -209,13 +190,10 @@ int main(int argc, char **argv)
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             // auto joints1 = RRT_model.ArmModel.getCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
-            //RRT_model.ArmModel.PrintPose("CurrentArmPose", CurrentArmPose);
             //RRT_model.ArmModel.tic();
-            //  Print("ESTADO de marker: ", UavArm_tools.getTrackingState());
 
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             { //Tracking OK
-                //RRT_model.ArmModel.PrintPose("UAV LOCAL", LocalUAVPose);
                 // Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose);
                 TrackingState++;
                 //Publicar aqui la pose absoluta del UAV para su control, tracking system
@@ -226,7 +204,6 @@ int main(int argc, char **argv)
             {
                 NoVisualContact_count++;
                 Robot_Commands.Send_Empty_Commands();
-                Print("ENTER IN RESET of B");
                 if (TrackingState == 0)
                 {
                     RRT_model.loop_end();
@@ -250,6 +227,7 @@ int main(int argc, char **argv)
             }
             if (TrackingState > 0 && UavArm_tools.Controller_Commands.tracking_process)
             {
+
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
                 //UavArm_tools.uavPose_to_ArmPoseReq_full(); // for rrt process
@@ -257,7 +235,6 @@ int main(int argc, char **argv)
                 UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
                 UavArm_tools.uavPose_to_ArmPoseReq_arm(); // for visual servoing
                 //m.unlock();
-
                 //UavArm_tools.setAltitudeRequest(UavArm_tools.getMinArmAltitude()); //change ArmPoseReq z value
                 UavArm_tools.CalculateDockingAltitude();
                 float trust_factor = 0.5;
@@ -274,29 +251,26 @@ int main(int argc, char **argv)
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
 
-                // RRT_model.ArmModel.PrintPose("Previous Sel Request", CurrentRequest_Thread);
-                Predict_B.Load_UGV_State(Robot_Commands.ugv_state); //sequential
+                     Predict_B.Load_UGV_State(Robot_Commands.ugv_state); //sequential
                 Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                 Predict_B.Charge_Nodes();
                 RRT_model.loop_start();
                 Predict_B.RRT_Path_Generation();
 
                 NextArmRequest = Predict_B.Selection_Function(trust_factor);
-                //Print("New sel");
-            }
+             }
             arm_control_msg_mtx.lock();
             fresh_request = true;
             ArmRequest = NextArmRequest;
             arm_control_msg_mtx.unlock();
             //CurrentRequest = UavArm_tools.getArmPoseReq();
-            RRT_model.ArmModel.PrintPose("Req", NextArmRequest);
+           // RRT_model.ArmModel.PrintPose("Req", NextArmRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
 
             // RRT_model.loop_end();
             // RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
             // RRT_model.loop_start();
-            // Print("current request",CurrentRequest_Thread.position.x,CurrentRequest_Thread.position.y,CurrentRequest_Thread.position.z,CurrentRequest_Thread.orientation.x,CurrentRequest_Thread.orientation.y,CurrentRequest_Thread.orientation.z,CurrentRequest_Thread.orientation.w );
-
+          
             //RRT_model.ArmModel.ReqMovement_byPose_Moveit(NextArmRequest);
 
             //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest);
@@ -336,7 +310,11 @@ int main(int argc, char **argv)
             if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
             {
                 geometry_msgs::Pose LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
-                Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
+
+                if (UavArm_tools.Controller_Commands.tracking_process)
+                {
+                    Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
+                }
                 y_correction = 0.0;
 
                 localUAV_Vel.push_back(sqrt(((OldLocalUAVPose.position.x - LocalUAVPose.position.x) * (OldLocalUAVPose.position.x - LocalUAVPose.position.x)) +
@@ -364,7 +342,7 @@ int main(int argc, char **argv)
             fresh_request = false;
             arm_control_msg_mtx.unlock();
 
-          //  y_correction = CurrentArmRequest.position.y;
+            //  y_correction = CurrentArmRequest.position.y;
 
             if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process) //tracking
             {
@@ -374,7 +352,6 @@ int main(int argc, char **argv)
 
                 if (ArmGoal.trajectory.points.size() > 0)
                 {
-                    //Print("GoalFound");
                     ArmGoal = RRT_model.SteerJoints(ArmGoal);
 
                     RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
@@ -393,7 +370,6 @@ int main(int argc, char **argv)
 
                     if (ArmGoal.trajectory.points.size() > 0)
                     {
-                        //Print("GoalFound");
                         ArmGoal = RRT_model.SteerJoints(ArmGoal);
                         RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
                     }

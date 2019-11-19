@@ -10,8 +10,7 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
 
     // cv::Mat image_test = cv::Mat::zeros(MapSize, MapSize, CV_8UC1);
     std::vector<Position> obs_pos_thick, obs_pos;
-    //Print("Laser Data", LaserData.min_angle, LaserData.max_angle, LaserData.range_max, LaserData.range_min, LaserData.state, LaserData.angle_increment,LaserData.size);
-
+   
     if (LaserData.state)
     {
 
@@ -34,8 +33,7 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
                 //image_test.at<int>(xc, yc) = 1;
             }
         }
-        // Print("MAP ZERO",ObstacleMapT[HalfMapSize][HalfMapSize]  ,ObstacleMapT[HalfMapSize+1][HalfMapSize+1],ObstacleMapT[HalfMapSize+1][HalfMapSize]  );
-        AccumulateObstacleMaps(ObstacleMapT);
+         AccumulateObstacleMaps(ObstacleMapT);
        
         // ObstacleMapT = Thicken_Map_from_Image(image_test,obs_pos);
         Get_Obstacle_Points(ObstacleMap_Global, obs_pos);
@@ -44,7 +42,6 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
         // ObstacleMapT = Thicken_Map(ObstacleMapT, obs_pos_thick);
         //ObstacleMapT = Thicken_Map(ObstacleMapT, obs_pos_thick);
 
-        // Print("=== OOOOO == Dilation time", elapsed.count());
 
         Map_mtx.lock();
         ObstacleMap.assign(ObstacleMap_Global.begin(), ObstacleMap_Global.end());
@@ -57,8 +54,6 @@ void ObstacleMapGen::CreateMap() //play sequentially with Laser_Handler
         Obstacle_Points.assign(obs_pos.begin(), obs_pos.end());
         Pts_mtx.unlock();
         auto end_t = std::chrono::high_resolution_clock::now();
-        //Print("==~MapTIme", std::chrono::duration_cast<std::chrono::microseconds>(end_t - start_t).count());
-        //Print("Obstacle Points SIZE",Obstacle_Points.size());
     }
     return;
 }
@@ -69,7 +64,7 @@ void ObstacleMapGen::ExpandObstacle_Polar(std::vector<VectorInt> &ObstacleMapT, 
     {
         double radius, angle;
         Rect_to_Polar(obs_pos[i].xval / map_img_factor, obs_pos[i].yval / map_img_factor, radius, angle);
-        // Print("angle",i,j,angle);
+
         Expand_Obstacle(radius, angle, ObstacleMapT);
     }
     obs_pos.clear();
@@ -94,7 +89,6 @@ void ObstacleMapGen::ExpandObstacle_Polar(std::vector<VectorInt> &ObstacleMapT, 
                 if ( radius < rad_int-0.24)
                 {
                     is_obstacle = true;
-                    //Print("radius", radius,x_real,y_real,i,j);
                 }
             }*/
             if (is_obstacle)
@@ -123,7 +117,6 @@ void ObstacleMapGen::Expand_Obstacle(double radius, double angle, std::vector<Ve
     bool limit_exceeded = false;
     double modified_radius = radius;
     int map_size_half = MapSize / 2;
-    //  Print("modified radius",modified_radius,angle);
     double cos_angle = cos(angle);
     double sin_angle = sin(angle);
 
@@ -195,7 +188,6 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map(std::vector<VectorInt> Obs_Ma
     }
    // auto end = std::chrono::high_resolution_clock::now();
   //  auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //Print("=== OOOOO == thick time", elapsed.count());
    // start = std::chrono::high_resolution_clock::now();
     Position pT;
     obs_positions.resize(MapSize * MapSize + 10);
@@ -221,7 +213,6 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map(std::vector<VectorInt> Obs_Ma
     obs_positions.resize(size_obs_pos);
    // end = std::chrono::high_resolution_clock::now();
    // elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-   // Print("=== OOOOO == assign time", elapsed.count());
     return Obs_Map;
 }
 
@@ -307,10 +298,8 @@ std::vector<VectorInt> ObstacleMapGen::Thicken_Map_from_Image(cv::Mat Image, std
         for (int j = 0; j < Image.cols; j++)
         {
             ObstacleMap[i][j] = 0;
-            //Print("img val",Image.at<int>(i,j));
             if (Image.at<int>(i, j) >= 1)
             {
-                Print("element found", i, j, Image.at<int>(i, j) >= 1);
                 Position pT;
                 pT.xval = round(i * map_img_factor);
                 pT.yval = round(j * map_img_factor);
@@ -361,7 +350,6 @@ void ObstacleMapGen::AccumulateObstacleMaps(std::vector<VectorInt> Obs_map)
     ObstacleMap_Global = ObstacleMapV;
     if (px_movement_x != 0.0 || px_movement_y != 0.0)
     {
-        //Print("=============================ENTERING IN MOVEMENT SHIFT~====================", px_movement_x, px_movement_y);
         for (int i = k; i < MapSize - k; i++)
         {
             for (int j = k; j < MapSize - k; j++)
