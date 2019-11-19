@@ -17,20 +17,20 @@
       <visual>
         <origin xyz="-0.0 -0.04 0.04" rpy="-1.570796327 0 0" />
         <geometry>
-            <mesh filename="package://ed_pmov/meshes/25h09_0/meshes/25h09_0.dae" scale="0.25 0.2 0.2"/> <!--qrb.dae-->
+            <mesh filename="package://ed_pmov/meshes/25h09_0/meshes/25h09_0.dae" scale="0.35 0.3 0.3"/> <!--qrb.dae-->
         </geometry>
       </visual>
       <collision>
         <origin xyz="-0.0 0 -0.0" rpy="-1.570796327 0 0 " />
         <geometry>
-	    <mesh filename="package://ed_pmov/meshes/25h09_0/meshes/25h09_0.dae" scale="0.25 0.2 0.2"/>
+	    <mesh filename="package://ed_pmov/meshes/25h09_0/meshes/25h09_0.dae" scale="0.35 0.3 0.3"/>
         </geometry>
       </collision>
     </link>
     
     
   <joint name="${name}_joint1" type="fixed">
-     <origin xyz="0.15 0 -0.031" rpy="3.141592654  0 0" />
+     <origin xyz="0.16 0 -0.031" rpy="3.141592654  0 0" />
       <parent link="${parent}"/>
       <child link="${name}_link1"/>
     </joint>

@@ -36,7 +36,7 @@
     </xacro:sonar_sensor>
 
 		<xacro:qr_mark name="qr" parent="base_linkq" >
-    				  <origin xyz="0.055 0.04 -0.0" rpy="1.5708  1.5708 0"/>
+    				  <origin xyz="0.055 0.04 -0.05" rpy="1.5708 1.5708 1.0"/>
     		</xacro:qr_mark>
 
    <gazebo reference="base_linkq">
