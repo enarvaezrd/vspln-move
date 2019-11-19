@@ -336,7 +336,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         ArmPoseReq.orientation.z = quaternion.z;
         ArmPoseReq.orientation.w = quaternion.w;
         counter = 0;
-      }
+    }
 
     float corg;
     corg = 0.008; //0.0065
@@ -377,7 +377,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
-   
+
     //------agregar flag de contacto-------
 
     if (rad <= (rad_int + 0.025))
@@ -671,7 +671,7 @@ void uav_arm_tools::CalculateDockingAltitude()
 {
     if (Controller_Commands.docking_process && state >= 1)
     {
-        DockingIteration++;
+        DockingIteration += 3;
 
         DockingAltitude = minArm_Altitude_Limit + log2(double(DockingIteration + 1.0) / 10.0) * DockingFactor;
 

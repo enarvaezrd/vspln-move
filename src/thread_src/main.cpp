@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     bool load_joints_state_sub;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.83;
-    double DockingFactor = 0.061;
+    double DockingFactor = 0.062;
 #ifdef REAL_ROBOTS
     load_joints_state_sub = true;
     string odom_str = "/robot1/odom"; ///robot1/robotnik_base_control/odom  ;   /robot1/odom
