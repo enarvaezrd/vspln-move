@@ -30,7 +30,7 @@
     
     
   <joint name="${name}_joint1" type="fixed">
-     <origin xyz="0.16 0 -0.031" rpy="3.141592654  0 0" />
+     <origin xyz="0.18 0 -0.031" rpy="3.141592654  0 0" />
       <parent link="${parent}"/>
       <child link="${name}_link1"/>
     </joint>
