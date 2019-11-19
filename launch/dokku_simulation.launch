@@ -47,10 +47,10 @@
     <!-- ROBOT2  -->
 
 	<group ns="robot2">
-		<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch">
+		<include file="$(find ed_pmov)/launch/spawn_quadrotor_mark.launch">
 			<arg name="z" default="5.0"/>
-			<arg name="x" default="0.3"/>
-			<arg name="y" default="0.2"/>
+			<arg name="x" default="-0.1"/>
+			<arg name="y" default="0.3"/>
 		</include>
 	</group>
 
