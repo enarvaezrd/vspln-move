@@ -8,15 +8,15 @@ int main(int argc, char **argv)
 {
     //==============================CONFIGURATION PARAMETERS===========================
 
-    int image_size = 400;
+    int image_size = 500;
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 11; // Profundidad de exploracion  Esz=prof_f
-    int Map_size = 400;
+    int prof_expl = 10; // Profundidad de exploracion  Esz=prof_f
+    int Map_size = image_size;
     float scale = 1.0;
-    double rrt_extension = 0.28; //extension of each rrt step for regression 0.38
-    int num_nodes_per_region = prof_expl + 15;
+    double rrt_extension = 0.32; //extension of each rrt step for regression 0.38 0.28
+    int num_nodes_per_region = prof_expl + 12;
     double rad_int = 0.26;
     double rad_ext = 0.425;
     double armMinAltitude = 0.47;
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     geometry_msgs::Pose ArmRequest = CurrentRequest_Thread;
     bool fresh_request = false;
     auto rrt_threadA = std::thread([&]() {
-        string window_name = "Prediction + RRT Image";
+        string window_name = "Prediction + RRT - EEFF Path Calculation";
 
 #ifdef OPENCV_DRAW
         cv::namedWindow(window_name, cv::WINDOW_NORMAL);
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 
             Predict_B.ClearImage_Ptraj();
             Predict_B.Load_Map(ObstacleMap.get_Map(), ObstacleMap.get_Obs_Points(), ObstacleMap.get_Obs_Points_Thick()); //Load Obstacle Map
-                                                                                                                         // Predict_B.Draw_Map();
+            //Predict_B.Draw_Map();
             ObstacleMap.Load_UGV_state(Robot_Commands.ugv_state);
             //CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
 
     auto threadControl = std::thread([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        ros::Rate loop_rateControl(40);
+        ros::Rate loop_rateControl(30);
         double non_tracking_height_corr = 0.2;
         double y_correction = 0.0;
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
             {
                 geometry_msgs::Pose LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
 
-                if (UavArm_tools.Controller_Commands.tracking_process)
+                //if (UavArm_tools.Controller_Commands.tracking_process)
                 {
                     Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
                 }

@@ -149,7 +149,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://ed_pmov/models/woodenfloor/woodenfloor1.dae</uri>
+              <uri>model://ed_pmov/models/woodenfloor/woodenfloorv1.2.dae</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -171,10 +171,31 @@
       <pose frame=''>0 0 0.0 0.5 -0 0</pose>
       <static>1</static>
       <link name='building'>
-        <visual name='visual'>
+	<!-- <collision name='collision'>
           <geometry>
             <mesh>
               <uri>model://ed_pmov/models/building/big_building.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>1</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision> -->
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://ed_pmov/models/building/LargeBuilding-v1.2.stl</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -197,7 +218,7 @@
       <collision name='collision'>
           <geometry>
             <box>
-              <size>44 30 0.02</size>
+              <size>53 30 0.02</size>
             </box>
           </geometry>
           <surface>
@@ -221,7 +242,7 @@
           <cast_shadows>0</cast_shadows>
           <geometry>
             <box>
-              <size>44 30 0.02</size>
+              <size>53 30 0.02</size>
             </box>
           </geometry>
           <material>
@@ -236,7 +257,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>19 -5.7 0.00 0 -0 0</pose>
+      <pose frame=''>23 -5.7 0.00 0 -0 0</pose>
     </model>
     <model name='asphalt_plane'>
       <static>1</static>
@@ -245,7 +266,7 @@
           <cast_shadows>0</cast_shadows>
           <geometry>
             <box>
-              <size>65 55 0.01</size>
+              <size>70 55 0.01</size>
             </box>
           </geometry>
           <material>
@@ -260,7 +281,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>14 -4 0 0 -0 0</pose>
+      <pose frame=''>22 -4 0 0 -0 0</pose>
     </model>
 <model name='oak_tree'>
       <static>1</static>
@@ -546,11 +567,11 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>34.1932 -9.71106 0.05 0 -0 0</pose>
+      <pose frame=''>43.5932 -9.01106 0.05 0 -0 0</pose>
     </model>
 
   <model name='cardboard_box_clone_clone_0'>
-      <pose frame=''>19.8361 -5.94716 0.2 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.8361 -5.94716 0.2 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -579,7 +600,7 @@
     </model>
 
     <model name='cardboard_box_clone_clone_1'>
-      <pose frame=''>19.6438 -5.17477 0.2 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.6438 -5.17477 0.2 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -608,7 +629,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_2'>
-      <pose frame=''>18.8202 -6.3741 0.2 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>20.8202 -6.3741 0.2 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -637,7 +658,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_3'>
-      <pose frame=''>18.8067 -6.29051 0.6 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>20.8067 -6.29051 0.6 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
 
         <inertial>
@@ -694,7 +715,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_4'>
-      <pose frame=''>18.2172 -6.26215 0.3 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>20.2172 -6.26215 0.3 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -723,7 +744,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_5'>
-      <pose frame=''>33.2066 -9.80225 0.21 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>44.6066 -8.90225 0.21 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -752,7 +773,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_6'>
-      <pose frame=''>11.32674 -7.26671 0.2 0 -0 -2.83619</pose>
+      <pose frame=''>12.2674 -8.786671 0.2 0 -0 -2.83619</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -780,7 +801,7 @@
       </link>
     </model>
 <model name='cardboard_box_clone_clone_7'>
-      <pose frame=''>11 -8 0.149 0 -0 -2.83619</pose>
+      <pose frame=''>11.9 -9.5 0.149 0 -0 -2.83619</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -932,7 +953,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>30.33309 -3.12478 0.173303 -3e-06 1e-06 3.22163</pose>
+      <pose frame=''>37.33309 -3.12478 0.173303 -3e-06 1e-06 3.22163</pose>
     </model>
     <model name='truss_1'>
       <link name='link'>
@@ -1096,7 +1117,59 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>31.2552 -2.90428 0 0 -2.0 4.0</pose>
+      <pose frame=''>38.2552 -2.90428 0 0 -2.0 4.0</pose>
+    </model>
+    <model name='unit_box_1'>
+      <pose frame=''>39.1 -5.081105 1.230146 0 5e-06 -0.038269</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.166667</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.166667</iyy>
+            <iyz>0</iyz>
+            <izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>4 5 0.05</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>4 5 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/White</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
     </model>
   </world>
 </sdf>

@@ -81,7 +81,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     }
     else
     { //Cuando ya se pueda calcular regresion, es decir cuando ya se hayan acumulado muchos valores para mean.vx mean.vy
-        
+
         double vx = mean.vx, vy = mean.vy;
         double vxtm = 0.002, vytm = 0.002;
         float maxdm = 0.035, pnd = 1.0;
@@ -757,8 +757,6 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
 */
     eeff_min_height = Marker_Abs_Pose.position.z; //this is the z value for the entire rrt, modify here to contact phase
 
-
-
     if (acum_values != (d_pr_m + 1))
         acum_values++;
     else
@@ -1053,7 +1051,7 @@ void Prediction::CheckandFix_Boundaries(std::vector<double> &x, std::vector<doub
         cv::circle(image_Ptraj, cv::Point(round((x[i] + maxsc) * scale), round((y[i] + maxsc) * scale)), 1, cv::Scalar(0, 0, 0), -1, 8);
 //mtxA.unlock();
 #endif
-  }
+    }
     return;
 }
 
@@ -1094,7 +1092,7 @@ void Prediction::RRT_Path_Generation()
         int RRTVS_Indx, VS_Node_Indx;
         VectorDbl TR{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]}; //VS position
         double D_traj_avd = Distance(nodes.coord[0], TR);       //as VS is faster than RRT,its needed to find a point near the current VS position
-                                                             
+
         /* 
         DFactor = max_cost;// / (1.0 + speed) ;  //look for a node with this cost
         double Min_RRTVS_Dist=1000000.0,Min_VS_Node_Dist=10000.0;
@@ -1165,7 +1163,7 @@ void Prediction::RRT_Path_Generation()
         cv::circle(image_Ptraj, cv::Point((nodes.coord[RRTVS_Indx][0] + maxsc) * scale, (nodes.coord[RRTVS_Indx][1] + maxsc) * scale), 6, Colors[1], CV_FILLED, 3, 8);
 
 #endif
-      
+
         // cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
         //#ifdef STREAMING
         Text_Stream_RRTData->write_TimeStamp();
@@ -1253,7 +1251,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
         Velocity_mtx.lock();
         double UAV_vel = UAV_Velocity;
         Velocity_mtx.unlock();
-        
+
         if (trust_index != 0.0)
         {
             trust_index += (ugv_state.velocity_linear.dx);
@@ -1292,7 +1290,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
             if (Road_VS_Result_Indx < 0)
                 Road_VS_Result_Indx = 0;
         }
-        Print("TRUST index",trust_index);
+        Print("TRUST index", trust_index);
         Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
 
         //Add more cases here
@@ -1335,29 +1333,29 @@ void Prediction::Draw_Map()
 {
 #ifdef OPENCV_DRAW
     int obs_thick_size = Obstacle_Points_thick.size();
-    int obs_size = Obstacle_Points.size();
-    int major_size = obs_thick_size;
-    if (obs_size >= major_size)
+   // int obs_size = Obstacle_Points.size();
+   // int major_size = obs_thick_size;
+   /* if (obs_size >= major_size)
     {
         major_size = obs_size;
-    }
+    }*/
 
-    for (int i = 0; i < major_size; i++)
+    for (int i = 0; i < obs_thick_size; i++)
     {
-        if (i < obs_size)
+       /* if (i < obs_thick_size)
+        {*/
+            image_Ptraj.at<cv::Vec3b>( image_size-Obstacle_Points_thick[i].xval,image_size-Obstacle_Points_thick[i].yval)={200,200,200};
+            //color[0] = 200;
+            //color[1] = 200;
+            //color[2] = 200;
+       /* }*/
+       /* if (i < obs_size)
         {
-            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points[i].yval, Obstacle_Points[i].xval);
+            color = image_Ptraj.at<cv::Vec3b>(1+image_size-Obstacle_Points[i].yval, Obstacle_Points[i].xval);
             color[0] = 70;
             color[1] = 70;
             color[2] = 70;
-        }
-        if (i < obs_thick_size)
-        {
-            cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(Obstacle_Points_thick[i].yval, Obstacle_Points_thick[i].xval);
-            color[0] = 190;
-            color[1] = 190;
-            color[2] = 190;
-        }
+        }*/
     }
 
 #endif

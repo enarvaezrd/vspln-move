@@ -13,7 +13,6 @@
 
     <arg name="record_rosbag" default="true" />
 
-	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
 
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
 		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
@@ -63,7 +62,7 @@
 	</include>
 
 	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
-
+	<node pkg="image_view" type="image_view" name="UAV_image" args="image:=/robot2/uav_cam/image_raw"/>
     <!--Joystick-->
 
 	<node name="joystick_node" pkg="joy" type="joy_node"/>

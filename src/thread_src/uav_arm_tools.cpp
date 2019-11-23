@@ -671,9 +671,9 @@ void uav_arm_tools::CalculateDockingAltitude()
 {
     if (Controller_Commands.docking_process && state >= 1)
     {
-        DockingIteration += 3;
+        DockingIteration += 2;
 
-        DockingAltitude = minArm_Altitude_Limit + log2(double(DockingIteration + 1.0) / 10.0) * DockingFactor;
+        DockingAltitude = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 10.0) * DockingFactor;
 
         if (DockingAltitude >= Docking_Altitude_Limit)
             DockingAltitude = Docking_Altitude_Limit;

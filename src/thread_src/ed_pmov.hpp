@@ -91,7 +91,7 @@ public:
                                            load_joint_states_sub(load_joint_states_sub_)
     {
         
-        num_IK_requests = 5;
+        num_IK_requests = 3;
         index_ks = 0;
         // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
         group.setGoalTolerance(0.005);            //0.004

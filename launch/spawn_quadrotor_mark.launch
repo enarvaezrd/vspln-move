@@ -30,7 +30,7 @@
 
   <!-- start robot state publisher -->
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisherq" output="screen" >
-	<param name="publish_frequency" type="double" value="100.0" /> 	    
+	<param name="publish_frequency" type="double" value="28.0" /> 	    
   </node>
 
   <!-- publish state and tf -->
@@ -66,6 +66,6 @@
   <rosparam command="load" file="$(find hector_quadrotor_model)/param/quadrotor_aerodynamics.yaml" />
   <rosparam command="load" file="$(find hector_quadrotor_model)/param/$(arg motors).yaml" />
     <!-- If needed, broadcast static tf for robot root -->
-    <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 odom_combined base_linkq 30" />
+    <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 odom_combined base_linkq 28" />
 
 </launch>
