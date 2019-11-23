@@ -7,7 +7,7 @@ material woodenfloor/Diffuse
       texture_unit
       {
         texture wood1.png
-	scale 0.05 0.04
+	scale 0.08 0.05
       }
     }
   }

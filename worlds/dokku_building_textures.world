@@ -257,7 +257,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>23 -5.7 0.00 0 -0 0</pose>
+      <pose frame=''>24 -7 0.00 0 -0 0</pose>
     </model>
     <model name='asphalt_plane'>
       <static>1</static>
@@ -326,7 +326,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>10.31066 -23.2422 0 0 -0 0</pose>
+      <pose frame=''>14.31066 -24.0 0 0 -0 0</pose>
     </model>
 
  <model name='Lamp Post_clone_4'>
@@ -339,7 +339,7 @@
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
-          <max_contacts>10</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -365,7 +365,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>22 -18 0 0 -0 0</pose>
+      <pose frame=''>22 -20 0 0 -0 0</pose>
     </model>
     <model name='Lamp Post_clone_5'>
       <static>1</static>
@@ -377,7 +377,7 @@
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
-          <max_contacts>10</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -403,7 +403,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>30 -18 0 0 -0 0</pose>
+      <pose frame=''>30 -20 0 0 -0 0</pose>
     </model>
    
     <model name='Lamp Post_clone_2_clone'>
@@ -497,7 +497,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>11 -18 -0.391548 0 -0 0</pose>
+      <pose frame=''>11 -20 -0.391548 0 -0 0</pose>
     </model>
     <model name='Lamp Post_clone_clone'>
       <static>1</static>
@@ -514,7 +514,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>-2 -5 0 0 0 -1.45514</pose>
+      <pose frame=''>-2 -8 0 0 0 -1.45514</pose>
     </model>
     <model name='Lamp Post_clone_clone_0'>
       <static>1</static>
@@ -550,7 +550,7 @@
         <kinematic>0</kinematic>
         <gravity>0</gravity>
       </link>
-      <pose frame=''>-2 -18.0 -0.391548 0 -0 0</pose>
+      <pose frame=''>-2 -20.0 -0.391548 0 -0 0</pose>
     </model>
     <model name='Construction Cone'>
       <static>1</static>
@@ -600,7 +600,7 @@
     </model>
 
     <model name='cardboard_box_clone_clone_1'>
-      <pose frame=''>21.6438 -5.17477 0.2 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.958 -5.17487 0.2 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -629,7 +629,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_2'>
-      <pose frame=''>20.8202 -6.3741 0.2 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.8202 -6 0.2 -0.000271 0.000224 0.198285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -657,8 +657,59 @@
         <gravity>0</gravity>
       </link>
     </model>
+  <model name='cardboard_box_6'>
+      <pose frame=''>21.3 -4.6302 0.2 -0.000271 0.000224 -1.1</pose>
+      <link name='link'>    
+        <visual name='visual'>
+          <pose frame=''>0 0 -0.15 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://cardboard_box/meshes/cardboard_box.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>0</gravity>
+      </link>
+    </model>
+ <model name='cardboard_box_7'>
+      <pose frame=''>22.7 -3.9741 0.2 -0.000271 0.000224 -0.2</pose>
+      <link name='link'>    
+        <visual name='visual'>
+          <pose frame=''>0 0 -0.15 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://cardboard_box/meshes/cardboard_box.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>0</gravity>
+      </link>
+    </model>
+ <model name='cardboard_box_8'>
+      <pose frame=''>30.7 1.48 0.2 -0.000271 0.000224 -0.2</pose>
+      <link name='link'>    
+        <visual name='visual'>
+          <pose frame=''>0 0 -0.15 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://cardboard_box/meshes/cardboard_box.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>0</gravity>
+      </link>
+    </model>
     <model name='cardboard_box_clone_clone_3'>
-      <pose frame=''>20.8067 -6.29051 0.6 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.8067 -6.1 0.6 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
 
         <inertial>
@@ -715,7 +766,7 @@
       </link>
     </model>
     <model name='cardboard_box_clone_clone_4'>
-      <pose frame=''>20.2172 -6.26215 0.3 -0.000271 0.000224 -0.098285</pose>
+      <pose frame=''>21.2172 -5.9 0.2 -0.000271 0.000224 -0.098285</pose>
       <link name='link'>
         <inertial>
           <mass>2</mass>
@@ -850,7 +901,7 @@
         </link>
       </model>
 <model name='unit_box_0'>
-      <pose frame=''>6.1 -0.081105 1.230146 0 5e-06 -0.038269</pose>
+      <pose frame=''>7.1 -0.4 1.230146 0 0 0.3</pose>
       <link name='link'>
         <inertial>
           <mass>1</mass>
@@ -866,10 +917,10 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>2.0662 1.89441 0.08</size>
+              <size>3.5662 2.6 0.08</size>
             </box>
           </geometry>
-          <max_contacts>10</max_contacts>
+          <max_contacts>3</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -886,12 +937,12 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>2.0662 1.89441 0.100302</size>
+              <size>3.5662 2.6 0.100302</size>
             </box>
           </geometry>
           <material>
             <script>
-              <name>Gazebo/Grey</name>
+              <name>Gazebo/White</name>
               <uri>file://media/materials/scripts/gazebo.material</uri>
             </script>
           </material>
