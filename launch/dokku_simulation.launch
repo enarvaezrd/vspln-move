@@ -2,6 +2,7 @@
     <node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
 	<arg name="altitude" default="1.0"/>
     <!-- GAZEBO-->
+
 	<arg name="paused" default="false"/>
 	<arg name="use_sim_time" default="true"/>
 	<arg name="gui" default="true"/>
@@ -13,7 +14,6 @@
 
     <arg name="record_rosbag" default="true" />
 
-
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
 		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
 		<arg name="paused" value="$(arg paused)"/>
@@ -23,8 +23,9 @@
 		<arg name="debug" value="$(arg debug)"/>
 	</include>
 
-	<!--<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
-      ROBOT1 -->
+	<!--<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>-->
+
+     <!-- ROBOT1 -->
 
 	<group ns="robot1">
 		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
@@ -60,8 +61,8 @@
 		<arg name="camera_frame" value="/robot1/cam_optical_frame"/>  <!--/robot1/cam-->
 		<arg name="image_topic" value="image_raw"/>
 	</include>
-
-	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+	<node pkg="image_view" type="image_view" name="UGV_image" args="image:=/robot1/ugv_cam/image_raw"/>
+	<node pkg="image_view" type="image_view" name="EEFF_image" args="image:=/tag_detections_image"/>
 	<node pkg="image_view" type="image_view" name="UAV_image" args="image:=/robot2/uav_cam/image_raw"/>
     <!--Joystick-->
 

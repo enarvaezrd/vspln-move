@@ -14,7 +14,7 @@ FollowTrajectoryClient::FollowTrajectoryClient() : traj_client_("/robot1/arm_con
   joint_names_.push_back("joint6");
 
   joint_state_sub_ = nh_.subscribe("/robot1/joint_states", 1, &FollowTrajectoryClient::jointStateCB, this);
-  pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot2/arm_general/goal_command", 1); //commands for the arm
+  pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot1/arm_general/goal_command", 1); //commands for the arm
 
   spinner_.start();
 

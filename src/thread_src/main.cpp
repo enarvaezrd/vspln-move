@@ -1,6 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-#define REAL_ROBOTS_
+#define REAL_ROBOTS
 #include "uav_arm_tools.hpp"
 
 using namespace std;
@@ -8,15 +8,15 @@ int main(int argc, char **argv)
 {
     //==============================CONFIGURATION PARAMETERS===========================
 
-    int image_size = 500;
+    int image_size = 600;
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
     int prof_expl = 10; // Profundidad de exploracion  Esz=prof_f
     int Map_size = image_size;
     float scale = 1.0;
-    double rrt_extension = 0.32; //extension of each rrt step for regression 0.38 0.28
-    int num_nodes_per_region = prof_expl + 12;
+    double rrt_extension = 0.33; //extension of each rrt step for regression 0.38 0.28
+    int num_nodes_per_region = prof_expl + 15;
     double rad_int = 0.26;
     double rad_ext = 0.425;
     double armMinAltitude = 0.47;
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
         while (ros::ok())
         {
             while (sequence_loop_th && ros::ok())
-            { 
+            {
                 //Ed_Pmov ARMMdl=RRT_modelA.Get_ArmModel();
                 //RRT_modelB.Load_ArmModel(ARMMdl);
                 RRT_model.Load_Adv(Predict_B.Get_Adv());
@@ -176,6 +176,8 @@ int main(int argc, char **argv)
         auto clA = std::chrono::high_resolution_clock::now();
         geometry_msgs::Pose CurrentArmPose;
         int NoVisualContact_count = 0;
+        cv::Rect myROI(round(1 * image_size / 5), round(1 * image_size / 4) + 50, round(3 * image_size / 5), round(2 * image_size / 4) - 10);
+
         while (ros::ok())
         {
 
@@ -251,34 +253,37 @@ int main(int argc, char **argv)
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
 
-                     Predict_B.Load_UGV_State(Robot_Commands.ugv_state); //sequential
+                Predict_B.Load_UGV_State(Robot_Commands.ugv_state); //sequential
                 Predict_B.Planif_SequenceA(CurrentRequest_Thread, CurrentArmPose);
                 Predict_B.Charge_Nodes();
                 RRT_model.loop_start();
                 Predict_B.RRT_Path_Generation();
 
                 NextArmRequest = Predict_B.Selection_Function(trust_factor);
-             }
+            }
             arm_control_msg_mtx.lock();
             fresh_request = true;
             ArmRequest = NextArmRequest;
             arm_control_msg_mtx.unlock();
             //CurrentRequest = UavArm_tools.getArmPoseReq();
-           // RRT_model.ArmModel.PrintPose("Req", NextArmRequest);
+            // RRT_model.ArmModel.PrintPose("Req", NextArmRequest);
             //std::chrono::microseconds elapsed_time = RRT_model.ArmModel.toc();
 
             // RRT_model.loop_end();
             // RRT_model.ArmModel.Sleep(elapsed_time); //sleep the resulting time
             // RRT_model.loop_start();
-          
+
             //RRT_model.ArmModel.ReqMovement_byPose_Moveit(NextArmRequest);
 
             //RRT_model.ArmModel.ReqMovement_byPose_FIx_Orientation(NextArmRequest);
 
 #ifdef OPENCV_DRAW
-            cv::Mat imageA = Predict_B.getImage_Ptraj();
+            // cv::Mat imageA = Predict_B.getImage_Ptraj();
+
+            cv::Mat croppedImage = Predict_B.getImage_Ptraj()(myROI);
             //   openCV_mutex.lock();
-            cv::imshow(window_name, imageA);
+
+            cv::imshow(window_name, croppedImage);
             cv::waitKey(1);
 #endif
             // openCV_mutex.unlock();
@@ -348,11 +353,12 @@ int main(int argc, char **argv)
             {
 
                 non_tracking_height_corr = -0.1;
-                auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
+                control_msgs::FollowJointTrajectoryGoal ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
 
                 if (ArmGoal.trajectory.points.size() > 0)
                 {
                     ArmGoal = RRT_model.SteerJoints(ArmGoal);
+                    Print("JOINTS REQUEST", ArmGoal.trajectory.points[0].positions[0], ArmGoal.trajectory.points[0].positions[1]);
 
                     RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
                 }
@@ -371,6 +377,7 @@ int main(int argc, char **argv)
                     if (ArmGoal.trajectory.points.size() > 0)
                     {
                         ArmGoal = RRT_model.SteerJoints(ArmGoal);
+                        Print("JOINTS REQUEST", ArmGoal.trajectory.points[0].positions[0], ArmGoal.trajectory.points[0].positions[1]);
                         RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
                     }
                 }

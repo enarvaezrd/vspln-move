@@ -373,6 +373,10 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
     if (load_joint_states_sub)
     {//real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
+        Print("JOINTS ",currentJoints[0],currentJoints[1]);
+        auto joints_fake = group.getCurrentJointValues();
+        Print("JOINTS FAKE ",joints_fake[0],joints_fake[1]);
+        currentJoints[1] += 2*PI;
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
         end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
         tf::poseEigenToMsg(end_effector_state, currentPose);
@@ -393,6 +397,7 @@ std::vector<double> Ed_Pmov::getCurrentJoints()
     if (load_joint_states_sub)
     {//real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
+        currentJoints[1] += 2*PI;
     }
     else
     { //simm

@@ -51,6 +51,7 @@
 #define PRINT
 #define SREAMING
 #define WIRELESS_CONTROLLER
+#define DEBUG
 using namespace std;
 struct Position_
 {
@@ -68,7 +69,7 @@ struct Orientation_
 struct RobotState_
 {
     Position_ position;
-    Orientation_ orientation; 
+    Orientation_ orientation;
     Velocity_ velocity_linear;
     Velocity_ velocity_angular;
 };
@@ -185,11 +186,11 @@ class Printer
 {
 public:
     Printer() {}
-    void operator()(std::string str_namespace, bool debug=true,
+    void operator()(std::string str_namespace,
                     double a = -1111, double b = -1111,
                     double c = -1111, double d = -1111,
                     double e = -1111, double f = -1111,
-                    double g = -1111)
+                    double g = -1111, bool debug = true)
     {
 #ifndef PRINT
         return;

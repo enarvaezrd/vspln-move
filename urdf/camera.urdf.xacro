@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="uav_camera" params="parent *origin "> 
+  <xacro:macro name="general_camera" params="name parent *origin "> 
 
-<joint name="uav_cam_optical_joint" type="fixed">
+<joint name="${name}_cam_optical_joint" type="fixed">
       <xacro:insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="uav_cam_optical_frame"/>
+      <child link="${name}_cam_optical_frame"/>
     </joint>
   
-    <link name="uav_cam_optical_frame"/>    
+    <link name="${name}_cam_optical_frame"/>    
     
-  </xacro:macro>
-	<gazebo reference="uav_cam_optical_frame">
+  
+	<gazebo reference="${name}_cam_optical_frame">
 	       <turnGravityOff>true</turnGravityOff>
-		<sensor type="camera" name="cam_camera_sensor">
+		<sensor type="camera" name="${name}_camera_sensor">
 		  <update_rate>13.0</update_rate>
 		  <camera>
 		     <horizontal_fov>1.3962634</horizontal_fov> <!--80-->
@@ -29,11 +29,11 @@
 		    </clip>
 		  </camera>
 
-		  <plugin name="cam_camera_controller" filename="libgazebo_ros_camera.so">
-		    <cameraName>uav_cam</cameraName>
+		  <plugin name="${name}_camera_controller" filename="libgazebo_ros_camera.so">
+		    <cameraName>${name}_cam</cameraName>
 		  <imageTopicName>image_raw</imageTopicName>
 		    <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-		    <frameName>uav_cam_optical_frame</frameName>
+		    <frameName>${name}_cam_optical_frame</frameName>
 		  <hackBaseline>0.0</hackBaseline>
 		  <distortionK1>0.0</distortionK1>
 		  <distortionK2>0.0</distortionK2>
@@ -43,4 +43,5 @@
 		  </plugin>
 		</sensor>
 	</gazebo>
+</xacro:macro>
 </robot>

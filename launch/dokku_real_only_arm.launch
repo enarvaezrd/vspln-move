@@ -1,0 +1,95 @@
+<launch>
+	<node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
+	<arg name="altitude" default="1.5"/>
+   <!-- GAZEBO-->
+
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+
+
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+	<!-- <node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/> -->
+
+   <!--  ROBOT1 - UGV-->
+
+	<group ns="robot1">
+		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
+		<!--launch-prefix="xterm -e gdb - -args"-->
+		<include file="$(find pioneer_proarm_moveit)/launch/demo.launch">
+			<arg name="z" default="0.05"/>
+			<arg name="x" default="0.0"/>
+			<!-- -1.5-->
+			<arg name="y" default="0.0"/>
+		</include>
+		<include file="$(find p3dx_control)/launch/control.launch"/>
+	</group>
+
+   <!-- ROBOT2 - UAV -->
+
+	<node name="control" pkg="ed_control" type="acontrol_arm" output="screen" args="$(arg altitude)" />
+	<group ns="robot2">
+		<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch">
+			<arg name="z" default="5.0"/>
+			<arg name="x" default="0.3"/>
+			<arg name="y" default="0.0"/>
+		</include>
+	</group>
+
+   <!--eeff Camera-->
+
+	<include file="$(find apriltag_ros)/launch/ps_eye_cam.launch"/>
+
+   <!--April Tag ROS launcher-->
+
+	<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
+		<arg name="camera_name" value="/camera"/>   <!--/robot1/cam-->
+		<arg name="camera_frame" value="/camera"/>  <!--/robot1/cam-->
+		<arg name="image_topic" value="image_raw"/> 
+	</include>
+
+	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+
+   <!--Joystick-->
+
+	<node name="joystick_node" pkg="joy" type="joy_node"/>
+
+   <!--Real pioneer controllers
+
+	<include file="$(find ed_control)/launch/pioneer_p3dx_control.launch"/>-->
+		
+   <!--Real arm controllers-->
+
+	<include file="$(find dynamixel_workbench_controllers)/launch/mx_arm_controllers.launch">
+		<arg name="launch_joystick" value="false"/>
+	</include>
+
+	<include file="$(find timed_roslaunch)/launch/timed_roslaunch.launch">
+		<arg name="time" value="3" />
+		<arg name="pkg" value="dynamixel_workbench_controllers" />
+		<arg name="file" value="pro_arm_controllers.launch" />
+		<arg name="value" value="launch_joystick:=false" />
+	</include>
+   <!--laser
+
+	<include file="$(find sick_scan)/launch/sick_lms_1xx.launch">
+		<arg name="hostname" default="133.87.124.111" />
+	</include>-->
+
+
+</launch>
+

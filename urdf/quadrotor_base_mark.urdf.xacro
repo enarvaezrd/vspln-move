@@ -4,7 +4,7 @@
 
   <xacro:include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
   <xacro:include filename="$(find ed_pmov)/urdf/qr_mark.urdf.xacro" />
-  <xacro:include filename="$(find ed_pmov)/urdf/quadrotor_camera.urdf.xacro" />
+  <xacro:include filename="$(find ed_pmov)/urdf/camera.urdf.xacro" />
   <xacro:property name="pi" value="3.1415926535897931" />
 
   <!-- Main quadrotor link -->
@@ -32,9 +32,9 @@
     </link>
 
     <!-- UAV camera sensor -->
-    <xacro:uav_camera parent="base_linkq">
+    <xacro:general_camera parent="base_linkq" name="uav">
       <origin xyz="0.187 0.0 0.0183" rpy="0 0.4 0"/>
-    </xacro:uav_camera>
+    </xacro:general_camera>
 
     <!-- Sonar height sensor -->
     <xacro:sonar_sensor name="sonar" parent="base_linkq" ros_topic="sonar_height" update_rate="15" min_range="0.03" max_range="6.0" field_of_view="${30*pi/180}" ray_count="1">

@@ -1,0 +1,18 @@
+<launch>
+   <!--eeff Camera-->
+
+	<include file="$(find apriltag_ros)/launch/ps_eye_cam.launch"/>
+
+   <!--April Tag ROS launcher-->
+
+	<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
+		<arg name="camera_name" value="/camera"/>   <!--/robot1/cam-->
+		<arg name="camera_frame" value="/camera"/>  <!--/robot1/cam-->
+		<arg name="image_topic" value="image_raw"/> 
+	</include>
+
+	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+
+
+</launch>
+

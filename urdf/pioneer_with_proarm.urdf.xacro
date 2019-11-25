@@ -13,6 +13,7 @@
   
 	<!-- Import all available sensors -->
 	<xacro:include filename="$(find robotnik_sensors)/urdf/all_sensors.urdf.xacro" />
+  	<xacro:include filename="$(find ed_pmov)/urdf/camera.urdf.xacro" />
 
 
 	<xacro:include filename="$(find sick_scan)/urdf/sick_lms1xx.urdf.xacro" />
@@ -27,7 +28,10 @@
 
     <xacro:arg name="prefix" default="pioneer_proarm_"/>
 
-
+ <!-- UGV camera sensor -->
+    <xacro:general_camera parent="$(arg prefix)base_link" name="ugv">
+      <origin xyz="0.22 0.0 0.3" rpy="0 0.0 0"/>
+    </xacro:general_camera>
 
 
     <xacro:pioneer3dx prefix="$(arg prefix)"/>  
