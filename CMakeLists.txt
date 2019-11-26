@@ -78,8 +78,17 @@ add_dependencies(ed_ik_solver ${catkin_EXPORTED_TARGETS})
 #add_dependencies(thrtest ${catkin_EXPORTED_TARGETS})
 
 
-
-
+add_executable(only_arm src/thread_src/main_only_arm.cpp
+	src/thread_src/ed_pmov.cpp
+	src/thread_src/trajectory_client.cpp
+	src/thread_src/rrt_functions.cpp
+	src/thread_src/prediction.cpp
+	src/thread_src/map_gen.cpp
+	src/thread_src/uav_ugv_commands.cpp
+	#include
+	)
+target_link_libraries(only_arm ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+add_dependencies(only_arm ${catkin_EXPORTED_TARGETS})
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
