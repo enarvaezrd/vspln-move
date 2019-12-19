@@ -322,8 +322,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose);
     Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw);
-
-    AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
+    Print("|||| current arm angle, mark ", AnglesCurrent.yaw, IAngleMark.yaw);
+    //AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
     double x_correction = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
     double y_correction = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
@@ -346,29 +346,23 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //corg=0.15;
     //num.MinMax_Correction(x_correction, 0.01);
     //num.MinMax_Correction(y_correction, 0.01);
-    //  cout << "PID x: " << x_correction << ", y" << y_correction << endl;
+    // cout << "Previous PID x: " << x_correction << ", y" << y_correction << endl;
     if (!Controller_Commands.tracking_process)
     {
-        //PIDReset();
+        PIDReset();
     }
     else
     {
         PID_Calculation(x_correction, y_correction);
     }
+    // cout << "After PID x: " << x_correction << ", y" << y_correction << endl;
 
     Pose_msg PID_ArmReq = ArmPoseReq;
-
-    num.MinMax_Correction(x_correction, 0.01);
-    num.MinMax_Correction(y_correction, 0.01);
-    PID_ArmReq.position.x -= x_correction;
-    PID_ArmReq.position.y += y_correction;
+    PID_ArmReq.position.x += x_correction;
+    PID_ArmReq.position.y -= y_correction;
     // cout << "PID x: " << PID_ArmReq.position.x << ", y" << PID_ArmReq.position.y << endl;
 
     //cout << "PID cor x: " << x_correction << ", y" << y_correction << endl;
-
-    float max_rectangle = 0.4;
-    num.MinMax_Correction(ArmPoseReqFull.position.x, max_rectangle); //limitaciones rectangulares
-    num.MinMax_Correction(ArmPoseReqFull.position.y, max_rectangle);
 
     double cat1, cat2, offx(0.0), offy(0.0);
     cat1 = PID_ArmReq.position.x - offx;
@@ -416,6 +410,9 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     { //Circulo interno
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
     }
+    float max_rectangle = 0.45;
+    num.MinMax_Correction(PID_ArmReq.position.x, max_rectangle); //limitaciones rectangulares
+    num.MinMax_Correction(PID_ArmReq.position.y, max_rectangle);
     //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
     //difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
     ArmPoseReq = PID_ArmReq;
@@ -434,8 +431,8 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
 {
 
-    double errorx = 0.0 - x_correction; //PID on correction
-    double errory = 0.0 - y_correction;
+    double errorx = x_correction; //PID on correction
+    double errory = y_correction;
     //Proportional terms
 
     PID_data_mtx.lock();
@@ -458,13 +455,23 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     PIDdata.integraly += errory * PIDdata.time;
     double Ioutx = PIDdata.Ki * PIDdata.integralx;
     double Iouty = PIDdata.Ki * PIDdata.integraly;
-    num.MinMax_Correction(Ioutx, 0.01); //as we dont want large corrections
-    num.MinMax_Correction(Iouty, 0.01);
+    //  num.MinMax_Correction(Ioutx, 0.05); //as we dont want large corrections
+    //  num.MinMax_Correction(Iouty, 0.05);
     double pid_outputx = Poutx + Ioutx + Doutx;
     double pid_outputy = Pouty + Iouty + Douty;
     // Restrict to max/min
-    // num.MinMax_Correction(pid_outputx, 0.05); //as we dont want large corrections
-    //num.MinMax_Correction(pid_outputy, 0.05);
+    if (Controller_Commands.docking_process)
+    {
+        Print("Docking ACTIVATED");
+        num.MinMax_Correction(pid_outputx, 0.001); //as we dont want large corrections in docking
+        num.MinMax_Correction(pid_outputy, 0.001);
+    }
+    else
+    {
+        num.MinMax_Correction(pid_outputx, 0.01); //small but larger for common tracking
+        num.MinMax_Correction(pid_outputy, 0.01);
+    }
+
     PIDdata.ex = errorx; //old values for next iteration
     PIDdata.ey = errory;
 
@@ -614,7 +621,7 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 
     Quat quaternion_angles = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark1.yaw);
 
-    AnglesCurrent.yaw += PI / 2;
+    //AnglesCurrent.yaw += PI / 2;
     float xc11 = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
     float yc11 = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
 
@@ -623,8 +630,8 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     quad_pose.orientation.y = quaternion_angles.y;
     quad_pose.orientation.z = quaternion_angles.z;
     quad_pose.orientation.w = quaternion_angles.w;
-    quad_pose.position.x -= xc11;
-    quad_pose.position.y += yc11;
+    quad_pose.position.x += xc11;
+    quad_pose.position.y -= yc11;
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.z);
@@ -671,24 +678,29 @@ void uav_arm_tools::CalculateDockingAltitude()
 {
     if (Controller_Commands.docking_process && state >= 1)
     {
-        DockingIteration += 2;
+        DockingIteration += 1;
 
         DockingAltitude = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 10.0) * DockingFactor;
 
         if (DockingAltitude >= Docking_Altitude_Limit)
             DockingAltitude = Docking_Altitude_Limit;
         minArmAltitude = DockingAltitude;
+        tracking_state_delayed = 0;
     }
     else
     {
-        Controller_Commands.docking_process = false;
-        DockingIteration = 0;
-        minArmAltitude -= 0.001;
-        if (minArmAltitude <= minArm_Altitude_Limit)
-            minArmAltitude = minArm_Altitude_Limit;
-        num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+        tracking_state_delayed++;
+        if (tracking_state_delayed > 10)
+        {
+            Controller_Commands.docking_process = false;
+            DockingIteration = 0;
+            minArmAltitude -= 0.001;
+            if (minArmAltitude <= minArm_Altitude_Limit)
+                minArmAltitude = minArm_Altitude_Limit;
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
 
-        DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
+            DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
+        }
     }
     return;
 }

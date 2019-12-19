@@ -78,6 +78,7 @@ public:
     ros::Subscriber sub_mx_joints_state;
     ros::Subscriber sub_pro_joints_state;
     std::vector<double> arm_joints_state;
+    std::mutex arm_measurements_mtx;
 };
 class Ed_Pmov
 {
@@ -94,8 +95,8 @@ public:
         num_IK_requests = 3;
         index_ks = 0;
         // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group.setGoalTolerance(0.005);            //0.004
-        group.setGoalOrientationTolerance(0.008); //0.008
+        group.setGoalTolerance(0.001);            //0.004
+        group.setGoalOrientationTolerance(0.005); //0.008
         group.setPlanningTime(0.1);
         group.setEndEffectorLink("link_motor_mx282");
 
@@ -135,7 +136,7 @@ public:
         // joints_pub = nh_.advertise< control_msgs::FollowJointTrajectoryGoal>("/joints_data", 1);    //uncomment if necessary
         if (load_joint_states_sub)
         {
-            ArmJointsState = new Arm_Joint_State("/dynamixel_workbench_mx/joint_states", "/dynamixel_workbench_pro/joint_states");
+            ArmJointsState = new Arm_Joint_State("/dynamixel_workbench_mx/joint_states", "/dynamixel_ed_pro_control/joint_states");
        }
        group.setEndEffectorLink("link_motor_mx282");
     }
@@ -162,6 +163,7 @@ public:
     std::pair<bool, PositionResults> RetrieveResults();
 
     void PrintCurrentPose(std::string);
+    void PrintCurrentJoints(std::string);
     void PrintPose(std::string, geometry_msgs::Pose);
     std::chrono::microseconds getDelayTime() { return delay_time; }
     void Sleep(std::chrono::microseconds);

@@ -11,12 +11,12 @@ class Prediction
 
 public:
     Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_,
-               float scale_, double rrt_extension_, float rad_int_, float rad_ext_) : image_size(img_size_),
+               float max_dimm_, double rrt_extension_, float rad_int_, float rad_ext_) : image_size(img_size_),
                                                                                       d_prv(d_prv_),
                                                                                       d_pr_m(d_pr_m_),
                                                                                       prof_expl(prof_expl_),
                                                                                       MapSize(map_size_ + 1),
-                                                                                      max_dimm(scale_),
+                                                                                      max_dimm(max_dimm_),
                                                                                       rrt_extension(rrt_extension_),
                                                                                       rad_int(rad_int_),
                                                                                       rad_ext(rad_ext_)
@@ -79,7 +79,7 @@ public:
         }
     }
     void Average_OldTrajectory();
-    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose);
+    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, bool);
     void Regression(VectorDbl x, VectorDbl y, int ndatos, int it, int order, VectorDbl &coeffs);
     void CheckandFix_Boundaries(VectorDbl &x, VectorDbl &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
@@ -127,7 +127,7 @@ public:
     }
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
-    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose); //extraer vecindad
+    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, bool); //extraer vecindad
 
     geometry_msgs::Pose NoTarget_Sequence(geometry_msgs::Pose Marker_Abs_Pose); //No quad
     //const Nodes Get_Nodes(){return nodes;}

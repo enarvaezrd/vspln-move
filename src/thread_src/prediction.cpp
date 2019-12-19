@@ -5,7 +5,7 @@
 
 using namespace PredNs;
 
-void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentEEFF_Pose)
+void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentEEFF_Pose, bool docking_process_flag)
 {
     //1. vicinities_init - conteo de acumulaciones,
     //2. d_pr_m - profundidad de datos previos para acumulaciones,
@@ -18,6 +18,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     //10. tr_brk - Trajectory break, punto de quiebre de trayectorias, indica en donde termina la anterior y empieza la nueva trayectoria. q_tr en matlab
     //11. tr_old - Anterior trayectoria almacenada, para comparar con la nueva tr, y realizar composicion de trayectoria
 
+    int advance_prediction = 0;
     float delta_x_prev = 0.0;
     float delta_y_prev = 0.0;
     VectorDbl deltas_x_;
@@ -105,11 +106,11 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
             // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i] = zvalue;
         }
-        double sationary_step_dist = 0.002; //0.0016
+        double sationary_step_dist = 0.016; //0.0016
         flagMtx.lock();
-        if (abs(acum_x[d_prv] - acum_x[d_prv - 1]) <= sationary_step_dist && abs(acum_y[d_prv] - acum_y[d_prv - 1]) <= sationary_step_dist)
+        if ((abs(acum_x[d_prv] - acum_x[d_prv - 1]) <= sationary_step_dist && abs(acum_y[d_prv] - acum_y[d_prv - 1]) <= sationary_step_dist) || docking_process_flag)
         {
-            fixed_dist = 0.003;
+            fixed_dist = 0.001;
             Stop_RRT_flag = true;
         }
         else
@@ -149,7 +150,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
             double stepx = (vxtm * indxj / prof_expl_adv); //paso resultante, para distancia fija
             for (int i = 0; i < prof_expl_adv; i++)
             {
-                traj.xval[i] = CurrentPoint.xval + ((i + 5) * stepx);
+                traj.xval[i] = CurrentPoint.xval + ((i + advance_prediction) * stepx);
                 //cout<<"==XVAl "<<traj.xval[i]<<endl;
             }
 
@@ -187,7 +188,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
             }
             double stepy = (vytm * indyj / prof_expl_adv);
             for (int i = 0; i < prof_expl_adv; i++)
-                traj.yval[i] = CurrentPoint.yval + ((i + 5) * stepy);
+                traj.yval[i] = CurrentPoint.yval + ((i + advance_prediction) * stepy);
 
             for (int i = 0; i < prof_expl_adv; i++)
             {
@@ -1282,7 +1283,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
             }
             if (trust_index > 0.3)
             {
-                Road_VS_Result_Indx -= 3;
+                Road_VS_Result_Indx -= 1;
             }
 
             Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
@@ -1333,23 +1334,23 @@ void Prediction::Draw_Map()
 {
 #ifdef OPENCV_DRAW
     int obs_thick_size = Obstacle_Points_thick.size();
-   // int obs_size = Obstacle_Points.size();
-   // int major_size = obs_thick_size;
-   /* if (obs_size >= major_size)
+    // int obs_size = Obstacle_Points.size();
+    // int major_size = obs_thick_size;
+    /* if (obs_size >= major_size)
     {
         major_size = obs_size;
     }*/
 
     for (int i = 0; i < obs_thick_size; i++)
     {
-       /* if (i < obs_thick_size)
+        /* if (i < obs_thick_size)
         {*/
-            image_Ptraj.at<cv::Vec3b>( image_size-Obstacle_Points_thick[i].xval,image_size-Obstacle_Points_thick[i].yval)={200,200,200};
-            //color[0] = 200;
-            //color[1] = 200;
-            //color[2] = 200;
-       /* }*/
-       /* if (i < obs_size)
+        image_Ptraj.at<cv::Vec3b>(image_size - Obstacle_Points_thick[i].xval, image_size - Obstacle_Points_thick[i].yval) = {200, 200, 200};
+        //color[0] = 200;
+        //color[1] = 200;
+        //color[2] = 200;
+        /* }*/
+        /* if (i < obs_size)
         {
             color = image_Ptraj.at<cv::Vec3b>(1+image_size-Obstacle_Points[i].yval, Obstacle_Points[i].xval);
             color[0] = 70;
@@ -1458,7 +1459,7 @@ geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs
     return Final_EEFF_Pose;
 }
 
-void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose) //extraer vecindad
+void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose, bool docking_process_flag) //extraer vecindad
 {
 
     //tic();
@@ -1466,7 +1467,7 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_
     //Print("tiempo RRT XY Mean Calc",toc());
     //tic();
     // Print("-------RRt2 TrajPredict------------");
-    Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose);
+    Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose,docking_process_flag);
     // Print("AAA tiempo Traj Predict",toc());
 
     return;

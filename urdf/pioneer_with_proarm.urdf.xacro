@@ -24,7 +24,7 @@
     	 <xacro:include filename="$(find hector_sensors_description)/urdf/asus_camera.urdf.xacro" />-->
  	 
 		 	
-    <xacro:include filename="$(find arm)/urdf/dynamixel_pro_arm_macro.urdf" />
+    <xacro:include filename="$(find ed_pmov)/urdf/dynamixel_pro_arm_macro.urdf" />
 
     <xacro:arg name="prefix" default="pioneer_proarm_"/>
 
@@ -37,7 +37,7 @@
     <xacro:pioneer3dx prefix="$(arg prefix)"/>  
 
   <xacro:pro_arm parent="$(arg prefix)base_link">
-    	<origin xyz="-0.0 0 0.24"   rpy="0 0 1.57"/><!--slightly above pioneer plattform-->
+    	<origin xyz="-0.0 0 0.26"   rpy="0 0 1.57"/><!--slightly above pioneer plattform-->
     </xacro:pro_arm>
 <!--laser
 -->

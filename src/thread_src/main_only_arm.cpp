@@ -1,6 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-#define REAL_ROBOTS_
+#define REAL_ROBOTS
 
 #include <sensor_msgs/Joy.h>
 #include "rrt_functions.hpp"
@@ -62,6 +62,8 @@ int main(int argc, char **argv)
 
     ros::Rate loop_rate(30);
     Printer Print;
+    std::vector<double> joint_zeroes = {0.2, 0.0, 0.0, 0.0, 0.0, 0.0};
+
     std::vector<double> joint_valuesT(6);
     joint_valuesT[0] = -PI / 2 + 0.1;
     joint_valuesT[1] = 2.0; //PI/2;
@@ -69,14 +71,36 @@ int main(int argc, char **argv)
     joint_valuesT[3] = 0.0; // PI/2;
     joint_valuesT[4] = 0.0;
     joint_valuesT[5] = 0.0; // PI/2;
+
+    Print("===========================state ", 1);
     rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, scale, num_nodes_per_region, load_joints_state_sub);
-    sleep(2.0);
+    Print("============================state ", 2);
+    sleep(1.0);
+    Print("Joint Request 1: ", joint_valuesT[0], joint_valuesT[1], joint_valuesT[2], joint_valuesT[3], joint_valuesT[4], joint_valuesT[5]);
 
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
 
     RRT_model.ArmModel.PrintModelInfo();
+    sleep(15.0);
+    Print("printing pose 1");
+    RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE 1 ::::");
+    Print("printing joints 1");
+    RRT_model.ArmModel.PrintCurrentJoints("====>STARTING JOINTS 2 ::::");
+    sleep(1.0);
 
-    RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE ::::");
+    joint_valuesT[0] = 0.0;
+    joint_valuesT[1] = 2.2; //PI/2;
+    Print("Joint Request 2: ", joint_valuesT[0], joint_valuesT[1], joint_valuesT[2], joint_valuesT[3], joint_valuesT[4], joint_valuesT[5]);
+
+    RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
+
+    sleep(15.0);
+    Print("printing pose 2");
+    RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE 2 ::::");
+    Print("printing joints 2");
+    RRT_model.ArmModel.PrintCurrentJoints("====>STARTING JOINTS 2 ::::");
+    sleep(1.0);
+
     float alturap = armMinAltitude; //0.21
 
     geometry_msgs::Pose target_pose = RRT_model.ArmModel.getCurrentPose();
@@ -91,7 +115,7 @@ int main(int argc, char **argv)
     target_pose.position.z = alturap;
 
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(2.0);
+    sleep(8.0);
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
@@ -99,11 +123,13 @@ int main(int argc, char **argv)
     int ThreadStep = 0;
 
     auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
-    double Gainx = 0.01;
-    double Gainy = 0.01;
+    double Gainx = target_posea.position.x;
+    double Gainy = target_posea.position.y;
     bool update_gain = true;
+    bool updated_position = false;
     while (ros::ok())
     {
+       
         if (!new_message_received)
         {
             ros::spinOnce();
@@ -116,22 +142,23 @@ int main(int argc, char **argv)
             loop_rate.sleep();
             continue;
         }
+        double step = 0.01;
         if (update_gain)
         {
             if (joystick_msg.axes[6] == -1.0)
-                Gainy += 0.01;
+                Gainy += step;
             if (joystick_msg.axes[6] == 1.0)
-                Gainy -= 0.01;
+                Gainy -= step;
             if (joystick_msg.axes[7] == -1.0)
-                Gainx -= 0.01;
+                Gainx -= step;
             if (joystick_msg.axes[7] == 1.0)
-                Gainx -= 0.01;
+                Gainx += step;
             update_gain = false;
         }
         if (joystick_msg.axes[6] == 0.0 && joystick_msg.axes[7] == 0.0)
             update_gain = true;
 
-        double max = 0.2;
+        double max = 0.3;
         if (Gainy < -max)
             Gainy = -max;
         if (Gainy > max)
@@ -146,8 +173,12 @@ int main(int argc, char **argv)
         ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea);
         if (ArmGoal.trajectory.points.size() > 0.0)
         {
-            ArmGoal = RRT_model.SteerJoints(ArmGoal);
-            Print("JOINTS REQUEST", ArmGoal.trajectory.points[0].positions[0], ArmGoal.trajectory.points[0].positions[1]);
+           // ArmGoal = RRT_model.SteerJoints(ArmGoal);
+            Print("JOINTS REQUEST", ArmGoal.trajectory.points[0].positions[0], ArmGoal.trajectory.points[0].positions[1],
+                                    ArmGoal.trajectory.points[0].positions[2], ArmGoal.trajectory.points[0].positions[3],
+                                     ArmGoal.trajectory.points[0].positions[4], ArmGoal.trajectory.points[0].positions[5]);
+            RRT_model.ArmModel.PrintCurrentJoints("=");
+            Print("XY position", target_posea.position.x,target_posea.position.y);
             RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
         }
 

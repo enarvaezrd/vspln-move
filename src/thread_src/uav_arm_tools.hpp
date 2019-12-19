@@ -60,6 +60,7 @@ public:
                                                                                         DockingFactor(DockingFactor_)
 
     {
+        tracking_state_delayed=0;
         PIDdata.ex = 0;
         PIDdata.ey = 0;
         PIDdata.ez = 0;
@@ -191,6 +192,7 @@ private:
     double Docking_Altitude_Limit;
     double DockingFactor;
     bool tracking_ok;
+    int tracking_state_delayed;
 };
 
 } // namespace ua_ns

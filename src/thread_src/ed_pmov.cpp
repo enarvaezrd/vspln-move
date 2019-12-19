@@ -3,28 +3,40 @@
 
 #include "ed_pmov.hpp"
 
-void Arm_Joint_State::Mx_Joints_State_Handler(const sensor_msgs::JointState &joints_state)
+void Arm_Joint_State::Mx_Joints_State_Handler(const sensor_msgs::JointState &joints_stateP)
 {
-    Mx_Joints_State = joints_state;
+    arm_measurements_mtx.lock();
+    Mx_Joints_State = joints_stateP;
+    arm_measurements_mtx.unlock();
 }
 void Arm_Joint_State::Pro_Joints_State_Handler(const sensor_msgs::JointState &joints_state)
 {
+    arm_measurements_mtx.lock();
     Pro_Joints_State = joints_state;
+    arm_measurements_mtx.unlock();
 }
 
 std::vector<double> Arm_Joint_State::GetCurrentArmJoints()
 {
+    arm_measurements_mtx.lock();
     int joint_count = 0.0;
     for (auto pro_joint : Pro_Joints_State.position)
     {
+        //  cout << "--- pro angles received: " << pro_joint << endl;
         arm_joints_state[joint_count] = pro_joint;
         joint_count++;
     }
     for (auto mx_joint : Mx_Joints_State.position)
     {
+        // cout << "---  mx angles received: " << mx_joint << endl;
         arm_joints_state[joint_count] = mx_joint;
         joint_count++;
     }
+
+    arm_measurements_mtx.unlock();
+
+    if (joint_count != 6)
+        std::cerr<<"Error: joints are not complete, No. Joints: "<< joint_count<<"\n";
 
     return arm_joints_state;
 }
@@ -124,7 +136,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req)
         //delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
         //usleep(1000000*(delay_time));
 
-       // Print("Joints", jv[0], jv[1], jv[2], jv[3], jv[4], jv[5]);
+        // Print("Joints", jv[0], jv[1], jv[2], jv[3], jv[4], jv[5]);
         arm.startTrajectory(goale); //Inicio de trayectoria en GAZEBO
     }
     else
@@ -155,6 +167,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         TPoseTemp.orientation.w = 0.0;
         TPoseTemp.orientation.x = 1.0;
         TPoseTemp.orientation.y = 0.0;
+
         TPoseTemp.orientation.z = 0.0;
         bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 2, 0.01);
         if (found_ikO)
@@ -230,7 +243,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         ////  joints_result[1] *= -1;
         //  joints_result[4] *= -1;
         //  joints_result[5] *= -1;
-       // Print("joints", joints_result[0], joints_result[1], joints_result[2], joints_result[3], joints_result[4], joints_result[5]);
+        // Print("joints", joints_result[0], joints_result[1], joints_result[2], joints_result[3], joints_result[4], joints_result[5]);
         goale = arm.makeArmUpTrajectory(joints_result);
 
         //int numpoints6 = goale.trajectory.points.size()-1;//escoger el punto final ya que empieza desde 0
@@ -245,7 +258,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
     }
     else
     {
-        PrintPose("NO solution for pose request!", pose_req);
+       // PrintPose("NO solution for pose request!", pose_req);
     }
     return goale;
 }
@@ -256,7 +269,7 @@ bool Ed_Pmov::Request_Movement_byJointsTrajectory(control_msgs::FollowJointTraje
     {
         arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
 
-       // Print("delay time ", delay_time.count());
+        // Print("delay time ", delay_time.count());
         std::this_thread::sleep_for(delay_time);
         return true;
     }
@@ -369,21 +382,21 @@ std::pair<bool, PositionResults> Ed_Pmov::RetrieveResults()
 
 geometry_msgs::Pose Ed_Pmov::getCurrentPose()
 {
-     Eigen::Affine3d end_effector_state;
+    Eigen::Affine3d end_effector_state;
     if (load_joint_states_sub)
-    {//real
-        currentJoints = ArmJointsState->GetCurrentArmJoints();
-        Print("JOINTS ",currentJoints[0],currentJoints[1]);
+    { //real
+        currentJoints = getCurrentJoints();
+        //PrintCurrentJoints("==");
         auto joints_fake = group.getCurrentJointValues();
-        Print("JOINTS FAKE ",joints_fake[0],joints_fake[1]);
-        currentJoints[1] += 2*PI;
+        //  Print("JOINTS FAKE ", joints_fake[0], joints_fake[1], joints_fake[2], joints_fake[3], joints_fake[4], joints_fake[5]);
+        //currentJoints[1] += 2 * PI;
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
         end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
         tf::poseEigenToMsg(end_effector_state, currentPose);
     }
     else
-    {//simm
-    
+    { //simm
+
         currentPose = group.getCurrentPose("link_motor_mx282").pose;
         //cout<<"CURRENTORIG Position: x: "<<currentPose.position.x<<", y: "<<currentPose.position.y<<", z: "<<currentPose.position.z<<"\n";
         //cout<<"CURRENTORIG Rotation: x: "<<currentPose.orientation.x<<", y: "<<currentPose.orientation.y<<", z: "<<currentPose.orientation.z<<", w: "<<currentPose.orientation.w<<"\n";
@@ -395,21 +408,23 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
 std::vector<double> Ed_Pmov::getCurrentJoints()
 {
     if (load_joint_states_sub)
-    {//real
+    { //real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
-        currentJoints[1] += 2*PI;
+        //Print(" Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
+
+        // currentJoints[0] +=  PI/2.0;
     }
     else
     { //simm
         currentJoints = group.getCurrentJointValues();
-       // cout<<"JOINT : "<<currentJoints[1]<<endl; 
+        // cout<<"JOINT : "<<currentJoints[1]<<endl;
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
         Eigen::Affine3d end_effector_state = kinematic_states_[0]->getGlobalLinkTransform("link_motor_mx282");
 
         Eigen::Quaterniond q_pos(end_effector_state.rotation());
         auto tr = end_effector_state.translation();
 
-       // ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation() << "\n");
+        // ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation() << "\n");
         //ROS_INFO_STREAM("Rotation: \n" << end_effector_state.rotation() << "\n");
         //cout<<"Rotation: x: "<<q_pos.x()<<", y: "<<q_pos.y()<<", z: "<<q_pos.z()<<", w: "<<q_pos.w()<<"\n";
     }
@@ -417,11 +432,20 @@ std::vector<double> Ed_Pmov::getCurrentJoints()
     auto currentJointsT = currentJoints;
     return currentJointsT;
 }
-void Ed_Pmov::PrintCurrentPose(std::string workspace=">>")
+void Ed_Pmov::PrintCurrentPose(std::string workspace = ">>")
 {
-    currentPose = group.getCurrentPose().pose;
+    currentPose = getCurrentPose();
     Print(workspace + ", Crrnt Position x,y,z: ", currentPose.position.x, currentPose.position.y, currentPose.position.z);
     Print(workspace + ", Crrnt Orientation ow,ox,oy,oz: ", currentPose.orientation.w, currentPose.orientation.x, currentPose.orientation.y, currentPose.orientation.z);
+    return;
+}
+void Ed_Pmov::PrintCurrentJoints(std::string workspace = ">>")
+{
+    currentJoints = getCurrentJoints();
+    if (currentJoints.size() == 6)
+        Print(workspace + ", Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
+    else
+        Print("!! Number of joints is not corect", currentJoints.size());
     return;
 }
 void Ed_Pmov::PrintPose(std::string workspace, geometry_msgs::Pose req_pose)

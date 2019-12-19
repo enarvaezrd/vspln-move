@@ -78,8 +78,8 @@ void FollowTrajectoryClient::startTrajectory(control_msgs::FollowJointTrajectory
   }*/
 
   goal.trajectory.header.stamp = ros::Time::now(); // + ros::Duration(0.1);
-  traj_client_.sendGoal(goal);
-  pub_trajectory_arm_command.publish(goal);
+  traj_client_.sendGoal(goal); //ros control
+  pub_trajectory_arm_command.publish(goal);  //real robot control node
 }
 
 void FollowTrajectoryClient::boundValue(double &val, double maxv, double minv)

@@ -1,0 +1,6 @@
+<launch>
+  <arg name="namespace"               default="dynamixel_pro_sdk"/>
+ 
+	<node name="$(arg namespace)" pkg="ed_control" type="pro_control_sdk" output="screen" required="true"/>
+
+</launch>

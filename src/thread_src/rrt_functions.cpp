@@ -742,12 +742,12 @@ control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJoi
 {
     if (goal.trajectory.points.size() > 0)
     {
-        double JointEPS =  80*EPS;
+        double JointEPS =  80.0*EPS;
         auto joints = ArmModel.getCurrentJoints();
         int ReqJointsSize = goal.trajectory.points[0].positions.size();
         int CurrentJointsSize = joints.size();
         if (CurrentJointsSize != ReqJointsSize)
-            Print("Joints sizes are not the same RRT functions line 773");
+            Print("Joints sizes are not the same RRT functions line 750");
         else
         {
             int joint_cn = 0;
