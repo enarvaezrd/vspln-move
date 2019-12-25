@@ -250,10 +250,10 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         tiempo_traj = goale.trajectory.points[0].time_from_start; //tiempo del punto final
         delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
 
-        if (delay_time.count() > 200000)
+        if (delay_time.count() > 100000)
         {
             // Print("Delay time", delay_time.count());
-            delay_time = std::chrono::microseconds(200000);
+            delay_time = std::chrono::microseconds(100000);
         }
     }
     else

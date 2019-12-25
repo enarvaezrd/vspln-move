@@ -322,8 +322,9 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose);
     Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw);
-    Print("|||| current arm angle, mark ", AnglesCurrent.yaw, IAngleMark.yaw);
-    //AnglesCurrent.yaw -= PI / 2; //por el offset hay que hacer creer al sistema que la orientacion es esta
+    //Print("|||| current arm angle, mark ", AnglesCurrent.yaw, IAngleMark.yaw);
+    if (!real_robots)
+        AnglesCurrent.yaw += PI / 2.0; //por el offset hay que hacer creer al sistema que la orientacion es esta
     //Transformacion en rotacion================================================================================
     double x_correction = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
     double y_correction = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
@@ -349,7 +350,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     // cout << "Previous PID x: " << x_correction << ", y" << y_correction << endl;
     if (!Controller_Commands.tracking_process)
     {
-        PIDReset();
+        //PIDReset();
     }
     else
     {
@@ -358,8 +359,16 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     // cout << "After PID x: " << x_correction << ", y" << y_correction << endl;
 
     Pose_msg PID_ArmReq = ArmPoseReq;
-    PID_ArmReq.position.x += x_correction;
-    PID_ArmReq.position.y -= y_correction;
+    if (real_robots)
+    {
+        PID_ArmReq.position.x += x_correction;
+        PID_ArmReq.position.y -= y_correction;
+    }
+    else
+    {
+        PID_ArmReq.position.x -= x_correction;
+        PID_ArmReq.position.y += y_correction;
+    }
     // cout << "PID x: " << PID_ArmReq.position.x << ", y" << PID_ArmReq.position.y << endl;
 
     //cout << "PID cor x: " << x_correction << ", y" << y_correction << endl;
@@ -425,7 +434,10 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     //ArmPoseReq.position.x = OldArmPoseReq.position.x + full_x_correction;
     //ArmPoseReq.position.y = OldArmPoseReq.position.y + full_y_correction;
+
+    
     OldArmPoseReq = ArmPoseReq;
+
     return ArmPoseReq;
 }
 void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
@@ -621,7 +633,8 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 
     Quat quaternion_angles = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark1.yaw);
 
-    //AnglesCurrent.yaw += PI / 2;
+    if (!real_robots)
+        AnglesCurrent.yaw += PI / 2;
     float xc11 = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
     float yc11 = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
 
@@ -630,8 +643,16 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     quad_pose.orientation.y = quaternion_angles.y;
     quad_pose.orientation.z = quaternion_angles.z;
     quad_pose.orientation.w = quaternion_angles.w;
-    quad_pose.position.x += xc11;
-    quad_pose.position.y -= yc11;
+    if (real_robots)
+    {
+        quad_pose.position.x += xc11;
+        quad_pose.position.y -= yc11;
+    }
+    else
+    {
+        quad_pose.position.x -= xc11;
+        quad_pose.position.y += yc11;
+    }
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.z);

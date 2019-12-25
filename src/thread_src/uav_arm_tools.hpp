@@ -53,14 +53,15 @@ public:
     int counter;
 
     uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_,
-                  string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_) : rad_ext(rad_ext_),
-                                                                                        rad_int(rad_int_), minArmAltitude(minArmAltitude_),
-                                                                                        Controller_Commands(cntrl_topic_),
-                                                                                        Docking_Altitude_Limit(Docking_Alt_Lim_),
-                                                                                        DockingFactor(DockingFactor_)
+                  string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_,
+                  bool real_robots_) : rad_ext(rad_ext_),
+                                       rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                       Controller_Commands(cntrl_topic_),
+                                       Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                       DockingFactor(DockingFactor_), real_robots(real_robots_)
 
     {
-        tracking_state_delayed=0;
+        tracking_state_delayed = 0;
         PIDdata.ex = 0;
         PIDdata.ey = 0;
         PIDdata.ez = 0;
@@ -106,7 +107,7 @@ public:
         Text_Stream_eeff_uav_relative->write_Data("ms");
         Text_Stream_eeff_uav_relative->write_Data("delimiter");
         Text_Stream_eeff_uav_relative->write_TimeStamp();
-        tracking_ok=false;
+        tracking_ok = false;
     }
 
     void Marker_Handler(const AprilTagPose &apriltag_marker_detections);
@@ -167,6 +168,7 @@ public:
     void PIDReset();
 
 private:
+    bool real_robots;
     ros::Subscriber sub_UAVmark; //Marker pose
     Printer Print;
     TextStream *Text_Stream_eeff_uav_relative;
