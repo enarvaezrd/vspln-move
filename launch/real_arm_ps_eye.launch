@@ -48,7 +48,7 @@
 		</include>
 	</group>
 -->
-	<node name="joystick_node" pkg="joy" type="joy_node"/>
+	<node if="$(arg launch_joystick)" name="joystick_node" pkg="joy" type="joy_node"/>
    <!--eeff Camera-->
 
 	<include file="$(find ed_pmov)/launch/ps_eye_cam.launch"/>
