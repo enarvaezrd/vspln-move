@@ -1,6 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-#define REAL_ROBOTS_
+#define REAL_ROBOTS
 #include "uav_arm_tools.hpp"
 
 using namespace std;
@@ -12,18 +12,27 @@ int main(int argc, char **argv)
 
     int d_prv = 5;      // profundidad de datos previos disponibles para prediccion
     int d_pr_m = 3;     // datos previos a usar para calculo de mean values
-    int prof_expl = 10; // Profundidad de exploracion  Esz=prof_f
+    int prof_expl = 9; // Profundidad de exploracion  Esz=prof_f
     int Map_size = image_size;
     float max_dimm = 1.0;
-    double rrt_extension = 0.2; //extension of each rrt step for regression 0.38 0.28
-    int num_nodes_per_region = prof_expl + 10;
+    double rrt_extension = 0.1; //extension of each rrt step for regression 0.38 0.28
+    int num_nodes_per_region = prof_expl + 15;
     double rad_int = 0.26;
-    double rad_ext = 0.42;
+    double rad_ext = 0.41;
     double armMinAltitude = 0.47;
     bool load_joints_state_sub, real_robots;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.83;
     double DockingFactor = 0.062;
+    map<int, ua_ns::Positions2D> marker_offsets;
+    ua_ns::Positions2D marker1;
+    marker1.x = {0};
+    marker1.y = {0};
+    ua_ns::Positions2D marker2;
+    marker2.x = {0};
+    marker2.y = {0};
+    marker_offsets.insert(std::pair<int, ua_ns::Positions2D>(0, marker1));
+    marker_offsets.insert(std::pair<int, ua_ns::Positions2D>(2, marker2));
 #ifdef REAL_ROBOTS
     load_joints_state_sub = true;
     string odom_str = "/robot1/odom"; ///robot1/robotnik_base_control/odom  ;   /robot1/odom
@@ -60,7 +69,7 @@ int main(int argc, char **argv)
     ObstacleMapGen ObstacleMap(Map_size, max_dimm, image_size, rad_int, rad_ext, laser_topic);
     RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y);
 
-    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots);
+    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
     sleep(3.0);
     auto image_MarkerARM_Pos = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
     int scale = floor(image_size / (2.0 * max_dimm));
@@ -215,9 +224,9 @@ int main(int argc, char **argv)
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             //RRT_model.ArmModel.tic();
 
-            if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
+            if (UavArm_tools.getTrackingState() > 0 || UavArm_tools.getTrackingState() == 20)
             { //Tracking OK
-                // Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose);
+                // Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose); done in control thread
                 TrackingState++;
                 //Publicar aqui la pose absoluta del UAV para su control, tracking system
                 if (TrackingState > 50)
@@ -226,19 +235,18 @@ int main(int argc, char **argv)
             else
             {
                 NoVisualContact_count++;
-                Robot_Commands.Send_Empty_Commands();
-                if (TrackingState == 0)
-                {
+                
+                
+               
+                if (NoVisualContact_count > 38)
+                { Print("Tracking state",UavArm_tools.getTrackingState(),NoVisualContact_count);
+                    Robot_Commands.Send_Empty_Commands();
+                    RRT_model.reset_nodes_reordered();
+                    UavArm_tools.PIDReset(); //reset, set zeros to errors and integrals
+                    TrackingState = 0;
+                    //UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
+                    UavArm_tools.counter = 0;
                     RRT_model.loop_end();
-                }
-
-                RRT_model.reset_nodes_reordered();
-                UavArm_tools.PIDReset(); //reset, set zeros to errors and integrals
-                TrackingState = 0;
-                UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
-                UavArm_tools.counter = 0;
-                if (NoVisualContact_count > 10)
-                {
                     NextArmRequest.position.x = UAV_position_x;
                     NextArmRequest.position.y = UAV_position_y;
                     NextArmRequest.position.z = alturap;
@@ -273,7 +281,7 @@ int main(int argc, char **argv)
                 UavArm_tools.setAltitudeRequest(UavArm_tools.getEEFFAltitude());
                 //CurrentRequest_Thread = UavArm_tools.getArmPoseReqFull();// with mutex
                 CurrentRequest_Thread = UavArm_tools.getArmPoseReq(); // with mutex
-                if (UavArm_tools.Controller_Commands.docking_process)
+                if (true || UavArm_tools.Controller_Commands.docking_process)
                     NextArmRequest = CurrentRequest_Thread;
                 else
                 {
@@ -323,7 +331,9 @@ int main(int argc, char **argv)
             //cout << "=====> SEQUENCE A TIME: " << RRT_model.ArmModel.toc(clA).count() << endl;
             double LoopA_time = RRT_model.ArmModel.toc(clA).count();
             if (LoopA_time > 100000)
-                Print("===--->SEQUENCE A TIME ", LoopA_time);
+                Print("===--->SEQUENCE A TIME HUGE!!!!", LoopA_time);
+                if (LoopA_time < 30000)
+                Print("===--->SEQUENCE A TIME LESS!!!!", LoopA_time);
             clA = std::chrono::high_resolution_clock::now();
         }
     });
@@ -381,8 +391,6 @@ int main(int argc, char **argv)
                 OldLocalUAVPose = LocalUAVPose;
             }
 
-            cout << "=====> SEQUENCE CONTROL TIME A: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
-            timestamp1 = std::chrono::high_resolution_clock::now();
             arm_control_msg_mtx.lock();
             geometry_msgs::Pose CurrentArmRequest = ArmRequest;
             bool fresh_request_local = fresh_request;
@@ -391,8 +399,6 @@ int main(int argc, char **argv)
             image_general.copyTo(Image_control_loop);
             arm_control_msg_mtx.unlock();
 
-            cout << "=====> SEQUENCE CONTROL TIME B: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
-            timestamp1 = std::chrono::high_resolution_clock::now();
             cv::circle(Image_control_loop, cv::Point(round((LocalUAVPose.position.x + max_dimm) * scale), round((LocalUAVPose.position.y + max_dimm) * scale)),
                        5, cv::Scalar(200, 0, 0), -1, 8);
             //Print("Current arm pose", CurrentArm_pose.position.x, CurrentArm_pose.position.y);
@@ -400,10 +406,8 @@ int main(int argc, char **argv)
                        5, cv::Scalar(0, 250, 0), -1, 8);
             cv::circle(Image_control_loop, cv::Point(round((CurrentArmRequest.position.x + max_dimm) * scale), round((CurrentArmRequest.position.y + max_dimm) * scale)),
                        5, cv::Scalar(0, 0, 250), -1, 8);
-            cout << "=====> SEQUENCE CONTROL TIME DRAW: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
             //  Print("Current pose request", CurrentArmRequest.position.x, CurrentArmRequest.position.y);
             //  y_correction = CurrentArmRequest.position.y;
-            timestamp1 = std::chrono::high_resolution_clock::now();
             if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process) //tracking
             {
 
@@ -445,15 +449,14 @@ int main(int argc, char **argv)
                     non_tracking_height_corr = -0.1;
                 }
             }
-            cout << "=====> SEQUENCE CONTROL TIME C: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
-timestamp1 = std::chrono::high_resolution_clock::now();
+            timestamp1 = std::chrono::high_resolution_clock::now();
             //  openCV_mutex.lock();
-            cv::imshow("Marker pos", Image_control_loop);
-            cv::waitKey(1);
-            cout << "=====> SEQUENCE CONTROL TIME opencv: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
-            
+           // cv::imshow("Marker pos", Image_control_loop);
+         //   cv::waitKey(1);
+            // cout << "=====> SEQUENCE CONTROL TIME opencv: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
+
             cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
-            
+
             // openCV_mutex.unlock();
             loop_rateControl.sleep();
             timestamp = std::chrono::high_resolution_clock::now();

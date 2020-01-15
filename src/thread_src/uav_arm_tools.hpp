@@ -51,14 +51,15 @@ public:
     PIDarm PIDdata;
     ControllerCommands Controller_Commands;
     int counter;
-
+    map<int,Positions2D> marker_offsets;
     uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_,
                   string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_,
-                  bool real_robots_) : rad_ext(rad_ext_),
-                                       rad_int(rad_int_), minArmAltitude(minArmAltitude_),
-                                       Controller_Commands(cntrl_topic_),
-                                       Docking_Altitude_Limit(Docking_Alt_Lim_),
-                                       DockingFactor(DockingFactor_), real_robots(real_robots_)
+                  bool real_robots_, map<int,Positions2D> marker_offsets_) : rad_ext(rad_ext_),
+                                                                    rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                                                    Controller_Commands(cntrl_topic_),
+                                                                    Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                                                    DockingFactor(DockingFactor_), real_robots(real_robots_),
+                                                                    marker_offsets(marker_offsets_)
 
     {
         tracking_state_delayed = 0;

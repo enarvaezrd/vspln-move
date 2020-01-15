@@ -14,14 +14,46 @@ void uav_arm_tools::counter_addOne()
 void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detections)
 {
     state = apriltag_marker_detections.detections.size();
+    Pose_msg Abs_pose;
+    Abs_pose.position.x = 0.0;
+    Abs_pose.position.y = 0.0;
+    Pose_msg marker_pose_;
     if (state >= 1)
     {
-        marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
+        if (state > marker_offsets.size())
+            ROS_ERROR("ERROR in size of marker_offsets uav_arm_tools.cpp %d", (int)marker_offsets.size());
+
+        if (state > 1)
+        {
+            for (int i = 0; i < state; i++)
+            {
+                int pose_id = apriltag_marker_detections.detections[i].id[0];
+                marker_pose_ = apriltag_marker_detections.detections[i].pose.pose.pose;
+                marker_pose_.position.x += marker_offsets[pose_id].x[0];
+                marker_pose_.position.y += marker_offsets[pose_id].y[0];
+
+                Abs_pose.position.x += marker_pose_.position.x / (double)(state);
+                Abs_pose.position.y += marker_pose_.position.y / (double)(state);
+                //cout << "=====> MARKER POSE x: " << marker_pose_.position.x << ", y: " << marker_pose_.position.y << endl;
+            }
+
+            //cout << "=====> MARKERS POSE x: " << Abs_pose.position.x << ", y: " << Abs_pose.position.y << endl;
+            marker_pose = marker_pose_;
+            marker_pose.position.x = Abs_pose.position.x;
+            marker_pose.position.y = Abs_pose.position.y;
+        }
+        else if (state == 1)
+        {
+            marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
+           // marker_pose.position.x /= 2;
+           // marker_pose.position.y /= 2;
+        }
     }
     else
     {
         state = 0;
     }
+    return;
 }
 
 struct Quat uav_arm_tools::ArmOrientReq_toQuaternion(double yaw_Mark, geometry_msgs::Pose cpose) //convertir a quaternion con modificaciones de roll y pitch fijos
@@ -435,7 +467,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //ArmPoseReq.position.x = OldArmPoseReq.position.x + full_x_correction;
     //ArmPoseReq.position.y = OldArmPoseReq.position.y + full_y_correction;
 
-    
     OldArmPoseReq = ArmPoseReq;
 
     return ArmPoseReq;
@@ -474,7 +505,7 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     // Restrict to max/min
     if (Controller_Commands.docking_process)
     {
-        Print("Docking ACTIVATED");
+        //Print("Docking ACTIVATED");
         num.MinMax_Correction(pid_outputx, 0.001); //as we dont want large corrections in docking
         num.MinMax_Correction(pid_outputy, 0.001);
     }
@@ -701,7 +732,7 @@ void uav_arm_tools::CalculateDockingAltitude()
     {
         DockingIteration += 1;
 
-        DockingAltitude = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 10.0) * DockingFactor;
+        DockingAltitude = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 15.0) * DockingFactor;
 
         if (DockingAltitude >= Docking_Altitude_Limit)
             DockingAltitude = Docking_Altitude_Limit;
@@ -711,7 +742,7 @@ void uav_arm_tools::CalculateDockingAltitude()
     else
     {
         tracking_state_delayed++;
-        if (tracking_state_delayed > 10)
+        if (tracking_state_delayed > 15)
         {
             Controller_Commands.docking_process = false;
             DockingIteration = 0;

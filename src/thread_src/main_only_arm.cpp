@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
 
     RRT_model.ArmModel.PrintModelInfo();
-    sleep(15.0);
+    sleep(2.0);
     Print("printing pose 1");
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE 1 ::::");
     Print("printing joints 1");
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 
     RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
 
-    sleep(15.0);
+    sleep(2.0);
     Print("printing pose 2");
     RRT_model.ArmModel.PrintCurrentPose("====>STARTING POSE 2 ::::");
     Print("printing joints 2");
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     target_pose.position.z = alturap;
 
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(8.0);
+    sleep(3.0);
 
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
 
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     bool updated_position = false;
     while (ros::ok())
     {
-       
+
         if (!new_message_received)
         {
             ros::spinOnce();
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
             continue;
         }
         double step = 0.01;
-        if (update_gain)
+       /*  if (update_gain)
         {
             if (joystick_msg.axes[6] == -1.0)
                 Gainy += step;
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
         }
         if (joystick_msg.axes[6] == 0.0 && joystick_msg.axes[7] == 0.0)
             update_gain = true;
-
+ 
         double max = 0.3;
         if (Gainy < -max)
             Gainy = -max;
@@ -180,11 +180,38 @@ int main(int argc, char **argv)
             RRT_model.ArmModel.PrintCurrentJoints("=");
             Print("XY position", target_posea.position.x,target_posea.position.y);
             RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
-        }
+        }*/
 
-        ros::spinOnce();
-        loop_rate.sleep();
+        if (update_gain)
+        {
+            if (joystick_msg.axes[6] == -1.0)
+            {
+                joint_valuesT[1] = 2.0;
+                joint_valuesT[2] = 1.2;
+                joint_valuesT[3] = 0.0;
+                joint_valuesT[4] = 0.8;
+                joint_valuesT[5] = -PI/2;
+            }
+            if (joystick_msg.axes[6] == 1.0)
+            {
+                joint_valuesT[1] = 2.0; //check values
+                joint_valuesT[2] = 1.7;
+                joint_valuesT[3] = -PI/2;
+                joint_valuesT[4]= 0.3;
+                joint_valuesT[5] = 0.0;
+            }
+            
+            joint_valuesT[0] = -PI / 2 + 0.1;
+            update_gain = false;
+        }
+        if (joystick_msg.axes[6] == 0.0 && joystick_msg.axes[7] == 0.0)
+            update_gain = true;
+
+            RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
+
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
+        ROS_INFO("node finished correctly\n");
     }
-    ROS_INFO("node finished correctly\n");
-}
 #endif
