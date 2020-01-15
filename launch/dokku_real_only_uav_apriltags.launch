@@ -5,13 +5,17 @@
 <!--Motors, ps_eye-->
   <include file="$(find ed_pmov)/launch/real_uav_ps_eye.launch">
 	<arg name="launch_joystick" default="true"/> 
-	<arg name="gui" default="false"/>
+	<arg name="video_device" default="/dev/video1"/>
   </include>
 
-<!--UAV Parrot Bebop 2-->
+<!--UAV Parrot Bebop 2
   <include file="$(find ed_control)/launch/bebop_control.launch">
 	<arg name="launch_joystick" value="false"/> 
 	<arg name="ip" default="192.168.42.1" />
         <arg name="namespace" default="bebop" />
   </include>
+-->
+  <node pkg="ed_pmov" type="only_uav_commands" name="only_uav_commands" output="screen" required="true"/>
+
+	<node name="uav_control" pkg="ed_control" type="uav_control"  output="screen"/>
 </launch>

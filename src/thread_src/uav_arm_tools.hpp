@@ -95,7 +95,7 @@ public:
         armDelay = 0.02;           //.035
         state = 0;
         DockingIteration = 0;
-
+/*
         Text_Stream_eeff_uav_relative = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_eeff_uavrelativepose_v1.txt");
         Text_Stream_eeff_uav_relative->write_Data("x");
         Text_Stream_eeff_uav_relative->write_Data("y");
@@ -107,7 +107,7 @@ public:
         Text_Stream_eeff_uav_relative->write_Data("time");
         Text_Stream_eeff_uav_relative->write_Data("ms");
         Text_Stream_eeff_uav_relative->write_Data("delimiter");
-        Text_Stream_eeff_uav_relative->write_TimeStamp();
+        Text_Stream_eeff_uav_relative->write_TimeStamp();*/
         tracking_ok = false;
     }
 

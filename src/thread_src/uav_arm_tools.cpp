@@ -653,14 +653,14 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     //std::cout<<"x"<<currentPose.orientation.x<<" y "<<currentPose.orientation.y<<" z "<<currentPose.orientation.z<<" w "<<currentPose.orientation.w<<std::endl;
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose); //end effector angle
 
-    Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.x);
+   /* Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.z);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.yaw);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.roll);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.pitch);
     Text_Stream_eeff_uav_relative->write_Data(1);
-    Text_Stream_eeff_uav_relative->write_TimeStamp();
+    Text_Stream_eeff_uav_relative->write_TimeStamp();*/
 
     Quat quaternion_angles = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark1.yaw);
 
@@ -684,14 +684,14 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
         quad_pose.position.x -= xc11;
         quad_pose.position.y += yc11;
     }
-    Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
+    /*Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.z);
     Text_Stream_eeff_uav_relative->write_Data(AnglesCurrent.yaw + IAngleMark1.yaw);
     Text_Stream_eeff_uav_relative->write_Data(IAngleMark1.roll);
     Text_Stream_eeff_uav_relative->write_Data(IAngleMark1.pitch);
     Text_Stream_eeff_uav_relative->write_Data(2);
-    Text_Stream_eeff_uav_relative->write_TimeStamp();
+    Text_Stream_eeff_uav_relative->write_TimeStamp();*/
     //  cout << "ANGLES: uav: " << IAngleMark1.yaw << ", EEFF" << AnglesCurrent.yaw << " corrx: " << xc11 << ", corry: " << yc11 << endl;
     //   cout << "QUAD POSE: x" << quad_pose.position.x << ", y" << quad_pose.position.y << endl;
     //  cout << "EEFF POSE: x" << CurrentArmPose.position.x << ", y" << CurrentArmPose.position.y << endl;
@@ -773,7 +773,7 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
             docking_process = true;
         }
     }
-
+cout<<"CONTROL"<<controller_msg.buttons[0]<<endl;
     if (controller_msg.buttons[0] == 1.0)
     {
         if (tracking_process)

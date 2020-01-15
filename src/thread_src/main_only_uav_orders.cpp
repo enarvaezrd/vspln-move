@@ -68,6 +68,16 @@ int main(int argc, char **argv)
     double non_tracking_height_corr = 0.2;
     double y_correction = 0.0;
     auto timestamp = std::chrono::high_resolution_clock::now();
+geometry_msgs::Pose target_pose;
+    target_pose.orientation.w = 0.0; //0.1
+    target_pose.orientation.x = 0.0; //0.10
+    target_pose.orientation.y = 1.0;
+    target_pose.orientation.z = 0.0;
+
+    target_pose.position.x = UAV_position_x; //0.1
+    target_pose.position.y = UAV_position_y;
+    target_pose.position.z = armMinAltitude;
+UavArm_tools.UpdateArmCurrentPose(target_pose);
     while (ros::ok())
     {
         geometry_msgs::Pose LocalUAVPose;
@@ -75,7 +85,8 @@ int main(int argc, char **argv)
         {
             non_tracking_height_corr = -0.16;
         }
-        if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
+         //cout << "=====> TRACKING STATE: " << UavArm_tools.getTrackingState() << ", tracking_autorized: "<<UavArm_tools.Controller_Commands.tracking_process<<endl;
+        if ((UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)&&UavArm_tools.Controller_Commands.tracking_process)
         {
             LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
             Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
@@ -84,9 +95,10 @@ int main(int argc, char **argv)
         auto toc_clock = std::chrono::high_resolution_clock::now();
         auto elapsed_c = std::chrono::duration_cast<std::chrono::microseconds>(toc_clock - timestamp);
 
-        cout << "=====> SEQUENCE CONTROL TIME: " << elapsed_c.count() << endl;
+        //cout << "=====> SEQUENCE ONLY UAV CONTROL TIME: " << elapsed_c.count() << endl;
 
         loop_rateControl.sleep();
+        ros::spinOnce();
         timestamp = std::chrono::high_resolution_clock::now();
     }
 }
