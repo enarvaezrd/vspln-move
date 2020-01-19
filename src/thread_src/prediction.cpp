@@ -201,8 +201,6 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
         //=========================================================================================================================================
         //=========================================COMPOSICION DE TRAYECTORIA======================================================================
 
-        double maxsc1 = 0.4;
-        double scale1 = floor(400 / (2 * maxsc1));
         if (first_tr)
         {
             /*double dvxy = abs((mean.vx + mean.vy) / 2);

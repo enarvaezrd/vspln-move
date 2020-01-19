@@ -773,7 +773,7 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
             docking_process = true;
         }
     }
-cout<<"CONTROL"<<controller_msg.buttons[0]<<endl;
+//cout<<"CONTROL"<<controller_msg.buttons[0]<<endl;
     if (controller_msg.buttons[0] == 1.0)
     {
         if (tracking_process)

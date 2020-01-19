@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(30);
     Printer Print;
 
-    RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y);
+    RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y,real_robots);
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
     sleep(3.0);

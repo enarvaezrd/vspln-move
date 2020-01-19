@@ -5,7 +5,7 @@
 <!--Motors, ps_eye-->
   <include file="$(find ed_pmov)/launch/real_uav_ps_eye.launch">
 	<arg name="launch_joystick" default="true"/> 
-	<arg name="video_device" default="/dev/video1"/>
+	<arg name="video_device" default="/dev/video0"/>
   </include>
 
 <!--UAV Parrot Bebop 2
