@@ -386,9 +386,21 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
     else
     {
-        PID_Calculation(x_correction, y_correction);
+       // PID_Calculation(x_correction, y_correction);
     }
     // cout << "After PID x: " << x_correction << ", y" << y_correction << endl;
+
+ if (Controller_Commands.docking_process)
+    {
+        //Print("Docking ACTIVATED");
+        num.MinMax_Correction(x_correction, 0.0005); //as we dont want large corrections in docking
+        num.MinMax_Correction(y_correction, 0.0005);
+    }
+    else
+    {
+        num.MinMax_Correction(x_correction, 0.0012); //small but larger for common tracking
+        num.MinMax_Correction(y_correction, 0.0012);
+    }
 
     Pose_msg PID_ArmReq = ArmPoseReq;
     if (real_robots)

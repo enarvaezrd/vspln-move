@@ -46,7 +46,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#define OPENCV_DRAW
+#define OPENCV_DRAW_
 #define PI 3.141592654
 #define PRINT
 #define SREAMING

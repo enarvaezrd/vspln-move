@@ -93,7 +93,7 @@ public:
         Stop_RRT_flag = true;
         Stretch_Extension = 2; //2 nodes
         r = 0.01;              //Radio de nodos cercanos Revisar  0.009 0.014
-        EPS = 0.005;           //Maximo movimiento Revisar  0.005  0.007
+        EPS = 0.001;           //Maximo movimiento Revisar  0.005  0.007
         
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
         emptyMatrix.resize(3);
