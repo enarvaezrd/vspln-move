@@ -1,0 +1,165 @@
+
+<robot name="proarm">
+
+  <link name="world"/>
+    <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin  xyz="0 0.0 0.00"  rpy="0.0 0 0" />
+  </joint>
+
+  <link name="base_link">
+  <inertial>
+      <origin  xyz="0.0 0.0 0.0"  rpy="0 0 0" />
+      <mass  value="0.5" />
+      <inertia ixx="0.01666" ixy="0.0" ixz="0.00"  iyy="0.01666"  iyz="0.0" izz="0.01666" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+      <geometry>
+        <box size="0.2 0.2 0.01"/>
+      </geometry>
+      <material name="clear_gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+      <geometry>
+        <box size="0.2 0.2 .01"/>
+      </geometry>
+    </collision>
+  </link>
+  
+ 
+
+   <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_pilar1"/>
+     <origin  xyz="0.0 0.0 0.18"  rpy="0.0 3.14159 0.0" />
+    <axis  xyz="0 0 1" />
+    <limit  lower="-3.15159" upper="3.14159" effort="2.0"  velocity="2.57" />
+  </joint>
+
+  
+ <link  name="link_pilar1">
+   
+    <visual>
+      <origin  xyz="0.0 0.0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x180_scaled.stl" />
+      </geometry>   
+       <material name="white"/>
+    </visual>
+  
+  </link>
+
+   <joint name="joint2" type="revolute">
+    <parent link="link_pilar1"/>
+    <child link="link_pilar2"/>
+     <origin  xyz="-0.0 -0.0 -0.036"  rpy="3.14159 0.0 3.14159" />
+     <axis  xyz="0 1 0" />
+     <limit  lower="-2.32" upper="2.32" effort="10"  velocity="4.57" />
+  </joint>
+
+
+
+ <link  name="link_pilar2">
+   
+    <visual>
+      <origin  xyz=" 0.0 0.0 0.0"  rpy="0.0 0.0 0.0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x150_scaled.stl" />
+      </geometry>
+       <material name="black"/>
+    </visual>
+
+  </link>
+
+
+
+
+
+   <joint name="joint3" type="revolute">
+    <parent link="link_pilar2"/>
+    <child link="link_motor_mx642"/>
+     <origin  xyz="0.0 0.0 0.247"  rpy="0.0 0.0  3.14159" />
+     <axis  xyz="0 1 0" />
+    <limit  lower="-2.32" upper="2.32" effort="10"  velocity="4.57" />
+  </joint> 
+
+
+
+ <link  name="link_motor_mx642">
+ 
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy=" 0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx641_scaled.stl"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+
+  </link>
+
+   <joint name="joint4" type="continuous">
+    <parent link="link_motor_mx642"/>
+    <child link="link_motor_mx281"/>
+     <origin  xyz="0.00 0.0 0.167"  rpy="1.57079 0.0 -1.57079 " />
+     <axis  xyz="0 1 0" />
+    <limit  lower="-3.14159" upper="3.1459" effort="10"  velocity="4.57" />
+  </joint>
+
+ <link  name="link_motor_mx281">
+ 
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx64_scaled.stl"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+
+  </link>
+
+ <joint name="joint5" type="revolute">
+    <parent link="link_motor_mx281"/>
+    <child link="link_bracket_f5l"/>
+     <origin  xyz="0.0 0.0 0.0"  rpy="1.570796 1.57079 3.14159" />
+     <axis  xyz="-1 0 0" />
+    <limit  lower="-1.82561" upper="1.82561" effort="10.0"  velocity="3.57" />
+  </joint>
+
+ <link  name="link_bracket_f5l">
+ 
+    <visual>
+      <origin  xyz="-0.0 -0.0 -0.0"  rpy="0.0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr05l_scaled_translated.stl"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+
+  </link>
+
+   <joint name="joint6" type="revolute">
+    <parent link="link_bracket_f5l"/>
+    <child link="link_motor_mx282"/>
+     <origin  xyz="0.0 0.0 0.084"  rpy="-3.1459 0 0" />
+     <axis  xyz="0 0 1" />
+    <limit  lower="-3.14159" upper="3.1459" effort="10"  velocity="5.57" />
+  </joint>
+
+ <link  name="link_motor_mx282">
+  
+    <visual>
+      <origin  xyz="0.00 0.0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx28_scaled.stl" />
+      </geometry>
+       <material name="black"/>
+    </visual>
+   
+  </link>
+ 
+</robot>
+
+

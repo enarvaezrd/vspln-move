@@ -1,7 +1,7 @@
 <launch>
   <arg name="gui" default="true" />
   <arg name="rvizconfig" default="$(find ed_pmov)/config/dukku_rviz.rviz" />
- 　<param name="robot_description" command="xacro --inorder  '$(find ed_pmov)/urdf/pioneer_with_proarm.urdf.xacro'"/>
+ 　<param name="robot_description" command="xacro --inorder  '$(find ed_pmov)/urdf/proarm.urdf'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />

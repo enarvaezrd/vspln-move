@@ -52,6 +52,7 @@
 #define SREAMING
 #define WIRELESS_CONTROLLER
 #define DEBUG
+#define REAL_ROBOTS
 using namespace std;
 struct Position_
 {

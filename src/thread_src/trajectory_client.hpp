@@ -16,7 +16,12 @@ public:
   void startTrajectory(control_msgs::FollowJointTrajectoryGoal goal);
   control_msgs::FollowJointTrajectoryGoal makeArmUpTrajectory(std::vector<double> joints_obj);
   actionlib::SimpleClientGoalState getState();
-  
+  void Update_Current_Joint_state(std::vector<double> joints_)
+  {
+    current_joint_state_ = joints_;
+    return;
+  }
+
 private:
   ros::NodeHandle nh_trajectory_client;
   ros::Publisher pub_trajectory_arm_command;

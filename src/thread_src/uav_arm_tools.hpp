@@ -69,9 +69,9 @@ public:
         PIDdata.time = 0;
         PIDdata.integralx = 0;
         PIDdata.integraly = 0;
-        PIDdata.Kp = 0.04;
-        PIDdata.Kd = 0.001;
-        PIDdata.Ki = 0.0000;
+        PIDdata.Kp = 0.019;
+        PIDdata.Kd = 0.009;
+        PIDdata.Ki = 0.002;
         counter = 0;
         minArm_Altitude_Limit = minArmAltitude;
 
@@ -92,10 +92,10 @@ public:
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.02;           //.035
+        armDelay = 0.001;           //.035
         state = 0;
         DockingIteration = 0;
-/*
+#ifdef SREAMING
         Text_Stream_eeff_uav_relative = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_eeff_uavrelativepose_v1.txt");
         Text_Stream_eeff_uav_relative->write_Data("x");
         Text_Stream_eeff_uav_relative->write_Data("y");
@@ -107,7 +107,8 @@ public:
         Text_Stream_eeff_uav_relative->write_Data("time");
         Text_Stream_eeff_uav_relative->write_Data("ms");
         Text_Stream_eeff_uav_relative->write_Data("delimiter");
-        Text_Stream_eeff_uav_relative->write_TimeStamp();*/
+        Text_Stream_eeff_uav_relative->write_TimeStamp();
+#endif
         tracking_ok = false;
     }
 

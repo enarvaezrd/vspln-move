@@ -1164,7 +1164,7 @@ void Prediction::RRT_Path_Generation()
 #endif
 
         // cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
-        //#ifdef STREAMING
+#ifdef STREAMING
         Text_Stream_RRTData->write_TimeStamp();
         for (int i = 0; i < Tr.xval.size(); i++)
         {
@@ -1186,7 +1186,7 @@ void Prediction::RRT_Path_Generation()
         }
 
         //Draw vicinity here
-        //#endif
+#endif
         for (int j = 0; j < rrt_vicinity.R.size(); j++)
         {
             cv::ellipse(image_Ptraj, cv::Point(Img(rrt_vicinity.TP[j][0]), Img(rrt_vicinity.TP[j][1])),
@@ -1195,11 +1195,13 @@ void Prediction::RRT_Path_Generation()
         }
 
         int pplan_indx = PathPlanning_Indexes.size();
+#ifdef SREAMING
 
         Text_Stream_RRTData->write_Data(nodes.coord[RoadIndexes[0]]);
         Text_Stream_RRTData->write_Data(0);
         Text_Stream_RRTData->write_Data(3);
         Text_Stream_RRTData->jump_line();
+#endif
         for (int i = 0; i < pplan_indx - 1; i++)
         {
             int iR = PathPlanning_Indexes[i];
@@ -1213,12 +1215,13 @@ void Prediction::RRT_Path_Generation()
                      cv::Scalar(00, 230, 50), 2, 8);
 
 #endif
-            //#ifdef STREAMING
+
+#ifdef STREAMING
             Text_Stream_RRTData->write_Data(nodes.coord[iRN]);
             Text_Stream_RRTData->write_Data(iRN);
             Text_Stream_RRTData->write_Data(3);
             Text_Stream_RRTData->jump_line();
-            //#endif
+#endif
         }
     }
     return;
@@ -1320,12 +1323,15 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
         NextRobotRequest.position.z = Tr.zval[adv];
         Final_VSPP_Index = adv;
     }
+#ifdef SREAMING
+
     Text_Stream_RRTData->write_Data(NextRobotRequest.position.x);
     Text_Stream_RRTData->write_Data(NextRobotRequest.position.y);
     Text_Stream_RRTData->write_Data(NextRobotRequest.position.z);
     Text_Stream_RRTData->write_Data(Final_VSPP_Index);
     Text_Stream_RRTData->write_Data(4);
     Text_Stream_RRTData->jump_line();
+#endif
     return NextRobotRequest;
 }
 void Prediction::Draw_Map()
@@ -1465,7 +1471,7 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_
     //Print("tiempo RRT XY Mean Calc",toc());
     //tic();
     // Print("-------RRt2 TrajPredict------------");
-    Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose,docking_process_flag);
+    Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose, docking_process_flag);
     // Print("AAA tiempo Traj Predict",toc());
 
     return;

@@ -1,6 +1,6 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-#define REAL_ROBOTS
+
 #include "uav_arm_tools.hpp"
 
 using namespace std;
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     int num_nodes_per_region = prof_expl + 15;
     double rad_int = 0.26;
     double rad_ext = 0.41;
-    double armMinAltitude = 0.47;
+    double armMinAltitude = 0.535;
     bool load_joints_state_sub, real_robots;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.83;
@@ -45,13 +45,13 @@ int main(int argc, char **argv)
     real_robots = false;
 #endif
 
-    double UAV_position_x = -0.18;
+    double UAV_position_x = -0.24;
     double UAV_position_y = 0.22;
-    //==================================================================================
+    //==================================================================================================================
 
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
-    
+
     Printer Print;
     std::vector<double> joint_valuesT(6);
     std::mutex m;
@@ -139,9 +139,10 @@ int main(int argc, char **argv)
 
     //namedWindow(window_name, cv::WINDOW_NORMAL);
     //cv::resizeWindow(window_name, image_size, image_size);
+    ros::AsyncSpinner spinner(2);
+    spinner.start();
 
     auto rrt_threadB = std::thread([&]() {
-        
         string window_name_B = "Prediction + RRT Image";
         ros::Rate loop_rate_thread(70);
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -205,7 +206,7 @@ int main(int argc, char **argv)
         // cv::namedWindow(window_name, cv::WINDOW_NORMAL);
 #endif
         //std::unique_lock<std::mutex> lck(mtx_main);
-        ros::Rate loop_rate(70);
+        ros::Rate loop_rate(40);
         auto clA = std::chrono::high_resolution_clock::now();
         geometry_msgs::Pose CurrentArmPose;
         int NoVisualContact_count = 0;
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
 
             auto timeStep = std::chrono::high_resolution_clock::now();
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
-            // auto joints1 = RRT_model.ArmModel.getCurrentJoints();
+            // auto joints1 = RRT_model.ArmModel.ReadCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
             //RRT_model.ArmModel.tic();
 
@@ -238,7 +239,7 @@ int main(int argc, char **argv)
             else
             {
                 NoVisualContact_count++;
-               // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                // std::this_thread::sleep_for(std::chrono::milliseconds(5));
                 if (NoVisualContact_count > 64) //2 secs
                 {
                     Print("Tracking state", UavArm_tools.getTrackingState(), NoVisualContact_count);
@@ -300,7 +301,9 @@ int main(int argc, char **argv)
             arm_control_msg_mtx.lock();
             fresh_request = true;
             ArmRequest = NextArmRequest;
+#ifdef OPENCV_DRAW
             image_general = Predict_B.getImage_Ptraj();
+#endif
             CurrentPose_General = CurrentArmPose;
             arm_control_msg_mtx.unlock();
             //CurrentRequest = UavArm_tools.getArmPoseReq();
@@ -332,12 +335,12 @@ int main(int argc, char **argv)
             loop_rate.sleep();
             ros::spinOnce();
             //cout << "=====> SEQUENCE A TIME: " << RRT_model.ArmModel.toc(clA).count() << endl;
-            double LoopA_time = RRT_model.ArmModel.toc(clA).count();
+          /*  double LoopA_time = RRT_model.ArmModel.toc(clA).count();
             if (LoopA_time > 100000)
                 Print("===--->SEQUENCE A TIME HUGE!!!!", LoopA_time);
             if (LoopA_time < 30000)
                 Print("===--->SEQUENCE A TIME LESS!!!!", LoopA_time);
-            clA = std::chrono::high_resolution_clock::now();
+            clA = std::chrono::high_resolution_clock::now();*/
         }
     });
 
@@ -347,9 +350,9 @@ int main(int argc, char **argv)
 
 #ifdef OPENCV_DRAW
         cv::namedWindow("Marker pos", cv::WINDOW_NORMAL);
-        #endif
+#endif
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        ros::Rate loop_rateControl(35);
+        ros::Rate loop_rateControl(45);
         double non_tracking_height_corr = 0.2;
         double y_correction = 0.0;
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
@@ -402,8 +405,11 @@ int main(int argc, char **argv)
             bool fresh_request_local = fresh_request;
             fresh_request = false;
             geometry_msgs::Pose CurrentArm_pose = CurrentPose_General;
+#ifdef OPENCV_DRAW
             image_general.copyTo(Image_control_loop);
+#endif
             arm_control_msg_mtx.unlock();
+
 
 #ifdef OPENCV_DRAW
             cv::circle(Image_control_loop, cv::Point(round((LocalUAVPose.position.x + max_dimm) * scale), round((LocalUAVPose.position.y + max_dimm) * scale)),
@@ -461,8 +467,8 @@ int main(int argc, char **argv)
 
 #ifdef OPENCV_DRAW
             //  openCV_mutex.lock();
-             cv::imshow("Marker pos", Image_control_loop);
-               cv::waitKey(1);
+            cv::imshow("Marker pos", Image_control_loop);
+            cv::waitKey(1);
             // cout << "=====> SEQUENCE CONTROL TIME opencv: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
 #endif
             cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
@@ -479,5 +485,6 @@ int main(int argc, char **argv)
     rrt_threadB.join();
     rrt_threadA.join();
     threadControl.join();
+    ros::waitForShutdown();
 }
 #endif

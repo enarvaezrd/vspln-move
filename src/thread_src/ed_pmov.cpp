@@ -262,7 +262,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
     }
     else
     {
-        // PrintPose("NO solution for pose request!", pose_req);
+         PrintPose("NO solution for pose request!", pose_req);
     }
     return goale;
 }
@@ -389,9 +389,9 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
     Eigen::Affine3d end_effector_state;
     if (load_joint_states_sub)
     { //real
-        currentJoints = getCurrentJoints();
+        currentJoints = ReadCurrentJoints();
         //PrintCurrentJoints("==");
-        auto joints_fake = group.getCurrentJointValues();
+        //auto joints_fake = group.getCurrentJointValues();
         //  Print("JOINTS FAKE ", joints_fake[0], joints_fake[1], joints_fake[2], joints_fake[3], joints_fake[4], joints_fake[5]);
         //currentJoints[1] += 2 * PI;
         kinematic_states_[0]->setJointGroupPositions(joint_model_groups_[0], currentJoints);
@@ -409,11 +409,12 @@ geometry_msgs::Pose Ed_Pmov::getCurrentPose()
     return currentPose;
 }
 
-std::vector<double> Ed_Pmov::getCurrentJoints()
+std::vector<double> Ed_Pmov::ReadCurrentJoints()
 {
     if (load_joint_states_sub)
     { //real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
+        arm.Update_Current_Joint_state(currentJoints);
         //Print(" Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
 
         // currentJoints[0] +=  PI/2.0;
@@ -445,7 +446,7 @@ void Ed_Pmov::PrintCurrentPose(std::string workspace = ">>")
 }
 void Ed_Pmov::PrintCurrentJoints(std::string workspace = ">>")
 {
-    currentJoints = getCurrentJoints();
+    currentJoints = ReadCurrentJoints();
     if (currentJoints.size() == 6)
         Print(workspace + ", Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
     else

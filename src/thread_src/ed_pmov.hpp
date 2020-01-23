@@ -95,7 +95,7 @@ public:
         num_IK_requests = 5;
         index_ks = 0;
         // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group.setGoalTolerance(0.001);            //0.004
+        group.setGoalTolerance(0.0005);            //0.004
         group.setGoalOrientationTolerance(0.005); //0.008
         group.setPlanningTime(0.1);
         group.setEndEffectorLink("link_motor_mx282");
@@ -142,7 +142,10 @@ public:
     }
 
     geometry_msgs::Pose getCurrentPose();
-    std::vector<double> getCurrentJoints();
+    std::vector<double> ReadCurrentJoints();
+    std::vector<double> getCurrentJoints(){
+        return currentJoints;
+    }
 
     void CheckandFixPoseRequest(geometry_msgs::Pose &pose_req);
     bool ReqMovement_byJointsValues(VectorDbl);

@@ -12,14 +12,14 @@ class Prediction
 public:
     Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_,
                float max_dimm_, double rrt_extension_, float rad_int_, float rad_ext_) : image_size(img_size_),
-                                                                                      d_prv(d_prv_),
-                                                                                      d_pr_m(d_pr_m_),
-                                                                                      prof_expl(prof_expl_),
-                                                                                      MapSize(map_size_ + 1),
-                                                                                      max_dimm(max_dimm_),
-                                                                                      rrt_extension(rrt_extension_),
-                                                                                      rad_int(rad_int_),
-                                                                                      rad_ext(rad_ext_)
+                                                                                         d_prv(d_prv_),
+                                                                                         d_pr_m(d_pr_m_),
+                                                                                         prof_expl(prof_expl_),
+                                                                                         MapSize(map_size_ + 1),
+                                                                                         max_dimm(max_dimm_),
+                                                                                         rrt_extension(rrt_extension_),
+                                                                                         rad_int(rad_int_),
+                                                                                         rad_ext(rad_ext_)
     {
         adv = 1;
         acum_values = 0;
@@ -50,6 +50,8 @@ public:
         PathPlanning_Available = false;
         PathPlanningAdvancing_Index = 0;
         first_tr = true;
+        
+#ifdef SREAMING
         Text_Stream_RRTData = new TextStream("/home/edd/catkin_ws/src/ed_pmov/rrtdata_v1.txt");
         Text_Stream_RRTData->write_Data("x");
         Text_Stream_RRTData->write_Data("y");
@@ -57,7 +59,7 @@ public:
         Text_Stream_RRTData->write_Data("index");
         Text_Stream_RRTData->write_Data("type");
         Text_Stream_RRTData->write_TimeStamp();
-
+#endif
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
         ugv_state_factor = 0.5; //40%
@@ -65,7 +67,7 @@ public:
         int cn = 0;
         for (int i = 0; i < prof_expl + adv; i++)
         {
-            tr_order_indexes.push_back(1+round(prof_expl / 2) + cn);
+            tr_order_indexes.push_back(1 + round(prof_expl / 2) + cn);
 
             if (i % 2 == 0)
             {
