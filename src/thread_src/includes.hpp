@@ -7,6 +7,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/Joy.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 
@@ -45,10 +46,13 @@
 #include <mutex>
 #include <condition_variable>
 
-#define OPENCV_DRAW
+#define OPENCV_DRAW_
 #define PI 3.141592654
-#define PRINT_
-#define SREAMING_
+#define PRINT
+#define SREAMING
+#define WIRELESS_CONTROLLER
+#define DEBUG
+#define REAL_ROBOTS
 using namespace std;
 struct Position_
 {
@@ -183,11 +187,23 @@ class Printer
 {
 public:
     Printer() {}
-    void operator()(std::string str, double a = -1111, double b = -1111, double c = -1111, double d = -1111, double e = -1111, double f = -1111, double g = -1111)
+    void operator()(std::string str_namespace,
+                    double a = -1111, double b = -1111,
+                    double c = -1111, double d = -1111,
+                    double e = -1111, double f = -1111,
+                    double g = -1111, bool debug = true)
     {
 #ifndef PRINT
         return;
 #endif
+
+#ifndef DEBUG
+        if (debug)
+        {
+            return;
+        }
+#endif
+
         std::vector<double> input;
         input.push_back(a);
         input.push_back(b);
@@ -197,9 +213,9 @@ public:
         input.push_back(f);
         input.push_back(g);
         int strSize = 0;
-        std::cout << "> " << str << ": ";
+        std::cout << "> " << str_namespace << ": ";
         strSize += 4;
-        strSize += str.size();
+        strSize += str_namespace.size();
         for (auto i : input)
         {
             //std::cout<<i;
@@ -230,13 +246,15 @@ public:
     bool activated;
 
     TextStream(string text_file) : limiter(-110),
-                                   activated(false)
+                                   activated(true)
     {
         outputfile.open(text_file);
+        start_time = std::chrono::system_clock::now();
     }
-    /* ~TextStream(){
+    ~TextStream()
+    {
         outputfile.close();
-    }*/
+    }
 
     void write_Data(double data)
     {
@@ -259,13 +277,12 @@ public:
         if (activated)
         {
             auto time_point = std::chrono::system_clock::now();
-            std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
-            std::stringstream ss;
-            ss << now_c;
-            outputfile << to_string(now_c) << ";";
+            std::chrono::duration<double> diff = time_point - start_time;
+
+            outputfile << diff.count() << ";";
 
             auto tse = time_point.time_since_epoch();
-            auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+            auto now_ms = std::chrono::duration_cast<std::chrono::microseconds>(tse);
             auto now_s = std::chrono::duration_cast<std::chrono::seconds>(tse);
             auto jst_ms = now_ms - now_s;
 
@@ -279,6 +296,7 @@ public:
             outputfile << "\n";
     }
     ofstream outputfile;
+    std::chrono::system_clock::time_point start_time;
 };
 
 #endif

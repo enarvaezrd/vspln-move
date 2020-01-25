@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
+  <xacro:include filename="$(find ed_pmov)/urdf/qr_mark.urdf.xacro" />
+  <xacro:include filename="$(find ed_pmov)/urdf/camera.urdf.xacro" />
+  <xacro:property name="pi" value="3.1415926535897931" />
+
+  <!-- Main quadrotor link -->
+  <xacro:macro name="quadrotor_base_macro">
+    <link name="base_linkq">
+      <inertial>
+        <mass value="1.077" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 ${90*pi/180}" />
+        <geometry>
+          <mesh filename="package://hector_quadrotor_description/meshes/quadrotor/bebop.stl" scale="0.001 0.001 0.001"/><!--quadrotor_base.dae-->
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 ${90*pi/180}" />
+        <geometry>
+               <mesh filename="package://hector_quadrotor_description/meshes/quadrotor/bebop.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- UAV camera sensor -->
+    <xacro:general_camera parent="base_linkq" name="uav">
+      <origin xyz="0.187 0.0 0.0183" rpy="0 0.4 0"/>
+    </xacro:general_camera>
+
+    <!-- Sonar height sensor -->
+    <xacro:sonar_sensor name="sonar" parent="base_linkq" ros_topic="sonar_height" update_rate="15" min_range="0.03" max_range="6.0" field_of_view="${30*pi/180}" ray_count="1">
+    	<origin xyz="-0.05 0.0 -0.01" rpy="0 ${90*pi/180} 0"/>
+    </xacro:sonar_sensor>
+
+    <xacro:qr_mark name="qr" parent="base_linkq" >
+    	<origin xyz="0.04 0.04 -0.01" rpy="${pi/2} ${pi/2} 0.0"/>
+    </xacro:qr_mark>
+
+   <gazebo reference="base_linkq">
+     <gravity>true</gravity>
+      <self_collide>true</self_collide>
+       <material value="Gazebo/Black" />
+    </gazebo>
+
+  </xacro:macro>
+</robot>

@@ -33,4 +33,10 @@ simm
 githubkey
 githubkey.pub
 src/standalone/simm
-
+*.bag
+data_eeff_uavrelativepose_v1.txt
+data_rrt.txt
+rrtdata_v1.txt
+*.mp4
+*.wma
+*.mkv

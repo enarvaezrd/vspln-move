@@ -1,0 +1,14 @@
+material cement/Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture cement5.jpg
+	scale 0.3 0.1
+      }
+    }
+  }
+}

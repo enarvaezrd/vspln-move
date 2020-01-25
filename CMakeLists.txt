@@ -62,20 +62,35 @@ add_executable(ed_pmov src/thread_src/main.cpp
 	src/thread_src/uav_ugv_commands.cpp
 	#include
 	)
+add_dependencies(ed_pmov ${catkin_EXPORTED_TARGETS})
+
+
+target_link_libraries(ed_pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+
+
 
 add_executable(ed_ik_solver src/thread_src/ik_solver/ed_pmov.cpp)
 
-target_link_libraries(ed_pmov ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
-add_dependencies(ed_pmov ${catkin_EXPORTED_TARGETS})
-
 target_link_libraries(ed_ik_solver ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+
 add_dependencies(ed_ik_solver ${catkin_EXPORTED_TARGETS})
 
-#add_executable(thrtest src/test/main.cpp)
 
 
-#target_link_libraries(thrtest ${catkin_LIBRARIES} ${OpenCS_LIBS} )
-#add_dependencies(thrtest ${catkin_EXPORTED_TARGETS})
+add_executable(only_uav_commands src/thread_src/main_only_uav_orders.cpp
+	src/thread_src/uav_arm_tools.cpp
+	src/thread_src/ed_pmov.cpp
+	src/thread_src/trajectory_client.cpp
+	src/thread_src/rrt_functions.cpp
+	src/thread_src/prediction.cpp
+	src/thread_src/map_gen.cpp
+	src/thread_src/uav_ugv_commands.cpp
+	#include
+	)
+target_link_libraries(only_uav_commands ${catkin_LIBRARIES} ${OpenCS_LIBS} ${OpenCV_LIBRARIES})
+add_dependencies(only_uav_commands ${catkin_EXPORTED_TARGETS})
+
+
 
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

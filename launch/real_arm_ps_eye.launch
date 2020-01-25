@@ -1,0 +1,79 @@
+<launch>
+	<node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
+	<arg name="altitude" default="1.5"/>
+   <!-- GAZEBO-->
+
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="false"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+	<arg name="launch_joystick" default="true"/> 
+	<arg name="video_device" default="/dev/video0"/> 
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+	<!-- <node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/> -->
+
+   <!--  ROBOT1 - UGV-->
+	<group ns="robot1">
+		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="true"/>
+		<!--launch-prefix="xterm -e gdb - -args"-->
+		<include file="$(find pioneer_proarm_moveit)/launch/demo.launch">
+			<arg name="z" default="0.05"/>
+			<arg name="x" default="0.0"/>
+			<!-- -1.5-->
+			<arg name="y" default="0.0"/>
+		</include>
+	</group>
+
+    <!-- ROBOT2 - UAV 
+<node name="control" pkg="ed_control" type="acontrol_arm" output="screen" args="$(arg altitude)" />
+	
+	<group ns="robot2">
+		<include file="$(find ed_pmov)/launch/spawn_quadrotor_mark.launch">
+			<arg name="z" default="5.0"/>
+			<arg name="x" default="0.3"/>
+			<arg name="y" default="0.0"/>
+		</include>
+	</group>
+-->
+	<node if="$(arg launch_joystick)" name="joystick_node" pkg="joy" type="joy_node"/>
+   <!--eeff Camera-->
+
+	<include file="$(find ed_pmov)/launch/ps_eye_cam.launch">
+		<arg name="video_device" default="$(arg video_device)"/> 
+	</include>
+
+   <!--April Tag ROS launcher-->
+
+	<include file="$(find ed_pmov)/launch/apriltag_continuous_detection.launch">
+		<arg name="camera_name" value="/ps_eye_camera/filtered"/>   <!--/robot1/cam-->
+		<arg name="camera_frame" value="/ps_eye_camera/filtered"/>  <!--/robot1/cam-->
+		<arg name="image_topic" value="image_raw"/> 
+	</include>
+
+	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+
+   <!--Real arm controllers-->
+
+	<include file="$(find ed_pmov)/launch/mx_arm_controllers.launch">
+		<arg name="launch_joystick" value="false"/>
+	</include>
+
+	<node name="pro_arm_controllers" pkg="ed_control" type="pro_control_sdk" required="true"/>
+	
+
+
+</launch>
+

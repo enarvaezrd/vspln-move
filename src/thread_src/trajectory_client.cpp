@@ -12,9 +12,10 @@ FollowTrajectoryClient::FollowTrajectoryClient() : traj_client_("/robot1/arm_con
   joint_names_.push_back("joint4");
   joint_names_.push_back("joint5");
   joint_names_.push_back("joint6");
-
+//#ifndef REAL_ROBOTS
   joint_state_sub_ = nh_.subscribe("/robot1/joint_states", 1, &FollowTrajectoryClient::jointStateCB, this);
-  pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot2/arm_general/goal_command", 1); //commands for the arm
+//#endif
+  pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot1/arm_general/goal_command", 1); //commands for the arm
 
   spinner_.start();
 
@@ -59,7 +60,7 @@ void FollowTrajectoryClient::jointStateCB(const sensor_msgs::JointState::ConstPt
 //! Sends the command to start a given trajectory
 void FollowTrajectoryClient::startTrajectory(control_msgs::FollowJointTrajectoryGoal goal)
 { // When to start the trajectory: 1s from now
-/*
+  /*
   int j = 0;
   bool big_diff = false;
   for (auto pt : goal.trajectory.points[1].positions)
@@ -70,18 +71,16 @@ void FollowTrajectoryClient::startTrajectory(control_msgs::FollowJointTrajectory
   }
   if (big_diff)
   {
-    Print("CURRENT JOINTS", current_joint_state_[0],current_joint_state_[1],
          current_joint_state_[2],current_joint_state_[3],
           current_joint_state_[4], current_joint_state_[5]);
 
-    Print("GOAL JOINTS", goal.trajectory.points[1].positions[0], goal.trajectory.points[1].positions[1],
           goal.trajectory.points[1].positions[2], goal.trajectory.points[1].positions[3],
           goal.trajectory.points[1].positions[4], goal.trajectory.points[1].positions[5]);
   }*/
 
   goal.trajectory.header.stamp = ros::Time::now(); // + ros::Duration(0.1);
-  traj_client_.sendGoal(goal);
-  pub_trajectory_arm_command.publish(goal);
+  traj_client_.sendGoal(goal);                     //ros control
+  pub_trajectory_arm_command.publish(goal);        //real robot control node
 }
 
 void FollowTrajectoryClient::boundValue(double &val, double maxv, double minv)
@@ -167,12 +166,13 @@ double FollowTrajectoryClient::wait_time_calc(std::vector<double> joints)
   JVelB = ((35.0 * 2.0 * PI) / 60.0); //joints 4 5 6 velocity per second 35 rpm
 
   Ttimer = tempdiff / JVelB;
-  if(Ttimer<0.0){
-    Ttimer=0.001;
-  }
-  else if(Ttimer>1.0)
+  if (Ttimer < 0.0)
   {
-    Ttimer=1.0;
+    Ttimer = 0.001;
+  }
+  else if (Ttimer > 1.0)
+  {
+    Ttimer = 1.0;
   }
   return Ttimer;
 }

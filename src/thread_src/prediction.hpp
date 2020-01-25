@@ -11,15 +11,15 @@ class Prediction
 
 public:
     Prediction(int img_size_, int d_prv_, int d_pr_m_, int prof_expl_, int map_size_,
-               float scale_, double rrt_extension_, float rad_int_, float rad_ext_) : image_size(img_size_),
-                                                                                      d_prv(d_prv_),
-                                                                                      d_pr_m(d_pr_m_),
-                                                                                      prof_expl(prof_expl_),
-                                                                                      MapSize(map_size_ + 1),
-                                                                                      max_dimm(scale_),
-                                                                                      rrt_extension(rrt_extension_),
-                                                                                      rad_int(rad_int_),
-                                                                                      rad_ext(rad_ext_)
+               float max_dimm_, double rrt_extension_, float rad_int_, float rad_ext_) : image_size(img_size_),
+                                                                                         d_prv(d_prv_),
+                                                                                         d_pr_m(d_pr_m_),
+                                                                                         prof_expl(prof_expl_),
+                                                                                         MapSize(map_size_ + 1),
+                                                                                         max_dimm(max_dimm_),
+                                                                                         rrt_extension(rrt_extension_),
+                                                                                         rad_int(rad_int_),
+                                                                                         rad_ext(rad_ext_)
     {
         adv = 1;
         acum_values = 0;
@@ -50,15 +50,38 @@ public:
         PathPlanning_Available = false;
         PathPlanningAdvancing_Index = 0;
         first_tr = true;
-        Text_Stream_TR = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_trajectory.txt");
-        Text_Stream_Path = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_path.txt");
+        
+#ifdef SREAMING
+        Text_Stream_RRTData = new TextStream("/home/edd/catkin_ws/src/ed_pmov/rrtdata_v1.txt");
+        Text_Stream_RRTData->write_Data("x");
+        Text_Stream_RRTData->write_Data("y");
+        Text_Stream_RRTData->write_Data("z");
+        Text_Stream_RRTData->write_Data("index");
+        Text_Stream_RRTData->write_Data("type");
+        Text_Stream_RRTData->write_TimeStamp();
+#endif
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
         ugv_state_factor = 0.5; //40%
         UAV_Velocity = 0.0;
-    }
+        int cn = 0;
+        for (int i = 0; i < prof_expl + adv; i++)
+        {
+            tr_order_indexes.push_back(1 + round(prof_expl / 2) + cn);
 
-    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose);
+            if (i % 2 == 0)
+            {
+                cn++;
+            }
+            cn *= -1;
+        }
+        for (int i = 0; i < prof_expl + adv; i++)
+        {
+            cout << "NUMBERS " << tr_order_indexes[i] << endl;
+        }
+    }
+    void Average_OldTrajectory();
+    void Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, bool);
     void Regression(VectorDbl x, VectorDbl y, int ndatos, int it, int order, VectorDbl &coeffs);
     void CheckandFix_Boundaries(VectorDbl &x, VectorDbl &y, int &prof_e);
     struct rrtns::MeanValues XYMean_Calculation(geometry_msgs::Pose Marker_Abs_Pose);
@@ -89,6 +112,14 @@ public:
         Velocity_mtx.unlock();
         return vel;
     }
+    void Set_UAV_Velocity(double vel)
+    {
+        Velocity_mtx.lock();
+        UAV_Velocity = vel;
+        Velocity_mtx.unlock();
+        return;
+    }
+
     const Etraj Get_TR()
     {
         TP_Mtx.lock();
@@ -98,7 +129,7 @@ public:
     }
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
-    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose); //extraer vecindad
+    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, bool); //extraer vecindad
 
     geometry_msgs::Pose NoTarget_Sequence(geometry_msgs::Pose Marker_Abs_Pose); //No quad
     //const Nodes Get_Nodes(){return nodes;}
@@ -109,6 +140,7 @@ public:
         rrt_vicinity_copy = vdr;
         NodesAvailable = true;
         New_Nodes_from_RRT = true;
+        PathPlanningAdvancing_Index = 0;
         NodesMtx.unlock();
         return;
     } //Called by B loop
@@ -130,7 +162,7 @@ public:
     double Distance(VectorDbl P0, VectorDbl P1);
     void RRT_Path_Generation();
 
-    geometry_msgs::Pose Selection_Function(double);
+    geometry_msgs::Pose Selection_Function(float);
 
     bool get_Stop_RRT_Flag()
     {
@@ -162,7 +194,7 @@ private:
 
     cv::Mat White_Imag, image_Ptraj;
     Vicinity rrt_vicinity, rrt_vicinity_copy;
-    Etraj Tr;
+    Etraj Tr, Tr_Original;
     Etraj Tr_old, Tr_temp;
     std::mutex TP_Mtx;
     int image_size;
@@ -178,8 +210,7 @@ private:
     mutex NodesMtx, flagMtx;
     bool NodesAvailable;
     bool NodesCharged;
-    TextStream *Text_Stream_TR;
-    TextStream *Text_Stream_Path;
+    TextStream *Text_Stream_RRTData;
 
     float max_dimm;
     int MapSize;
@@ -198,6 +229,7 @@ private:
     int PathPlanningAdvancing_Index;
     geometry_msgs::Pose Marker_Pose_Manipulator_Coords;
     NumberCorrection num;
+    VectorInt tr_order_indexes;
 };
 } // namespace PredNs
 

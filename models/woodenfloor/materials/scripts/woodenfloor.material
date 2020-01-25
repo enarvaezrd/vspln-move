@@ -1,0 +1,14 @@
+material woodenfloor/Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture wood1.png
+	scale 0.08 0.05
+      }
+    }
+  }
+}

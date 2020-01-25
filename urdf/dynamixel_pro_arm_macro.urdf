@@ -1,0 +1,808 @@
+<robot  xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!--<gazebo>
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+ <robotNamespace>/robot1</robotNamespace>
+	 	<robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>  
+  </plugin>
+</gazebo>--> 
+  <xacro:macro name="pro_arm" params="parent *origin">
+
+
+
+
+ <joint name="arm_base" type="fixed">
+   <xacro:insert_block name="origin" />
+    <parent link="${parent}"/>
+    <child link="base_link"/>
+  </joint>
+
+ <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="0.9 0.9 0.9 1"/>
+  </material>
+  <material name="pure_white">
+    <color rgba="1 1 1 1"/>
+  </material>
+    <material name="clear_gray">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
+  
+  <material name="black">
+    <color rgba="0.05 0.05 0.05 0.95"/>
+  </material>
+  
+
+<!--PLANO BASE 
+
+  <link name="world"/>
+   <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+<origin  xyz="0 0.0 0.01"  rpy="0.0 0 0" />
+  </joint>-->
+
+  <link name="base_link">
+  <inertial>
+      <origin  xyz="-0.0 0.0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.016667333" ixy="0.0" ixz="0.00"  iyy="0.016667333"  iyz="0.0" izz="0.016667333" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+      <geometry>
+        <box size="0.08 0.08 .01"/>
+        <!--making it slightly bigger in x and z direction-->
+      </geometry>
+      <material name="clear_gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+      <geometry>
+        <box size="0.1 0.15 .01"/>
+        <!--making it slightly bigger in x and z direction-->
+      </geometry>
+    </collision>
+  </link>
+  
+ 
+  
+  <!--FIRSTMotorBASE   JOINT  1  H42-20-S300-->
+   <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_motor_h42"/>
+     <origin  xyz="0 0.0 0.005"  rpy="0.0 3.141592654 0.0" />
+    <axis  xyz="0 0 1" />
+    <limit  lower="-3.1" upper="3.1" effort="2"  velocity="2.57" />
+  </joint>
+
+  <link  name="link_motor_h42">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.1" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h42.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h42.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+   <!--Connection motor base, pilar-->
+   <joint name="joint_motor_h42_base" type="fixed">
+    <parent link="link_motor_h42"/>
+    <child link="link_pilar1"/>
+     <origin  xyz="0.025 0.045 -0.18"  rpy="0 0 0" />
+     
+  </joint>
+  
+ <link  name="link_pilar1">
+    <inertial>
+     <origin  xyz="0 -0.02 0.0"  rpy="0 0 0" />
+      <mass  value="0.1" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 -0.02 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x180.stl" scale="0.001 0.001 0.001"/>
+      </geometry>   
+       <material name="white"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 -0.02 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x180.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!--ADAPTADOR para   H54-100-S500-->
+   <joint name="joint_conector_frp54" type="fixed">
+    <parent link="link_pilar1"/>
+    <child link="link_conector_frp54"/>
+     <origin  xyz="-0.025 -0.045 -0.006"  rpy="-1.570796327 0.0 0.0" />
+ </joint>
+
+ <link  name="link_conector_frp54">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.05" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54a.stl" scale="0.001 0.001 0.001"/>
+      </geometry>      
+<material name="black"/>  
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54a.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!--SEGUNDOMotor    H54-100-S500-->
+   <joint name="motor_h54_base" type="fixed">
+    <parent link="link_conector_frp54"/>
+    <child link="link_motor_h54"/>
+    <origin  xyz="0.0 0.03 0.027"  rpy=" 1.570796327 0.0 -1.570796327" />
+  </joint>
+
+ <link  name="link_motor_h54">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.08" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h54.stl" scale="0.001 0.001 0.001"/>
+      </geometry>    
+       <material name="black"/>     
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h54.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!--Bracket FRP54h JOINT 2 -->
+   <joint name="joint2" type="revolute">
+    <parent link="link_motor_h54"/>
+    <child link="link_bracket_f54"/>
+     <origin  xyz="0.0 -0.021 0.0"  rpy="-1.570796327 1.570796327 0" />
+     <axis  xyz="0 0 1" />
+     <limit  lower="-2.32" upper="2.32" effort="10"  velocity="4.57" />
+  </joint>
+
+ <link  name="link_bracket_f54">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.05" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54h.stl" scale="0.001 0.001 0.001"/>
+      </geometry>    
+       <material name="black"/>     
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54h.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!--SEGUNDO PILAR -->
+   <joint name="joint_pilar2" type="fixed">
+    <parent link="link_bracket_f54"/>
+    <child link="link_pilar2"/>
+     <origin  xyz="0.025 0.216 0.025"  rpy="1.570796327 0.0 0" />
+  </joint>
+
+ <link  name="link_pilar2">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.08" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x150.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/50x50x150.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!--Junta CONEXION PRIMER MOTOR MX64 -->
+   <joint name="joint_support_h42" type="fixed">
+    <parent link="link_pilar2"/>
+    <child link="link_support_h42"/>
+     <origin  xyz="-0.025 -0.025 -0.006"  rpy="-1.570796327 0.0 0" />
+  </joint>
+
+ <link  name="link_support_h42">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/FRP42-A110-Support.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/FRP42-A110-Support.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!--CONEXION MOTOR H42P -->
+   <joint name="joint_motor_h42p" type="fixed">
+    <parent link="link_support_h42"/>
+    <child link="link_motor_h42p"/>
+     <origin  xyz="0.00 0.021 0.042"  rpy="0.0 0.0 0.0" />
+  </joint>
+
+ <link  name="link_motor_h42p">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h42.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/h42.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!--JOINT 3 -->
+   <joint name="joint3" type="revolute">
+    <parent link="link_motor_h42p"/>
+    <child link="link_bracket_h42p"/>
+     <origin  xyz="-0.0 0.0 0" rpy="0 1.570796327 3.141592654" />
+     <axis  xyz="1 0 0" />
+    <limit  lower="0.2" upper="2.3" effort="10"  velocity="4.57" />
+  </joint>
+
+ <link  name="link_bracket_h42p">
+    <inertial>
+     <origin  xyz=" 0.042 -0.058 -0.021 "  rpy="0.0 -1.570796327 0" />
+      <mass  value="0.04" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0.046 -0.058 -0.021"  rpy="0 -1.570796327 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/BracketH42P.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0.042 -0.058 -0.021"  rpy="0.0 -1.570796327 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/BracketH42P.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!--CONEXION SEGUNDO MOTOR MX64 -->
+   <joint name="joint_motor_mx641" type="fixed">
+    <parent link="link_conector_fr05b"/>
+    <child link="link_motor_mx641"/>
+     <origin  xyz="0.0 0.0 0.0"  rpy="0 0.0  0.0" />
+  </joint>
+
+ <link  name="link_motor_mx641">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0"/>
+      <mass  value="0.07" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx64.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx64.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+ <!--JOINT 4 -->
+   <joint name="joint4" type="revolute">
+    <parent link="link_motor_mx641"/>
+    <child link="link_conector_fr07s"/>
+     <origin  xyz="0.00 0.0 0.0235"  rpy="1.570796327 0.0 -1.570796327 " />
+     <axis  xyz="0 -1 0" />
+    <limit  lower="-3.14159" upper="3.1459" effort="10"  velocity="4.57" />
+  </joint>
+
+ <link  name="link_conector_fr07s">
+    <inertial>
+     <origin  xyz="0.0 0.0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0.0 0.0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr07s.stl" scale="0.0012 0.001 0.0011"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0.0 0.0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr07s.stl" scale="0.0012 0.001 0.0011" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!--CONEXION SEGUNDO MOTOR MX64 -->
+   <joint name="joint_motor_mx642" type="fixed">
+    <parent link="link_conector_fr07s"/>
+    <child link="link_motor_mx642"/>
+     <origin  xyz="0.0 0.051 0.0"  rpy="0.0 0.0 0.0" />
+  </joint>
+
+ <link  name="link_motor_mx642">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0"/>
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx64.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx64.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+ <!--JOINT  5-->
+   <joint name="joint5" type="revolute">
+    <parent link="link_motor_mx642"/>
+    <child link="link_bracket_f5l"/>
+     <origin  xyz="0.0 0.0 0.0"  rpy="0.0 1.570796327 3.141592654" />
+     <axis  xyz="-1 0 0" />
+    <limit  lower="-1.825619449" upper="1.825619449" effort="10"  velocity="3.57" />
+  </joint>
+
+ <link  name="link_bracket_f5l">
+    <inertial>
+     <origin  xyz="0.06 -0.06 0.03"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="-0.025 -0.06 -0.03"  rpy="1.570796327 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr05l.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0.06 -0.06 0.03"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr05l.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+<!--JOINT  6-->
+   <joint name="joint6" type="revolute">
+    <parent link="link_bracket_f5l"/>
+    <child link="link_motor_mx282"/>
+     <origin  xyz="0.0 -0.076 0.0"  rpy="-1.570796327 0 0" />
+     <axis  xyz="0 0 1" />
+    <limit  lower="-3.14159" upper="3.1459" effort="10"  velocity="5.57" />
+  </joint>
+
+ <link  name="link_motor_mx282">
+    <inertial>
+     <origin  xyz="0.00 0.0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0.00 0.0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx28.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0.00 0.0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/mx28.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+
+
+
+ <!--OTHER ACCESORIES WITH FIXED JOINTS-->
+
+
+
+   <joint name="joint_bearing_i54" type="fixed">
+    <parent link="link_motor_h54"/>
+    <child link="link_bearing_i54"/>
+     <origin  xyz="0.0 -0.075 0.0"  rpy="1.570796327 0 0.0" />
+  </joint>
+
+ <link  name="link_bearing_i54">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54i.stl" scale="0.001 0.001 0.001"/>
+      </geometry>    
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/frp54i.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+ <joint name="joint_conector_f05b" type="fixed">
+    <parent link="link_bracket_h42p"/>
+    <child link="link_conector_fr05b"/>
+     <origin  xyz="0.045 -0.09 -0.00"  rpy="0.0 -1.570796327 1.570796327" />
+  </joint>
+
+ <link  name="link_conector_fr05b">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr05b.stl" scale="0.001 0.001 0.001"/>
+      </geometry>    
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/fr05b.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+ <joint name="joint_eeff" type="fixed">
+    <parent link="link_motor_mx282"/>
+    <child link="link_eeff"/>
+     <origin  xyz="0.0 0.0 -0.014"  rpy="0.0 -3.141592654 0.0" />
+  </joint>
+
+ <link  name="link_eeff">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.01" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/eeff.stl" scale="0.001 0.001 0.001"/>
+      </geometry>    
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/eeff.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+ <joint name="joint_camera" type="fixed">
+    <parent link="link_eeff"/>
+    <child link="link_camera"/>
+     <origin  xyz="0.0 0.06 -0.018"  rpy="0.0 0.0 0.0" />
+  </joint>
+
+ <link  name="link_camera">
+    <inertial>
+     <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <mass  value="0.001" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.000"  iyy="0.0001"  iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>     
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/basler_pulse_camera.stl" scale="0.008 0.008 0.008"/>
+      </geometry>    
+       <material name="black"/>
+    </visual>
+    <collision>
+    <origin  xyz="0 0 0.0"  rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ed_pmov/meshes/dokku_arm/basler_pulse_camera.stl" scale="0.008 0.008 0.008" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="cam_optical_joint" type="fixed">
+      <origin xyz="-0.00 0.04 -0.00" rpy="0 -1.570796327 1.570796327" />
+      <parent link="link_camera" />
+      <child link="cam_optical_frame"/>
+    </joint>
+  
+    <link name="cam_optical_frame"/>    
+
+
+
+  </xacro:macro>
+
+    
+   <transmission name="tran1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint1">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor1">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+   <transmission name="tran2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint2">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor2">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+   <transmission name="tran3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint3">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor3">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+   <transmission name="tran4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint4">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor4">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+   <transmission name="tran5">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint5">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor5">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  
+  <transmission name="tran6">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint6">
+     <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+     </joint>
+    <actuator name="motor6">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo reference="base_link">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/White" />
+    </gazebo>
+
+  <gazebo reference="link_motor_h42">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+
+    <gazebo reference="link_pilar1">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/White" />
+    </gazebo>
+
+  <gazebo reference="link_motor_h54">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+   
+ <gazebo reference="link_conector_frp54">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+
+ <gazebo reference="link_bracket_f54">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+
+ <gazebo reference="link_bearing_i54">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+
+ <gazebo reference="link_pilar2">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/White" />
+    </gazebo>
+ <gazebo reference="link_motor_h42p">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+ <gazebo reference="link_motor_mx641">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+<gazebo reference="link_conector_fr07s">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/White" />
+    </gazebo>
+<gazebo reference="link_motor_mx642">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+<gazebo reference="link_bracket_f5l">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/White" />
+    </gazebo>
+<gazebo reference="link_motor_mx282">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Black" />
+    </gazebo>
+<gazebo reference="link_eeff">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Red" />
+    </gazebo>
+<gazebo reference="link_camera">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Red" />
+    </gazebo>
+<gazebo reference="cam_optical_frame">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Red" />
+    </gazebo>
+
+<gazebo reference="link_bracket_h42p">
+      <gravity>true</gravity>
+       <self_collide>true</self_collide>
+      <material value="Gazebo/Red" />
+    </gazebo>
+
+ <gazebo reference="cam_optical_frame">
+	       <turnGravityOff>true</turnGravityOff>
+		<sensor type="camera" name="cam_camera_sensor">
+		  <update_rate>40.0</update_rate>
+		  <camera>
+		     <horizontal_fov>1.3962634</horizontal_fov> <!--80-->
+		    <image>
+		      <format>R8G8B8</format>
+		      <width>800</width>
+		      <height>800</height>
+		    </image>
+		    <clip>
+		      <near>0.02</near>
+		      <far>300</far>
+		    </clip>
+		  </camera>
+
+		  <plugin name="cam_camera_controller" filename="libgazebo_ros_camera.so">
+		    <cameraName>cam</cameraName>
+		  <imageTopicName>image_raw</imageTopicName>
+		    <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+		    <frameName>cam_optical_frame</frameName>
+		  <hackBaseline>0.0</hackBaseline>
+		  <distortionK1>0.0</distortionK1>
+		  <distortionK2>0.0</distortionK2>
+		  <distortionK3>0.0</distortionK3>
+		  <distortionT1>0.0</distortionT1>
+		  <distortionT2>0.0</distortionT2>
+		  </plugin>
+		</sensor>
+	    </gazebo>
+</robot>
+
+

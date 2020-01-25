@@ -12,11 +12,13 @@ class RRT
 
 public:
     Ed_Pmov ArmModel;
-    RRT(int image_size_, int d_prv_, int d_pr_m_, int prof_expl_, int scale_, int NumNodesToAdd_,bool load_joint_states_sub) : ArmModel(load_joint_states_sub),
+
+    RRT(int image_size_, int d_prv_, int d_pr_m_, int prof_expl_, int max_dimm_, int NumNodesToAdd_,bool load_joint_states_sub) : ArmModel(load_joint_states_sub),
+
                                                                                                     d_prv(d_prv_), d_pr_m(d_pr_m_),
                                                                                                     prof_expl(prof_expl_), image_size(image_size_),
                                                                                                     NumNodesToAdd(NumNodesToAdd_),
-                                                                                                    scale(scale_)
+                                                                                                    max_dimm(max_dimm_)
     {
         sequence_loop = false;
         MaxOldNodesReg = NumNodesToAdd; // Max number of nodes to save
@@ -75,7 +77,7 @@ public:
         r_exterior = 0.45;
         r_interior = 0.08;
         f_dist = 0.1;
-        maxsc = scale;
+        maxsc = max_dimm;
         scale = floor(image_size / (2.0 * maxsc));
         finish = true;
         TrajNodesIncluded = 2;
@@ -93,7 +95,7 @@ public:
         Stop_RRT_flag = true;
         Stretch_Extension = 2; //2 nodes
         r = 0.01;              //Radio de nodos cercanos Revisar  0.009 0.014
-        EPS = 0.005;           //Maximo movimiento Revisar  0.005  0.007
+        EPS = 0.001;           //Maximo movimiento Revisar  0.005  0.007
         
         Text_Stream = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_rrt.txt");
         emptyMatrix.resize(3);
@@ -245,6 +247,7 @@ private:
     double r_interior;
     double maxsc;
     double scale;
+    int max_dimm;
     double f_dist;
     Printer Print;
     std::chrono::time_point<std::chrono::high_resolution_clock> tic_clock_time;

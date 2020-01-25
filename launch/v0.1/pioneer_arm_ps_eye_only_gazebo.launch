@@ -1,0 +1,47 @@
+<launch>
+
+	<arg name="altitude" default="1.5"/>
+	<!-- GAZEBO-->
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+
+	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+
+	<!--  ROBOT1 -->
+	<group ns="robot1">
+		<!-- Load the URDF into the ROS Parameter Server -->
+		<param name="robot_description"
+			command="xacro --inorder '$(find ed_pmov)/urdf/pioneer_with_proarm.urdf.xacro'" />
+
+		<!-- Run a python script to the send a service call to gazebo_ros to spawn 
+			a URDF robot -->
+		<node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+			respawn="false" output="screen" args="-urdf -model pioneer_proarm -param robot_description" />
+		<include file="$(find p3dx_control)/launch/control.launch"/>
+	</group>
+	
+
+	<node name="pioneer_simm_control" pkg="ed_control" type="pioneer_p3dx_control_simm"/>
+
+	<!--Joystick-->
+	<node name="joystick_node" pkg="joy" type="joy_node"/>
+
+
+
+</launch>

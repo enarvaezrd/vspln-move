@@ -1,0 +1,24 @@
+<launch>
+
+
+
+<!--Motors, ps_eye-->
+  <include file="$(find ed_pmov)/launch/real_arm_ps_eye.launch">
+	<arg name="launch_joystick" default="true"/> 
+	<arg name="gui" default="false"/>
+  </include>
+
+<!--EM Servo-->
+  <include file="$(find ed_pmov)/launch/arduino_control.launch">
+	<arg name="launch_joystick" value="false"/> 
+  </include>
+
+<!--Real pioneer controllers-->
+  <include file="$(find ed_control)/launch/pioneer_p3dx_control.launch">
+	<arg name="launch_joystick" default="false"/> 
+	<arg name="pioneer_port" default="/dev/ttyUSB2"/> 
+  </include>
+
+
+
+</launch>

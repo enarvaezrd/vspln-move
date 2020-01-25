@@ -1,0 +1,14 @@
+material wall/Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture wall.jpg
+	scale 1.1 1.1
+      }
+    }
+  }
+}

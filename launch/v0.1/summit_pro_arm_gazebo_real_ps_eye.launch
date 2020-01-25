@@ -1,0 +1,96 @@
+<launch>
+
+	<arg name="altitude" default="1.5"/>
+	<!-- GAZEBO-->
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+
+	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+
+
+	<node name="control" pkg="ed_control" type="acontrol_arm" output="screen" args="$(arg altitude)" />
+	<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
+	<!--  ROBOT1 -->
+	<group ns="robot1">
+		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
+		<!--launch-prefix="xterm -e gdb - -args"-->
+		<include file="$(find summit_pro_arm_moveit)/launch/demo.launch">
+			<arg name="z" default="0.05"/>
+			<arg name="x" default="0.0"/>
+			<!-- -1.5-->
+			<arg name="y" default="0.0"/>
+		</include>
+		<!-- <rosparam command="load" file="$(find summit_xl_robot_control)/config/summit_xl_robot_control.yaml" />
+
+ 	 <rosparam command="load" file="$(find summit_xl_robot_control)/config/summit_xl.yaml"/>
+
+  	<node name="summit_xl_robot_control" pkg="summit_xl_robot_control" type="summit_xl_robot_control" output="screen"/> -->
+		<!-- start summit_xl_control nodes -->
+		<include file="$(find summit_pro_arm_moveit)/launch/summit_xl_control.launch">
+			<arg name="prefix" value="$(arg prefix)"/>
+			<arg name="sim" value="true"/>
+			<arg if="$(arg ros_planar_move_plugin)" name="kinematics" value="steel_skid_pro"/>
+			<arg name="ros_planar_move_plugin" value="$(arg ros_planar_move_plugin)"/>
+			<arg name="launch_robot_localization" value="$(arg launch_robot_localization)"/>
+		</include>
+	</group>
+
+	<!-- ROBOT2  -->
+	<group ns="robot2">
+		<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mark.launch">
+			<arg name="z" default="5.0"/>
+			<arg name="x" default="0.3"/>
+			<arg name="y" default="0.0"/>
+		</include>
+	</group>
+
+<!--Camera Launcher-->
+<include file="$(find apriltag_ros)/launch/ps_eye_cam.launch"/>
+
+<!--April Tag ROS launcher-->
+	<include file="$(find apriltag_ros)/launch/continuous_detection.launch">
+		<arg name="camera_name" value="/camera"/>   <!--/robot1/cam-->
+		<arg name="camera_frame" value="/camera"/>  <!--/robot1/cam-->
+		<arg name="image_topic" value="image_raw"/>
+	</include>
+
+	<node pkg="image_view" type="image_view" name="ImageDisplay" args="image:=/tag_detections_image"/>
+
+	<!--Summit_controller-->
+	<!--Joystick-->
+	<node name="joystick_node" pkg="joy" type="joy_node"/>
+	<!--node_controller-->
+	<node name="summit_control" pkg="ed_control" type="summit_control"/>
+
+
+<!--Real arm controllers-->
+	<include file="$(find dynamixel_workbench_controllers)/launch/mx_arm_controllers.launch">
+		<arg name="launch_joystick" value="false"/>
+	</include>
+
+
+	<include file="$(find timed_roslaunch)/launch/timed_roslaunch.launch">
+		<arg name="time" value="3" />
+		<arg name="pkg" value="dynamixel_workbench_controllers" />
+		<arg name="file" value="pro_arm_controllers.launch" />
+		<arg name="value" value="launch_joystick:=false" />
+	</include>
+
+</launch>
+

@@ -1,0 +1,46 @@
+<launch>
+    <node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
+	<arg name="altitude" default="1.0"/>
+    <!-- GAZEBO-->
+
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+	<!--<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>-->
+
+     <!-- ROBOT1 -->
+
+	<group ns="robot1">
+		<node pkg="ed_pmov" type="only_arm" name="ed_pmov_only_arm" output="screen" required="false"/>
+		<!--launch-prefix="xterm -e gdb - -args"-->
+		<include file="$(find pioneer_proarm_moveit)/launch/demo.launch">
+			<arg name="z" default="0.05"/>
+			<arg name="x" default="0.0"/>
+			<!-- -1.5-->
+			<arg name="y" default="0.0"/>
+		</include>
+	</group>
+
+  
+
+	<node name="joystick_node" pkg="joy" type="joy_node"/>
+
+
+
+</launch>

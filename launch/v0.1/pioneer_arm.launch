@@ -1,0 +1,47 @@
+<launch>
+
+	<arg name="altitude" default="1.5"/>
+	<!-- GAZEBO-->
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+	<arg name="prefix" default="summit_xl_"/>
+	<arg name="ros_planar_move_plugin" default="false"/>
+	<arg name="launch_robot_localization" default="true"/>
+
+	<rosparam file="$(find summit_pro_arm_moveit)/config/gazebo_ros_control_params.yaml" command="load"/>
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find summit_xl_gazebo)/worlds/summit.world"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+	</include>
+
+
+
+	<node name="control" pkg="ed_control" type="acontrol_arm" output="screen" args="$(arg altitude)" />
+	<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
+	<!--  ROBOT1 -->
+	<group ns="robot1">
+		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
+		<!--launch-prefix="xterm -e gdb - -args"-->
+		<include file="$(find summit_pro_arm_moveit)/launch/demo.launch">
+			<arg name="z" default="0.05"/>
+			<arg name="x" default="0.0"/>
+			<!-- -1.5-->
+			<arg name="y" default="0.0"/>
+		</include>
+
+	</group>
+
+	<!--Joystick-->
+	<node name="joystick_node" pkg="joy" type="joy_node"/>
+
+
+
+</launch>
