@@ -45,7 +45,7 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
         else if (state == 1)
         {
             marker_poses_.push_front(apriltag_marker_detections.detections[0].pose.pose.pose);
-            if (marker_poses_.size() >= 5)
+            if (marker_poses_.size() >= 4)
             {
                 marker_poses_.pop_back();
             }
@@ -68,6 +68,7 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
     else
     {
         state = 0;
+        marker_poses_.clear();
     }
     return;
 }

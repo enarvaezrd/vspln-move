@@ -139,6 +139,7 @@ public:
             ArmJointsState = new Arm_Joint_State("/dynamixel_workbench_mx/joint_states", "/dynamixel_ed_pro_control/joint_states");
        }
        group.setEndEffectorLink("link_motor_mx282");
+       eeffLink="link_motor_mx282";
     }
 
     geometry_msgs::Pose getCurrentPose();

@@ -44,10 +44,10 @@ int main(int argc, char **argv)
     real_robots = false;
 #endif
 
-    double UAV_position_x = -0.24;
-    double UAV_position_y = 0.15;
+    double UAV_position_x = -0.18;
+    double UAV_position_y = 0.18;
     //==================================================================================================================
-
+   
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
 
