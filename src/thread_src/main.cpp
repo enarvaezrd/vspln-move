@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 #endif
 
     double UAV_position_x = -0.24;
-    double UAV_position_y = 0.22;
+    double UAV_position_y = 0.15;
     //==================================================================================================================
 
     ros::init(argc, argv, "arm_program");

@@ -18,7 +18,7 @@ public:
     RobotCommands(std::string odometry_str_, double uav_x, double uav_y, bool real_robots_) : uav_xpos(uav_x),
                                                                                               uav_ypos(uav_y),   //0.22-0.4
                                                                                               uav_altitude(1.1), //0.94; 1.1 for non contact
-                                                                                              max_uav_correction(0.6),
+                                                                                              max_uav_correction(1.0),
                                                                                               odometry_str(odometry_str_),
                                                                                               real_robots_flag(real_robots_)
     {

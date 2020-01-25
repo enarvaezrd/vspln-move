@@ -1,7 +1,12 @@
 <launch>
    <!--eeff Camera-->
 
-	<include file="$(find apriltag_ros)/launch/ps_eye_cam.launch"/>
+	<arg name="video_device" default="/dev/video1"/> 
+   <!--eeff Camera-->
+
+	<include file="$(find ed_pmov)/launch/ps_eye_cam.launch">
+		<arg name="video_device" default="$(arg video_device)"/>
+	</include>
 
    <!--April Tag ROS launcher-->
 

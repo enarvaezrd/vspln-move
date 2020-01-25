@@ -12,7 +12,7 @@
 	<arg name="ros_planar_move_plugin" default="false"/>
 	<arg name="launch_robot_localization" default="true"/>
 	<arg name="launch_joystick" default="true"/> 
-
+	<arg name="video_device" default="/dev/video0"/> 
 
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
 		<arg name="world_name" value="$(find ed_pmov)/worlds/dokku_building_textures.world"/>
@@ -51,7 +51,9 @@
 	<node if="$(arg launch_joystick)" name="joystick_node" pkg="joy" type="joy_node"/>
    <!--eeff Camera-->
 
-	<include file="$(find ed_pmov)/launch/ps_eye_cam.launch"/>
+	<include file="$(find ed_pmov)/launch/ps_eye_cam.launch">
+		<arg name="video_device" default="$(arg video_device)"/> 
+	</include>
 
    <!--April Tag ROS launcher-->
 
