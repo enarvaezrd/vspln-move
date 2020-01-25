@@ -1,6 +1,5 @@
 #ifndef MAIN_APP
 #define MAIN_APP
-
 #include "uav_arm_tools.hpp"
 
 using namespace std;
@@ -123,6 +122,7 @@ int main(int argc, char **argv)
     sleep(5.0);
 */
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
+    UavArm_tools.setArmPoseReq(target_posea);
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
     Print("PETA ANGLES yaw,roll,pitch", IAngleMark.yaw, IAngleMark.roll, IAngleMark.pitch);
@@ -209,8 +209,10 @@ int main(int argc, char **argv)
         ros::Rate loop_rate(40);
         auto clA = std::chrono::high_resolution_clock::now();
         geometry_msgs::Pose CurrentArmPose;
+
         int NoVisualContact_count = 0;
         cv::Rect myROI(round(1 * image_size / 5), round(1 * image_size / 4) + 50, round(3 * image_size / 5), round(2 * image_size / 4) - 10);
+
 
         while (ros::ok())
         {
@@ -219,6 +221,7 @@ int main(int argc, char **argv)
             Predict_B.Load_Map(ObstacleMap.get_Map(), ObstacleMap.get_Obs_Points(), ObstacleMap.get_Obs_Points_Thick()); //Load Obstacle Map
             //Predict_B.Draw_Map();
             ObstacleMap.Load_UGV_state(Robot_Commands.ugv_state);
+
             //CurrentArmPose = RRT_model.ArmModel.getCurrentPose(); //desde el brazo
             geometry_msgs::Pose NextArmRequest = CurrentRequest_Thread;
 
@@ -226,6 +229,7 @@ int main(int argc, char **argv)
             CurrentArmPose = RRT_model.ArmModel.getCurrentPose();
             // auto joints1 = RRT_model.ArmModel.ReadCurrentJoints();
             UavArm_tools.UpdateArmCurrentPose(CurrentArmPose);
+
             //RRT_model.ArmModel.tic();
 
             if (UavArm_tools.getTrackingState() > 0 || UavArm_tools.getTrackingState() == 20)
@@ -235,6 +239,7 @@ int main(int argc, char **argv)
                 //Publicar aqui la pose absoluta del UAV para su control, tracking system
                 if (TrackingState > 50)
                     TrackingState = 50;
+                noTargetCount=0;
             }
             else
             {

@@ -1234,7 +1234,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
     if (PathPlanning_Available && !Stop_RRT_flag)
     {
         VectorDbl Visual_Servoing_position{Tr.xval[adv], Tr.yval[adv], Tr.zval[adv]};
-        double minDistance = 100000.0;
+        double minDistance = 1000000.0;
         int VS_Index_in_PPath = PathPlanning_Indexes.size() - 1;
         int Road_VS_Result_Indx = 0;
         //Find path planning road point closest to VS point
@@ -1242,7 +1242,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
         {
             int PPlan_Indx = PathPlanning_Indexes[i];
             double distance = Distance(nodes.coord[PPlan_Indx], Visual_Servoing_position);
-            if (distance <= minDistance)
+            if (distance < minDistance)
             {
                 minDistance = distance;
                 VS_Index_in_PPath = PPlan_Indx;
@@ -1304,7 +1304,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
         NextRobotRequest.position.z = nodes.coord[Final_VSPP_Index][2];
 
 #ifdef OPENCV_DRAW
-        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
+        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 7, cv::Scalar(200, 0, 0), -1, 8);
 #endif
 
         if (UAV_vel > 0.01)
@@ -1435,7 +1435,7 @@ geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs
     cat2 = Final_EEFF_Pose.position.y;
     double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
 
-    if (rad >= rad_ext - 0.05)
+    if (rad >= rad_ext - 0.005)
     {
         double theta = 0;
         if (Final_EEFF_Pose.position.x < 0.0)
@@ -1452,7 +1452,9 @@ geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs
     }
 
 #ifdef OPENCV_DRAW
+
     //  cv::circle(image_Ptraj, cv::Point((int)((Final_EEFF_Pose.position.x + maxsc) * scale), (int)((Final_EEFF_Pose.position.y + maxsc) * scale)), 6, Colors[0], CV_FILLED, 3, 8);
+
     int x_point = (Final_EEFF_Pose.position.x + maxsc) * scale;
     int y_point = (Final_EEFF_Pose.position.y + maxsc) * scale;
     cv::Vec3b &color = image_Ptraj.at<cv::Vec3b>(y_point, x_point);

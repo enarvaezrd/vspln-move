@@ -22,10 +22,10 @@
 		<arg name="headless" value="$(arg headless)"/>
 		<arg name="debug" value="$(arg debug)"/>
 	</include>
-
+   <!--
 	<node pkg="turtlebot_teleop" type="teleop_quad_keyboard.py" name="turtlebot_teleop" required="false"/>
 
-   <!--  ROBOT1 - UGV-->
+  ROBOT1 - UGV-->
 
 	<group ns="robot1">
 		<node pkg="ed_pmov" type="ed_pmov" name="ed_pmov" output="screen" required="false"/>
@@ -68,9 +68,9 @@
 
 	<node name="joystick_node" pkg="joy" type="joy_node"/>
 
-   <!--Real pioneer controllers-->
+   <!--Real pioneer controllers
 
-	<include file="$(find ed_control)/launch/pioneer_p3dx_control.launch"/>
+	<include file="$(find ed_control)/launch/pioneer_p3dx_control.launch"/>-->
 		
    <!--Real arm controllers-->
 
@@ -84,12 +84,12 @@
 		<arg name="file" value="pro_arm_controllers.launch" />
 		<arg name="value" value="launch_joystick:=false" />
 	</include>
-   <!--laser-->
+   <!--laser
 
 	<include file="$(find sick_scan)/launch/sick_lms_1xx.launch">
 		<arg name="hostname" default="133.87.124.111" />
 	</include>
-
+-->
 
 </launch>
 

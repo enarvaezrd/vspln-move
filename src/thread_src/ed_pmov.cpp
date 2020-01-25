@@ -125,7 +125,7 @@ bool Ed_Pmov::ReqMovement_byPose(geometry_msgs::Pose pose_req)
 {
     ros::Duration tiempo_traj(0.0);
     //CheckandFixPoseRequest(pose_req);
-    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.006);
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, eeffLink, 2, 0.006);
 
     if (fk)
     {
@@ -158,7 +158,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
     ros::Duration tiempo_traj(0.0);
     //CheckandFixPoseRequest(pose_req);
 
-    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.01);
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, eeffLink, 2, 0.01);
 
     if (fk)
     {
@@ -173,7 +173,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         TPoseTemp.orientation.y = 0.0;
 
         TPoseTemp.orientation.z = 0.0;
-        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 2, 0.01);
+        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, eeffLink, 2, 0.01);
         if (found_ikO)
         {
             kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result_pos); //de jv saco posicion de joints 0 a 5
@@ -193,13 +193,14 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         tiempo_traj = goale.trajectory.points[1].time_from_start; //tiempo del punto final
         delay_time = std::chrono::microseconds(int(tiempo_traj.toSec() * 1000000));
         int delay_time_usecs = delay_time.count();
-        if (delay_time_usecs > 50000)
+        if (delay_time_usecs > 90000)
         {
             // Print("Delay time", delay_time_usecs);
-            delay_time_usecs = 50000;
+            delay_time_usecs = 90000;
         }
         //usleep(delay_time_usecs);
         arm.startTrajectory(goale); //Inicio de trayectoria en GAZEBO
+       // usleep(delay_time_usecs);
     }
     else
     {
@@ -217,7 +218,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
     //CheckandFixPoseRequest(pose_req);
 
     control_msgs::FollowJointTrajectoryGoal goale;
-    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, 2, 0.01);
+    bool fk = kinematic_states_[0]->setFromIK(joint_model_groups_[0], pose_req, eeffLink, 2, 0.01);
 
     if (fk)
     {
@@ -230,7 +231,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         TPoseTemp.orientation.x = 1.0;
         TPoseTemp.orientation.y = 0.0;
         TPoseTemp.orientation.z = 0.0;
-        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, 2, 0.01);
+        bool found_ikO = kinematic_states_[0]->setFromIK(joint_model_groups_[0], TPoseTemp, eeffLink, 2, 0.01);
         if (found_ikO)
         {
             kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result_pos); //de jv saco posicion de joints 0 a 5
@@ -313,7 +314,7 @@ inline bool Ed_Pmov::Check_Collision_Indx(std::vector<double> Position, int inde
     CheckPose.orientation.x = 0.0;
     CheckPose.orientation.y = 1.0;
     CheckPose.orientation.z = 0.0;
-    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, 1, 0.0004);
+    bool found_ik = kinematic_states_[index_f]->setFromIK(joint_model_groups_[index_f], CheckPose, eeffLink, 1, 0.0004);
     return found_ik;
 }
 

@@ -225,6 +225,7 @@ private:
     GroupPlan my_plan;
     bool load_joint_states_sub;
     std::chrono::time_point<std::chrono::high_resolution_clock> tic_clock_time;
+    string eeffLink ;
 };
 
 #endif

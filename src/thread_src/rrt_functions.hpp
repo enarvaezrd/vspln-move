@@ -12,7 +12,9 @@ class RRT
 
 public:
     Ed_Pmov ArmModel;
+
     RRT(int image_size_, int d_prv_, int d_pr_m_, int prof_expl_, int max_dimm_, int NumNodesToAdd_,bool load_joint_states_sub) : ArmModel(load_joint_states_sub),
+
                                                                                                     d_prv(d_prv_), d_pr_m(d_pr_m_),
                                                                                                     prof_expl(prof_expl_), image_size(image_size_),
                                                                                                     NumNodesToAdd(NumNodesToAdd_),
