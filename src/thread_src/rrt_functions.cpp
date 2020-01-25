@@ -741,19 +741,9 @@ VectorDbl RRT::steer(VectorDbl qr, VectorDbl qn, double min_ndist, double EPS)
 
 control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJointTrajectoryGoal goal)
 {
-    if (goal.trajectory.points.size() > 0)
+   if (goal.trajectory.points.size() > 0)
     {
-<<<<<<< HEAD
         double JointEPS =  80.0*EPS;
-=======
-        vector<double> JointEPS;
-        JointEPS.push_back(0.1 * EPS);
-        JointEPS.push_back(0.1 * EPS);
-        JointEPS.push_back(0.1 * EPS);
-        JointEPS.push_back(0.1 * EPS);
-        JointEPS.push_back(0.1 * EPS);
-        JointEPS.push_back(0.1 * EPS);
->>>>>>> master
         auto joints = ArmModel.getCurrentJoints();
         int ReqJointsSize = goal.trajectory.points[0].positions.size();
         int CurrentJointsSize = joints.size();
@@ -761,19 +751,20 @@ control_msgs::FollowJointTrajectoryGoal RRT::SteerJoints(control_msgs::FollowJoi
             Print("Joints sizes are not the same RRT functions line 750");
         else
         {
+            int joint_cn = 0;
             double diff;
-            for (int i = 0; i < ReqJointsSize; i++)
+            for (auto req_joint : goal.trajectory.points[0].positions)
             {
-                diff = goal.trajectory.points[0].positions[i] - joints[i];
-                double diffT=diff;
-                if (diff < -JointEPS[i])
-                    diff = -JointEPS[i];
-                else if (diff > JointEPS[i])
-                    diff = JointEPS[i];
-                cout<<"Request: "<<goal.trajectory.joint_names[i] <<": "<<goal.trajectory.points[0].positions[i]<<", Current joint: "<< joints[i] <<", diff:"<< diff<<", old diff"<<diffT<<endl;
-                goal.trajectory.points[0].positions[i] = joints[i] + diff;
-
-                //  Print("Joint", joints[joint_cn],req_jointT,req_joint );
+                auto req_jointT = req_joint;
+                diff = req_joint - joints[joint_cn];
+                if (diff < -JointEPS)
+                    diff = -JointEPS;
+                if (diff > JointEPS)
+                    diff = JointEPS;
+                req_joint = joints[joint_cn] + diff;
+                goal.trajectory.points[0].positions[joint_cn]=req_joint;
+              //  Print("Joint", joints[joint_cn],req_jointT,req_joint );
+                joint_cn++;
             }
         }
     }

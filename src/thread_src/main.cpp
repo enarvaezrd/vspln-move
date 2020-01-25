@@ -239,13 +239,12 @@ int main(int argc, char **argv)
                 //Publicar aqui la pose absoluta del UAV para su control, tracking system
                 if (TrackingState > 50)
                     TrackingState = 50;
-                noTargetCount=0;
             }
             else
             {
                 NoVisualContact_count++;
                 // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                if (NoVisualContact_count > 64) //2 secs
+                if (NoVisualContact_count > 60) //2 secs
                 {
                     Print("Tracking state", UavArm_tools.getTrackingState(), NoVisualContact_count);
                     Robot_Commands.Send_Empty_Commands();

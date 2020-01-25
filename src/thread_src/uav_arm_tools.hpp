@@ -86,6 +86,13 @@ public:
         oldPos_ci.y.resize(6);
         oldPos_ciFull.x.resize(6);
         oldPos_ciFull.y.resize(6);
+        empty_pose.position.x=0.0;
+        empty_pose.position.y=0.0;
+        empty_pose.position.z=0.0;
+        empty_pose.orientation.x=0.0;
+        empty_pose.orientation.y=0.0;
+        empty_pose.orientation.z=0.0;
+        empty_pose.orientation.w=0.0;
         for (int i = 0; i < 6; i++)
         {
             oldPos_ci.x[i] = 0;
@@ -170,6 +177,8 @@ public:
     void PIDReset();
 
 private:
+    Pose_msg empty_pose;
+    deque<Pose_msg> marker_poses_;
     bool real_robots;
     ros::Subscriber sub_UAVmark; //Marker pose
     Printer Print;

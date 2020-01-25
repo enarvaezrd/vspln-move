@@ -44,9 +44,25 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
         }
         else if (state == 1)
         {
-            marker_pose = apriltag_marker_detections.detections[0].pose.pose.pose;
-           // marker_pose.position.x /= 2;
-           // marker_pose.position.y /= 2;
+            marker_poses_.push_front(apriltag_marker_detections.detections[0].pose.pose.pose);
+            if (marker_poses_.size() >= 5)
+            {
+                marker_poses_.pop_back();
+            }
+            Pose_msg marker_tmp;
+            marker_tmp.orientation = apriltag_marker_detections.detections[0].pose.pose.pose.orientation;
+
+            for (auto marker_ : marker_poses_)
+            {
+                marker_tmp.position.x += marker_.position.x;
+                marker_tmp.position.y += marker_.position.y;
+                marker_tmp.position.z += marker_.position.z;
+            }
+            marker_tmp.position.x /= (double)(marker_poses_.size());
+            marker_tmp.position.y /= (double)(marker_poses_.size());
+            marker_tmp.position.z /= (double)(marker_poses_.size());
+            marker_pose = marker_tmp;
+
         }
     }
     else
@@ -393,7 +409,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
     // cout << "After PID x: " << x_correction << ", y" << y_correction << endl;
 
- if (Controller_Commands.docking_process)
+    if (Controller_Commands.docking_process)
     {
         //Print("Docking ACTIVATED");
         num.MinMax_Correction(x_correction, 0.0009); //as we dont want large corrections in docking
@@ -418,7 +434,6 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
     // cout << "PID x: " << PID_ArmReq.position.x << ", y" << PID_ArmReq.position.y << endl;
 
-
     //cout << "PID cor x: " << x_correction << ", y" << y_correction << endl;
 
     double cat1, cat2, offx(0.0), offy(0.0);
@@ -435,7 +450,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     {
         minArmAltitude += 0.0055;
         num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.13);
-        Print("ENter in Correction Z, rad. minalt",rad,minArmAltitude);
+        Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
     }
     else
     {
@@ -520,7 +535,7 @@ void uav_arm_tools::PID_Calculation(double &x_correction, double &y_correction)
     double pid_outputx = Poutx + Ioutx + Doutx;
     double pid_outputy = Pouty + Iouty + Douty;
     // Restrict to max/min
-   
+
     PIDdata.ex = errorx; //old values for next iteration
     PIDdata.ey = errory;
 
@@ -714,7 +729,7 @@ void uav_arm_tools::PIDReset()
     PIDdata.ex = 0.0;
     PIDdata.ey = 0.0;
     PIDdata.ez = 0.0;
-   // PIDdata.time = 0.001;
+    // PIDdata.time = 0.001;
     PIDdata.integralx = 0.0;
     PIDdata.integraly = 0.0;
     PID_data_mtx.unlock();
@@ -782,7 +797,7 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
             docking_process = true;
         }
     }
-//cout<<"CONTROL"<<controller_msg.buttons[0]<<endl;
+    //cout<<"CONTROL"<<controller_msg.buttons[0]<<endl;
     if (controller_msg.buttons[0] == 1.0)
     {
         if (tracking_process)
