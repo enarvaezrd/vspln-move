@@ -15,13 +15,13 @@ int main(int argc, char **argv)
     int Map_size = image_size;
     float max_dimm = 1.0;
     double rrt_extension = 0.06; //extension of each rrt step for regression 0.38 0.28
-    int num_nodes_per_region = prof_expl + 15;
-    double rad_int = 0.26;
+    int num_nodes_per_region = prof_expl + 1;
+    double rad_int = 0.245;
     double rad_ext = 0.41;
-    double armMinAltitude = 0.535;
+    double armMinAltitude = 0.55;
     bool load_joints_state_sub, real_robots;
     std::string controller_topic = "/joy";
-    double Docking_Alt_Lim_ = 0.83;
+    double Docking_Alt_Lim_ = 0.87;
     double DockingFactor = 0.0625;
     map<int, ua_ns::Positions2D> marker_offsets;
     ua_ns::Positions2D marker1;
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     real_robots = false;
 #endif
 
-    double UAV_position_x = -0.18;
+    double UAV_position_x = -0.2;
     double UAV_position_y = 0.18;
     //==================================================================================================================
    
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(4.0);
+    sleep(1.0);
     RRT_model.ArmModel.PrintCurrentPose("====> POSE WITH POSE REQUEST ::::");
     /* target_pose.position.x = -0.17; //0.1
     target_pose.position.y = 0.2;
@@ -139,13 +139,13 @@ int main(int argc, char **argv)
 
     //namedWindow(window_name, cv::WINDOW_NORMAL);
     //cv::resizeWindow(window_name, image_size, image_size);
-    ros::AsyncSpinner spinner(2);
+    ros::AsyncSpinner spinner(3);
     spinner.start();
 
     auto rrt_threadB = std::thread([&]() {
         string window_name_B = "Prediction + RRT Image";
         ros::Rate loop_rate_thread(70);
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         bool sequence_loop_th = false;
         //sleep(6.0);
         auto clB = std::chrono::high_resolution_clock::now();
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
 #ifdef OPENCV_DRAW
         cv::namedWindow("Marker pos", cv::WINDOW_NORMAL);
 #endif
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         ros::Rate loop_rateControl(45);
         double non_tracking_height_corr = 0.2;
         double y_correction = 0.0;
@@ -475,7 +475,7 @@ int main(int argc, char **argv)
             cv::waitKey(1);
             // cout << "=====> SEQUENCE CONTROL TIME opencv: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
 #endif
-            cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
+           // cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
 
             // openCV_mutex.unlock();
             loop_rateControl.sleep();

@@ -62,7 +62,6 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
             marker_tmp.position.y /= (double)(marker_poses_.size());
             marker_tmp.position.z /= (double)(marker_poses_.size());
             marker_pose = marker_tmp;
-
         }
     }
     else
@@ -391,7 +390,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     }
 
     float corg;
-    corg = 0.007; //0.0065
+    corg = 0.0008; //0.0065
 
     //PID implementation
     //Error calculation
@@ -413,13 +412,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (Controller_Commands.docking_process)
     {
         //Print("Docking ACTIVATED");
-        num.MinMax_Correction(x_correction, 0.0009); //as we dont want large corrections in docking
-        num.MinMax_Correction(y_correction, 0.0007);
+        num.MinMax_Correction(x_correction, 0.0012); //as we dont want large corrections in docking
+        num.MinMax_Correction(y_correction, 0.001);
     }
     else
     {
-        num.MinMax_Correction(x_correction, 0.001); //small but larger for common tracking
-        num.MinMax_Correction(y_correction, 0.001);
+        num.MinMax_Correction(x_correction, 0.0015); //small but larger for common tracking
+        num.MinMax_Correction(y_correction, 0.0015);
     }
 
     Pose_msg PID_ArmReq = ArmPoseReq;
@@ -446,19 +445,21 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
 
     //------agregar flag de contacto-------
-
-    if (rad <= (rad_int + 0.025))
+    if (!Controller_Commands.docking_process)
     {
-        minArmAltitude += 0.0055;
-        num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.13);
-        Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
-    }
-    else
-    {
-        minArmAltitude -= 0.001;
-        if (minArmAltitude <= minArm_Altitude_Limit)
-            minArmAltitude = minArm_Altitude_Limit;
-        num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+        if (rad <= (rad_int + 0.012))
+        {
+            minArmAltitude += 0.0015;
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.135);
+           // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
+        }
+        else
+        {
+            minArmAltitude -= 0.001;
+            if (minArmAltitude <= minArm_Altitude_Limit)
+                minArmAltitude = minArm_Altitude_Limit;
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+        }
     }
 
     /* 
@@ -482,6 +483,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
 
     if (rad <= rad_int)
     { //Circulo interno
+       // Print("INNER CIRCLE CORRECTIONS");
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
     }
     float max_rectangle = 0.45;
@@ -569,9 +571,9 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     float sx = 0, sy = 0, maxC = 1.0;
     float xf = CurrentPoseReq.position.x, yf = CurrentPoseReq.position.y;
     float xo = OldPoseReq.position.x, yo = OldPoseReq.position.y;
-    float dx = 1.5 * (xf - xo);
-    float dy = 1.5 * (yf - yo);
-
+    float dx = 1.0 * (xf - xo);
+    float dy = 1.0 * (yf - yo);
+    /*
     if ((xf >= 0) && (-dx > maxC * xf))
     {
         dx = -maxC * xf;
@@ -626,14 +628,16 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     {
         sy = yf - offy + dy;
     }
-
+*/
+    sx = dx;
+    sy = dy;
     theta = std::atan2(sy, sx);
 
     double xf3 = rad_int * cos(theta) + offx; //ideal
     double yf3 = rad_int * sin(theta) + offy;
 
-    double corrx = 0.3 * (xf3 - CurrentPoseReq.position.x);
-    double corry = 0.3 * (yf3 - CurrentPoseReq.position.y);
+    double corrx = 1.0 * (xf3 - CurrentPoseReq.position.x);
+    double corry = 1.0 * (yf3 - CurrentPoseReq.position.y);
 
     float corr_factor = 4.0;
     if (abs(dx) > 3.0 * abs(dy))
@@ -757,27 +761,40 @@ void uav_arm_tools::CalculateDockingAltitude()
     {
         DockingIteration += 1;
 
-        DockingAltitude = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 25.0) * DockingFactor;
+        double docking_altitude_calculated = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 25.0) * DockingFactor;
+        if (DockingAltitude < docking_altitude_calculated) //probably docking_altitude_calculated is smaller than DockingAltitude
+        {
+            DockingAltitude = docking_altitude_calculated;
+        }
+        else
+        {
+            DockingIteration += 2;
+        }
 
         if (DockingAltitude >= Docking_Altitude_Limit)
             DockingAltitude = Docking_Altitude_Limit;
         minArmAltitude = DockingAltitude;
         tracking_state_delayed = 0;
+        docking_has_been_requested_ = true;
     }
     else
     {
         tracking_state_delayed++;
-        if (tracking_state_delayed > 15)
+        if (tracking_state_delayed > 15 && docking_has_been_requested_)
         {
+
             Controller_Commands.docking_process = false;
             DockingIteration = 0;
-            minArmAltitude -= 0.001;
+            minArmAltitude -= 0.002;
             if (minArmAltitude <= minArm_Altitude_Limit)
+            {
                 minArmAltitude = minArm_Altitude_Limit;
+                docking_has_been_requested_ = false;
+            }
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
-
-            DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
         }
+       // Print("downing altitude", minArmAltitude);
+        DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
     }
     return;
 }

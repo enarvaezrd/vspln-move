@@ -69,12 +69,12 @@ public:
         PIDdata.time = 0;
         PIDdata.integralx = 0;
         PIDdata.integraly = 0;
-        PIDdata.Kp = 0.019;
-        PIDdata.Kd = 0.009;
-        PIDdata.Ki = 0.002;
+        PIDdata.Kp = 0.021;
+        PIDdata.Kd = 0.002;
+        PIDdata.Ki = 0.00;
         counter = 0;
         minArm_Altitude_Limit = minArmAltitude;
-
+docking_has_been_requested_=false;
         DockingAltitude = minArm_Altitude_Limit;
 
         // rad_ext = 0.45;
@@ -99,7 +99,7 @@ public:
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.001;           //.035
+        armDelay = 0.0001;           //.035
         state = 0;
         DockingIteration = 0;
 #ifdef SREAMING
@@ -141,7 +141,7 @@ public:
     }
     void setAltitudeRequest(float altitude)
     {
-        minArmAltitude = minArm_Altitude_Limit;
+        //minArmAltitude = minArm_Altitude_Limit;
         ArmPoseReq.position.z = altitude;
         ArmPoseReqFull.position.z = altitude;
     }
@@ -206,6 +206,7 @@ private:
     double DockingFactor;
     bool tracking_ok;
     int tracking_state_delayed;
+    bool docking_has_been_requested_;
 };
 
 } // namespace ua_ns
