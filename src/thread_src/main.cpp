@@ -16,9 +16,9 @@ int main(int argc, char **argv)
     float max_dimm = 1.0;
     double rrt_extension = 0.06; //extension of each rrt step for regression 0.38 0.28
     int num_nodes_per_region = prof_expl + 1;
-    double rad_int = 0.245;
-    double rad_ext = 0.41;
-    double armMinAltitude = 0.55;
+    double rad_int = 0.245; //0.245
+    double rad_ext = 0.37; //0.41
+    double armMinAltitude = 0.57;
     bool load_joints_state_sub, real_robots;
     std::string controller_topic = "/joy";
     double Docking_Alt_Lim_ = 0.87;
@@ -44,10 +44,10 @@ int main(int argc, char **argv)
     real_robots = false;
 #endif
 
-    double UAV_position_x = -0.2;
+    double UAV_position_x = -0.18;
     double UAV_position_y = 0.18;
     //==================================================================================================================
-   
+
     ros::init(argc, argv, "arm_program");
     ros::NodeHandle nodle_handle;
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, max_dimm, rrt_extension, rad_int, rad_ext);
     ObstacleMapGen ObstacleMap(Map_size, max_dimm, image_size, rad_int, rad_ext, laser_topic);
-    RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y, real_robots);
+    RobotCommands Robot_Commands(odom_str, UAV_position_x+0.002, UAV_position_y-0.001, real_robots);
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
     sleep(3.0);
@@ -213,7 +213,6 @@ int main(int argc, char **argv)
         int NoVisualContact_count = 0;
         cv::Rect myROI(round(1 * image_size / 5), round(1 * image_size / 4) + 50, round(3 * image_size / 5), round(2 * image_size / 4) - 10);
 
-
         while (ros::ok())
         {
 
@@ -339,7 +338,7 @@ int main(int argc, char **argv)
             loop_rate.sleep();
             ros::spinOnce();
             //cout << "=====> SEQUENCE A TIME: " << RRT_model.ArmModel.toc(clA).count() << endl;
-          /*  double LoopA_time = RRT_model.ArmModel.toc(clA).count();
+            /*  double LoopA_time = RRT_model.ArmModel.toc(clA).count();
             if (LoopA_time > 100000)
                 Print("===--->SEQUENCE A TIME HUGE!!!!", LoopA_time);
             if (LoopA_time < 30000)
@@ -356,7 +355,7 @@ int main(int argc, char **argv)
         cv::namedWindow("Marker pos", cv::WINDOW_NORMAL);
 #endif
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        ros::Rate loop_rateControl(45);
+        ros::Rate loop_rateControl(30);
         double non_tracking_height_corr = 0.2;
         double y_correction = 0.0;
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
@@ -366,7 +365,15 @@ int main(int argc, char **argv)
         while (ros::ok())
         {
             auto timestamp1 = std::chrono::high_resolution_clock::now();
-
+            arm_control_msg_mtx.lock();
+            geometry_msgs::Pose CurrentArmRequest = ArmRequest;
+            bool fresh_request_local = fresh_request;
+            fresh_request = false;
+            geometry_msgs::Pose CurrentArm_pose = CurrentPose_General;
+#ifdef OPENCV_DRAW
+            image_general.copyTo(Image_control_loop);
+#endif
+            arm_control_msg_mtx.unlock();
             geometry_msgs::Pose LocalUAVPose;
             Image_control_loop = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
             if (UavArm_tools.Controller_Commands.docking_process && UavArm_tools.Controller_Commands.tracking_process)
@@ -403,17 +410,6 @@ int main(int argc, char **argv)
 
                 OldLocalUAVPose = LocalUAVPose;
             }
-
-            arm_control_msg_mtx.lock();
-            geometry_msgs::Pose CurrentArmRequest = ArmRequest;
-            bool fresh_request_local = fresh_request;
-            fresh_request = false;
-            geometry_msgs::Pose CurrentArm_pose = CurrentPose_General;
-#ifdef OPENCV_DRAW
-            image_general.copyTo(Image_control_loop);
-#endif
-            arm_control_msg_mtx.unlock();
-
 
 #ifdef OPENCV_DRAW
             cv::circle(Image_control_loop, cv::Point(round((LocalUAVPose.position.x + max_dimm) * scale), round((LocalUAVPose.position.y + max_dimm) * scale)),
@@ -475,7 +471,7 @@ int main(int argc, char **argv)
             cv::waitKey(1);
             // cout << "=====> SEQUENCE CONTROL TIME opencv: " << RRT_model.ArmModel.toc(timestamp1).count() << endl;
 #endif
-           // cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
+            // cout << "=====> SEQUENCE CONTROL TIME: " << RRT_model.ArmModel.toc(timestamp).count() << endl;
 
             // openCV_mutex.unlock();
             loop_rateControl.sleep();

@@ -51,7 +51,7 @@ public:
         PathPlanningAdvancing_Index = 0;
         first_tr = true;
         
-#ifdef SREAMING
+#ifdef STREAMING
         Text_Stream_RRTData = new TextStream("/home/edd/catkin_ws/src/ed_pmov/rrtdata_v1.txt");
         Text_Stream_RRTData->write_Data("x");
         Text_Stream_RRTData->write_Data("y");

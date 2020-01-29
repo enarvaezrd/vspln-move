@@ -6,6 +6,7 @@
   <include file="$(find ed_pmov)/launch/real_arm_ps_eye.launch">
 	<arg name="launch_joystick" default="true"/> 
 	<arg name="gui" default="false"/>
+	 <arg name="video_device" default="/dev/video1"/> 
   </include>
 
 <!--EM Servo-->

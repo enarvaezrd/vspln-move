@@ -102,7 +102,7 @@ docking_has_been_requested_=false;
         armDelay = 0.0001;           //.035
         state = 0;
         DockingIteration = 0;
-#ifdef SREAMING
+#ifdef STREAMING
         Text_Stream_eeff_uav_relative = new TextStream("/home/edd/catkin_ws/src/ed_pmov/data_eeff_uavrelativepose_v1.txt");
         Text_Stream_eeff_uav_relative->write_Data("x");
         Text_Stream_eeff_uav_relative->write_Data("y");

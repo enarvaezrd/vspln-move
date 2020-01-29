@@ -49,7 +49,7 @@
 #define OPENCV_DRAW_
 #define PI 3.141592654
 #define PRINT
-#define SREAMING
+#define STREAMING
 #define WIRELESS_CONTROLLER
 #define DEBUG
 #define REAL_ROBOTS

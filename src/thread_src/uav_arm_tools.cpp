@@ -45,7 +45,7 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
         else if (state == 1)
         {
             marker_poses_.push_front(apriltag_marker_detections.detections[0].pose.pose.pose);
-            if (marker_poses_.size() >= 4)
+            if (marker_poses_.size() >= 2)
             {
                 marker_poses_.pop_back();
             }
@@ -412,13 +412,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (Controller_Commands.docking_process)
     {
         //Print("Docking ACTIVATED");
-        num.MinMax_Correction(x_correction, 0.0012); //as we dont want large corrections in docking
+        num.MinMax_Correction(x_correction, 0.0008); //as we dont want large corrections in docking
         num.MinMax_Correction(y_correction, 0.001);
     }
     else
     {
-        num.MinMax_Correction(x_correction, 0.0015); //small but larger for common tracking
-        num.MinMax_Correction(y_correction, 0.0015);
+        num.MinMax_Correction(x_correction, 0.001); //small but larger for common tracking
+        num.MinMax_Correction(y_correction, 0.001);
     }
 
     Pose_msg PID_ArmReq = ArmPoseReq;
@@ -486,7 +486,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
        // Print("INNER CIRCLE CORRECTIONS");
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
     }
-    float max_rectangle = 0.45;
+    float max_rectangle = 0.5;
     num.MinMax_Correction(PID_ArmReq.position.x, max_rectangle); //limitaciones rectangulares
     num.MinMax_Correction(PID_ArmReq.position.y, max_rectangle);
     //// difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
@@ -678,7 +678,7 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
 
     //std::cout<<"x"<<currentPose.orientation.x<<" y "<<currentPose.orientation.y<<" z "<<currentPose.orientation.z<<" w "<<currentPose.orientation.w<<std::endl;
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose); //end effector angle
-#ifdef SREAMING
+#ifdef STREAMING
     Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(CurrentArmPose.position.z);
@@ -711,7 +711,7 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
         quad_pose.position.x -= xc11;
         quad_pose.position.y += yc11;
     }
-#ifdef SREAMING
+#ifdef STREAMING
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.y);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.z);

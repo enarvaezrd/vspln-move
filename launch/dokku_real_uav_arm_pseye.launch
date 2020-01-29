@@ -23,9 +23,9 @@
   </include>
 
 
-<!--Record 
+<!--Record -->
   <include file="$(find ed_pmov)/launch/record_nodes.launch">
         <arg name="real_robots" default="true" />
-  </include>-->
+  </include>
 
 </launch>

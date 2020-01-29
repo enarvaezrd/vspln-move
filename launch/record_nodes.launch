@@ -2,14 +2,20 @@
     <arg name="real_robots" default="false" />
     <arg name="simulation" default="true" />
  <node if="$(arg real_robots)" pkg="rosbag" type="record" name="record_rosbag"
-       args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag  
+       args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag 
+			/RosAria_control/cmd_vel
+			/RosAria_control/pose
+			/RosAria_control/motors_state
+			/ps_eye_camera/image_raw
+			/bebop/image_raw
+			/bebop/cmd_vel
+			/bebop/odom
 			/tag_detections 
-			/robot1/odom 
-			/robot2/ground_truth/state 
-			/robot1/joint_states 
-			/robot2/command/motor 
-			/robot2/motor_status" />
-<group if="$(arg foo)">
+			/dynamixel_ed_pro_control/joint_states
+			/robot2/visual_local_guidance/uav_msg
+			/dynamixel_workbench_mx/joint_states
+			/robot1/arm_general/goal_command" />
+<group unless="$(arg real_robots)">
   <node if="$(arg simulation)" pkg="rosbag" type="record" name="record_rosbag"
        args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag  
 			/tag_detections 
