@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 #endif
 
     double UAV_position_x = -0.18;
-    double UAV_position_y = 0.22;
+    double UAV_position_y = 0.18;
     //================================================================================================
 
     ros::init(argc, argv, "arm_program");
@@ -89,7 +89,7 @@ UavArm_tools.UpdateArmCurrentPose(target_pose);
         if ((UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)&&UavArm_tools.Controller_Commands.tracking_process)
         {
             LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
-            Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
+            Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, 0.0,y_correction);
             y_correction = 0.0;
         }
         auto toc_clock = std::chrono::high_resolution_clock::now();

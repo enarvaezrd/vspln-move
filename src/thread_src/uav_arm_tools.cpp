@@ -447,15 +447,16 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //------agregar flag de contacto-------
     if (!Controller_Commands.docking_process)
     {
-        if (rad <= (rad_int + 0.012))
+        double rad_margin = 0.15;
+        if (rad <= (rad_int + rad_margin)) //0.012
         {
-            minArmAltitude += 0.0015;
-            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.135);
-           // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
+            minArmAltitude = minArm_Altitude_Limit + 1.0 * ((rad_int + rad_margin) - rad);
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.1); //0.135
+            Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
         }
         else
         {
-            minArmAltitude -= 0.001;
+            minArmAltitude -= 0.0001;
             if (minArmAltitude <= minArm_Altitude_Limit)
                 minArmAltitude = minArm_Altitude_Limit;
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
@@ -481,9 +482,9 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         PID_ArmReq = ExternalCircle_Corrections(PID_ArmReq);
     }
 
-    if (rad <= rad_int)
+    if (rad < rad_int)
     { //Circulo interno
-       // Print("INNER CIRCLE CORRECTIONS");
+        // Print("INNER CIRCLE CORRECTIONS");
         PID_ArmReq = InnerCircle_Corrections(PID_ArmReq, OldArmPoseReq, corg);
     }
     float max_rectangle = 0.5;
@@ -571,8 +572,8 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     float sx = 0, sy = 0, maxC = 1.0;
     float xf = CurrentPoseReq.position.x, yf = CurrentPoseReq.position.y;
     float xo = OldPoseReq.position.x, yo = OldPoseReq.position.y;
-    float dx = 1.0 * (xf - xo);
-    float dy = 1.0 * (yf - yo);
+    float dx = xf; //1.0 * (xf - xo);
+    float dy = yf; //1.0 * (yf - yo);
     /*
     if ((xf >= 0) && (-dx > maxC * xf))
     {
@@ -636,8 +637,8 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     double xf3 = rad_int * cos(theta) + offx; //ideal
     double yf3 = rad_int * sin(theta) + offy;
 
-    double corrx = 1.0 * (xf3 - CurrentPoseReq.position.x);
-    double corry = 1.0 * (yf3 - CurrentPoseReq.position.y);
+    double corrx = 1.0 * (xf3 - CurrentArmPose.position.x);
+    double corry = 1.0 * (yf3 - CurrentArmPose.position.y);
 
     float corr_factor = 4.0;
     if (abs(dx) > 3.0 * abs(dy))
@@ -664,8 +665,9 @@ Pose_msg uav_arm_tools::InnerCircle_Corrections(Pose_msg CurrentPoseReq, Pose_ms
     num.MinMax_Correction(corry, max_correction);
 
     Pose_msg Result_poseReq = CurrentPoseReq;
-    Result_poseReq.position.x += corrx;
-    Result_poseReq.position.y += corry;
+
+    Result_poseReq.position.x = xf3; //+= corrx;
+    Result_poseReq.position.y = yf3; //+= corry;
     return Result_poseReq;
 }
 geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
@@ -793,7 +795,7 @@ void uav_arm_tools::CalculateDockingAltitude()
             }
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
         }
-       // Print("downing altitude", minArmAltitude);
+        // Print("downing altitude", minArmAltitude);
         DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
     }
     return;

@@ -29,7 +29,7 @@ public:
     }
 
     void UGV_Odom_Handler(const nav_msgs::Odometry &ugv_odom);
-    void Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double x_corection);
+    void Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double x_corection, double y_corection);
     void Send_Empty_Commands();
     Angles ConvPosetoAngles(geometry_msgs::Pose pose);
     Printer Print;

@@ -33,14 +33,13 @@ Angles RobotCommands::ConvPosetoAngles(geometry_msgs::Pose pose) //Convertir qua
     return angles;
 }
 
-void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double y_corection)
+void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double x_correction, double y_correction)
 {
-    Angles UAV_yaw_Angle = ConvPosetoAngles(uav_local_pose);    //tal vez es necesario sacar el angulo del uav desde marker pose
-    float x_error_local = uav_local_pose.position.x - uav_xpos; //Error calculation in local coordinates
-    float y_error_local = uav_local_pose.position.y - uav_ypos;       //(uav_ypos + (y_corection - uav_ypos) / 4.0);
+    Angles UAV_yaw_Angle = ConvPosetoAngles(uav_local_pose);                    //tal vez es necesario sacar el angulo del uav desde marker pose
+    float x_error_local = uav_local_pose.position.x - (uav_xpos + x_correction); //Error calculation in local coordinates
+    float y_error_local = uav_local_pose.position.y - (uav_ypos + y_correction); //(uav_ypos + (y_corection - uav_ypos) / 4.0);
     //std::cout<<"UAV LOCAL ERRORS: "<< x_error_local<<", y: "<< y_error_local<<std::endl;
     UAV_yaw_Angle.yaw *= -1.0; //Inverse rotation
-
 
     UAV_yaw_Angle.yaw = fmod(UAV_yaw_Angle.yaw, PI);
     float x_error_uav = x_error_local * sin(UAV_yaw_Angle.yaw) + y_error_local * cos(UAV_yaw_Angle.yaw); //Rotation to UAV coordinates

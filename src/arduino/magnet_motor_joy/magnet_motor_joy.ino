@@ -67,6 +67,7 @@ void setup()
   nh.initNode();
   //nh.advertise(chatter);
   nh.subscribe(sub);
+  nh.getHardware()->setBaud(1000000)
 }
 
 // Spining the node each times to listen from the topic

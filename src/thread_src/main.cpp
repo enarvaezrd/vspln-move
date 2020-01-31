@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     float max_dimm = 1.0;
     double rrt_extension = 0.06; //extension of each rrt step for regression 0.38 0.28
     int num_nodes_per_region = prof_expl + 1;
-    double rad_int = 0.245; //0.245
+    double rad_int = 0.15; //0.245
     double rad_ext = 0.37; //0.41
     double armMinAltitude = 0.57;
     bool load_joints_state_sub, real_robots;
@@ -44,8 +44,8 @@ int main(int argc, char **argv)
     real_robots = false;
 #endif
 
-    double UAV_position_x = -0.18;
-    double UAV_position_y = 0.18;
+    double UAV_position_x = -0.25;
+    double UAV_position_y = 0.1;
     //==================================================================================================================
 
     ros::init(argc, argv, "arm_program");
@@ -66,10 +66,10 @@ int main(int argc, char **argv)
 
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, max_dimm, rrt_extension, rad_int, rad_ext);
     ObstacleMapGen ObstacleMap(Map_size, max_dimm, image_size, rad_int, rad_ext, laser_topic);
-    RobotCommands Robot_Commands(odom_str, UAV_position_x+0.002, UAV_position_y-0.001, real_robots);
+    RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y, real_robots);
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
-    sleep(3.0);
+    sleep(2.0);
     auto image_MarkerARM_Pos = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
     int scale = floor(image_size / (2.0 * max_dimm));
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
     Angles IAngleMark = UavArm_tools.ConvPosetoAngles(target_pose);
     Print("PET ANGLES yaw,roll,pitch", IAngleMark.yaw, IAngleMark.roll, IAngleMark.pitch);
-    sleep(2.0);
+    sleep(1.0);
     target_pose.orientation.w = 0.0; //0.1
     target_pose.orientation.x = 0.0; //0.10
     target_pose.orientation.y = 1.0;
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 
     //namedWindow(window_name, cv::WINDOW_NORMAL);
     //cv::resizeWindow(window_name, image_size, image_size);
-    ros::AsyncSpinner spinner(3);
+    ros::AsyncSpinner spinner(2);
     spinner.start();
 
     auto rrt_threadB = std::thread([&]() {
@@ -355,8 +355,9 @@ int main(int argc, char **argv)
         cv::namedWindow("Marker pos", cv::WINDOW_NORMAL);
 #endif
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        ros::Rate loop_rateControl(30);
+        ros::Rate loop_rateControl(35);
         double non_tracking_height_corr = 0.2;
+        double x_correction = 0.0;
         double y_correction = 0.0;
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
         deque<double> localUAV_Vel;
@@ -386,10 +387,19 @@ int main(int argc, char **argv)
                 LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
                 // RRT_model.ArmModel.PrintPose("UAV Marker", LocalUAVPose);
                 //if (UavArm_tools.Controller_Commands.tracking_process)
-
+                if (UavArm_tools.Controller_Commands.docking_process)
                 {
-                    Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, y_correction);
+                    x_correction = 0.05;
+                    y_correction = 0.0;
                 }
+                else
+                {
+                    x_correction = 0.0;
+                    y_correction = 0.0;
+                }
+
+                Robot_Commands.Calculate_and_Send_Commands(LocalUAVPose, non_tracking_height_corr, x_correction, y_correction);
+
                 y_correction = 0.0;
 
                 localUAV_Vel.push_back(sqrt(((OldLocalUAVPose.position.x - LocalUAVPose.position.x) * (OldLocalUAVPose.position.x - LocalUAVPose.position.x)) +

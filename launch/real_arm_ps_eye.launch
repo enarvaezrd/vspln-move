@@ -1,5 +1,6 @@
 <launch>
-	<node name="foo" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
+	<node name="foo_xbox" pkg="ed_pmov" type="disable_xbox_mouse.sh" />
+	<node name="foo_ports" pkg="ed_pmov" type="activate_ports.sh" />
 	<arg name="altitude" default="1.5"/>
    <!-- GAZEBO-->
 
