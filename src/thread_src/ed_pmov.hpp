@@ -95,9 +95,9 @@ public:
         num_IK_requests = 5;
         index_ks = 0;
         // group.setPlannerId("RRTConnectkConfigDefault"); //PRMstarkConfigDefault---RRTConnectkConfigDefault--RRTkConfigDefault--PRMkConfigDefault--RRTstarkConfigDefault
-        group.setGoalTolerance(0.0005);            //0.004
-        group.setGoalOrientationTolerance(0.005); //0.008
-        group.setPlanningTime(0.1);
+        group.setGoalTolerance(0.00001);            //0.004
+        group.setGoalOrientationTolerance(0.003); //0.008
+        group.setPlanningTime(0.02);
         group.setEndEffectorLink("link_motor_mx282");
 
         kinematic_models_.push_back(robot_model_loader.getModel()); //First model for basic operation

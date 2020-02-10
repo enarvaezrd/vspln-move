@@ -69,8 +69,8 @@ public:
         PIDdata.time = 0;
         PIDdata.integralx = 0;
         PIDdata.integraly = 0;
-        PIDdata.Kp = 0.021;
-        PIDdata.Kd = 0.002;
+        PIDdata.Kp = 0.04;
+        PIDdata.Kd = 0.00;
         PIDdata.Ki = 0.00;
         counter = 0;
         minArm_Altitude_Limit = minArmAltitude;

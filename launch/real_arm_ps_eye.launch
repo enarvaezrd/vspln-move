@@ -72,7 +72,7 @@
 		<arg name="launch_joystick" value="false"/>
 	</include>
 
-	<node name="pro_arm_controllers" pkg="ed_control" type="pro_control_sdk" required="true"/>
+	<node name="pro_arm_controllers" pkg="ed_control" type="pro_control_sdk" required="true" />
 	
 
 

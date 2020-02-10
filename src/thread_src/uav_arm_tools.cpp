@@ -413,7 +413,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     {
         //Print("Docking ACTIVATED");
         num.MinMax_Correction(x_correction, 0.0008); //as we dont want large corrections in docking
-        num.MinMax_Correction(y_correction, 0.001);
+        num.MinMax_Correction(y_correction, 0.0008);
     }
     else
     {
@@ -452,7 +452,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         {
             minArmAltitude = minArm_Altitude_Limit + 1.0 * ((rad_int + rad_margin) - rad);
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.1); //0.135
-            Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
+           // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
         }
         else
         {
@@ -782,20 +782,21 @@ void uav_arm_tools::CalculateDockingAltitude()
     else
     {
         tracking_state_delayed++;
-        if (tracking_state_delayed > 15 && docking_has_been_requested_)
+        if (tracking_state_delayed > 25 && docking_has_been_requested_)
         {
 
             Controller_Commands.docking_process = false;
             DockingIteration = 0;
-            minArmAltitude -= 0.002;
+            minArmAltitude -= 0.02;
             if (minArmAltitude <= minArm_Altitude_Limit)
             {
                 minArmAltitude = minArm_Altitude_Limit;
                 docking_has_been_requested_ = false;
             }
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+            Print("downing altitude", minArmAltitude);
         }
-        // Print("downing altitude", minArmAltitude);
+
         DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
     }
     return;

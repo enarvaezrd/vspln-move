@@ -24,11 +24,10 @@ char copy[50];
 
 
 void joystick_handler( const std_msgs::Int8& joystick){
-  if ( joystick.data==0 )
+  if ( joystick.data==0 ||joystick.data==3)
   {
     digitalWrite(10, LOW);
     myServo.write(180); // Opened
-    return;
     
   }
  /* String str_data= String(joystick.buttons[11]);
@@ -42,7 +41,7 @@ void joystick_handler( const std_msgs::Int8& joystick){
       digitalWrite(10, HIGH);
   }
   
-  if (joystick.data==2)
+  if (joystick.data==2 ||joystick.data==0)
     {
       digitalWrite(13, HIGH); 
       myServo.write(0); //Closed
@@ -52,6 +51,7 @@ void joystick_handler( const std_msgs::Int8& joystick){
       digitalWrite(13, LOW); 
       myServo.write(180); // Opened
     } 
+    delay(5);
     return;
 }
 
@@ -67,12 +67,12 @@ void setup()
   nh.initNode();
   //nh.advertise(chatter);
   nh.subscribe(sub);
-  nh.getHardware()->setBaud(1000000)
+  nh.getHardware()->setBaud(57600);
 }
 
 // Spining the node each times to listen from the topic
 void loop()
 {
   nh.spinOnce();
-  delay(5);
+  delay(10);
 }

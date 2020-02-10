@@ -8,7 +8,7 @@
 
     <node pkg="uvc_camera" type="uvc_camera_node" name="mycam" output="screen">
       <!-- Parameters used to find the camera -->
-      <param name="fps" value="60"/>
+      <param name="fps" value="30"/>
       <param name="height" value="480"/>
       <param name="width" value="640"/>
       <param name="Auto_Exposure" value="0"/>

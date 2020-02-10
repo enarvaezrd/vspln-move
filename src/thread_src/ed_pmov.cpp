@@ -225,7 +225,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         std::vector<double> joints_result(6);
         kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result);
 
-        std::vector<double> joints_result_pos(6);
+      /*  std::vector<double> joints_result_pos(6);
         geometry_msgs::Pose TPoseTemp = pose_req;
         TPoseTemp.orientation.w = 0.0;
         TPoseTemp.orientation.x = 1.0;
@@ -243,7 +243,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
             //joints_result[5] = joints_result_pos[5];
             //std::cout<<"last joint todo: "<<jv[5]<<std::endl;
             //std::cout<<"last joint simple: "<<jvT[5]<<std::endl;
-        }
+        }*/
 
         ////  joints_result[1] *= -1;
         //  joints_result[4] *= -1;

@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     float max_dimm = 1.0;
     double rrt_extension = 0.06; //extension of each rrt step for regression 0.38 0.28
     int num_nodes_per_region = prof_expl + 1;
-    double rad_int = 0.15; //0.245
+    double rad_int = 0.18; //0.245
     double rad_ext = 0.37; //0.41
     double armMinAltitude = 0.57;
     bool load_joints_state_sub, real_robots;
@@ -119,9 +119,15 @@ int main(int argc, char **argv)
     target_pose.position.x = 0.17; //0.1
     target_pose.position.y = -0.2;
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
-    sleep(5.0);
+   
 */
+    sleep(4.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
+    geometry_msgs::Pose target_pose_noTracking = target_posea;
+
+    target_pose_noTracking.position.y=0.0;
+    target_pose_noTracking.position.z-=0.05;
+    RRT_model.ArmModel.PrintCurrentPose("====>SPOSEA TARGET ::::");
     UavArm_tools.setArmPoseReq(target_posea);
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -198,7 +204,7 @@ int main(int argc, char **argv)
     bool fresh_request = false;
     cv::Mat image_general = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
     geometry_msgs::Pose CurrentPose_General = CurrentRequest_Thread;
-
+    int Accumulated_Tracking_State=0;
     auto rrt_threadA = std::thread([&]() {
         string window_name = "Prediction + RRT - EEFF Path Calculation";
 
@@ -243,7 +249,7 @@ int main(int argc, char **argv)
             {
                 NoVisualContact_count++;
                 // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                if (NoVisualContact_count > 60) //2 secs
+                if (NoVisualContact_count > 155) //2 secs
                 {
                     Print("Tracking state", UavArm_tools.getTrackingState(), NoVisualContact_count);
                     Robot_Commands.Send_Empty_Commands();
@@ -253,17 +259,25 @@ int main(int argc, char **argv)
                     //UavArm_tools.ArmPoseReq_decreaseAlt(0.02); //modifies the arm request to lower the end effector
                     UavArm_tools.counter = 0;
                     RRT_model.loop_end();
-                    NextArmRequest.position.x = UAV_position_x;
-                    NextArmRequest.position.y = UAV_position_y;
-                    NextArmRequest.position.z = alturap;
+                    NextArmRequest = target_posea;
+                    /*NextArmRequest.position.y = UAV_position_y;
+                    NextArmRequest.position.z = alturap;*/
                     CurrentRequest_Thread = NextArmRequest;
+                    UavArm_tools.CalculateDockingAltitude();
+                    NextArmRequest.position.z = UavArm_tools.getEEFFAltitude();
+                    Print("Altitude", NextArmRequest.position.z);
                     UavArm_tools.setArmPoseReq(NextArmRequest);
                     NoVisualContact_count = 0;
                 }
+                else
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                }
+
                 //
                 //NextArmRequest = Predict_B.NoTarget_Sequence(target_posea);
             }
-            if (TrackingState > 0 && UavArm_tools.Controller_Commands.tracking_process)
+            if (TrackingState > 5 && UavArm_tools.Controller_Commands.tracking_process)
             {
                 UavArm_tools.counter_addOne(); // para envio espaciado de orientaciones
                                                // m.lock();
@@ -307,6 +321,7 @@ int main(int argc, char **argv)
 #ifdef OPENCV_DRAW
             image_general = Predict_B.getImage_Ptraj();
 #endif
+            Accumulated_Tracking_State=TrackingState;
             CurrentPose_General = CurrentArmPose;
             arm_control_msg_mtx.unlock();
             //CurrentRequest = UavArm_tools.getArmPoseReq();
@@ -370,10 +385,12 @@ int main(int argc, char **argv)
             geometry_msgs::Pose CurrentArmRequest = ArmRequest;
             bool fresh_request_local = fresh_request;
             fresh_request = false;
-            geometry_msgs::Pose CurrentArm_pose = CurrentPose_General;
 #ifdef OPENCV_DRAW
+            geometry_msgs::Pose CurrentArm_pose = CurrentPose_General;
+
             image_general.copyTo(Image_control_loop);
 #endif
+            int tracking_state_local=Accumulated_Tracking_State;
             arm_control_msg_mtx.unlock();
             geometry_msgs::Pose LocalUAVPose;
             Image_control_loop = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
@@ -382,14 +399,14 @@ int main(int argc, char **argv)
                 non_tracking_height_corr = -0.16;
             }
 
-            if (UavArm_tools.getTrackingState() == 1 || UavArm_tools.getTrackingState() == 20)
+            if (tracking_state_local>8)
             {
                 LocalUAVPose = UavArm_tools.Calc_LocalUAVPose();
                 // RRT_model.ArmModel.PrintPose("UAV Marker", LocalUAVPose);
                 //if (UavArm_tools.Controller_Commands.tracking_process)
                 if (UavArm_tools.Controller_Commands.docking_process)
                 {
-                    x_correction = 0.05;
+                    x_correction = 0.01;
                     y_correction = 0.0;
                 }
                 else
@@ -457,7 +474,7 @@ int main(int argc, char **argv)
                 if (!UavArm_tools.Controller_Commands.tracking_process) //no tracking
                 {
                     non_tracking_height_corr = 0.1;
-                    auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_posea); //return to origin
+                    auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_pose_noTracking); //return to origin
 
                     if (ArmGoal.trajectory.points.size() > 0)
                     {
