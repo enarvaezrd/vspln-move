@@ -12,9 +12,9 @@ FollowTrajectoryClient::FollowTrajectoryClient() : traj_client_("/robot1/arm_con
   joint_names_.push_back("joint4");
   joint_names_.push_back("joint5");
   joint_names_.push_back("joint6");
-//#ifndef REAL_ROBOTS
+  //#ifndef REAL_ROBOTS
   joint_state_sub_ = nh_.subscribe("/robot1/joint_states", 1, &FollowTrajectoryClient::jointStateCB, this);
-//#endif
+  //#endif
   pub_trajectory_arm_command = nh_trajectory_client.advertise<control_msgs::FollowJointTrajectoryGoal>("/robot1/arm_general/goal_command", 1); //commands for the arm
 
   spinner_.start();
@@ -92,22 +92,13 @@ void FollowTrajectoryClient::boundValue(double &val, double maxv, double minv)
   return;
 }
 
-control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTrajectory(std::vector<double> joints_obj)
+control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTrajectory(std::vector<double> req_positions)
 {
   const size_t NUM_TRAJ_POINTS = 1;
-  std::vector<double> req_positions(NUM_JOINTS);
-  //std::vector<double> mid_positions(NUM_JOINTS);
-  double maxval = 2.35619449;
-  /*boundValue(joints_obj[1],maxval,-maxval );
-        boundValue(joints_obj[2],maxval,-maxval );
-        boundValue(joints_obj[4],maxval,-maxval );*/
+  if (req_positions.size() != NUM_JOINTS)
+    ROS_ERROR("ERROR, Number of joints requested different from available %s, %d, %s", __FUNCTION__, __LINE__, __FILE__);
 
-  req_positions[0] = joints_obj[0];
-  req_positions[1] = joints_obj[1];
-  req_positions[2] = joints_obj[2];
-  req_positions[3] = joints_obj[3];
-  req_positions[4] = joints_obj[4];
-  req_positions[5] = joints_obj[5];
+  current_joint_request_ = req_positions;
 
   /*mid_positions[0] = (joints_obj[0]+current_joint_state_[0])/2;
         mid_positions[1] = (joints_obj[1]+current_joint_state_[1])/2;

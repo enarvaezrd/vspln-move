@@ -21,6 +21,7 @@ public:
     current_joint_state_ = joints_;
     return;
   }
+  std::vector<double> current_joint_request_;
 
 private:
   ros::NodeHandle nh_trajectory_client;
@@ -31,6 +32,7 @@ private:
   std::vector<std::string> joint_names_;
   bool got_joint_state_;
   std::vector<double> current_joint_state_;
+
   ros::AsyncSpinner spinner_;
 
   void boundValue(double &val, double maxv, double minv);

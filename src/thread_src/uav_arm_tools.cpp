@@ -412,13 +412,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (Controller_Commands.docking_process)
     {
         //Print("Docking ACTIVATED");
-        num.MinMax_Correction(x_correction, 0.0008); //as we dont want large corrections in docking
-        num.MinMax_Correction(y_correction, 0.0008);
+        num.MinMax_Correction(x_correction, 0.0006); //as we dont want large corrections in docking
+        num.MinMax_Correction(y_correction, 0.0006);
     }
     else
     {
-        num.MinMax_Correction(x_correction, 0.001); //small but larger for common tracking
-        num.MinMax_Correction(y_correction, 0.001);
+        num.MinMax_Correction(x_correction, 0.0008); //small but larger for common tracking
+        num.MinMax_Correction(y_correction, 0.0008);
     }
 
     Pose_msg PID_ArmReq = ArmPoseReq;

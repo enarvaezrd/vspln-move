@@ -26,6 +26,9 @@
 <!--Record -->
   <include file="$(find ed_pmov)/launch/record_nodes.launch">
         <arg name="real_robots" default="true" />
+	<arg name="extra_cameras" default="true" />
   </include>
+
+<!--Extra Cameras -->
 
 </launch>

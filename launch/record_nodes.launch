@@ -1,7 +1,10 @@
 <launch>
     <arg name="real_robots" default="false" />
     <arg name="simulation" default="true" />
- <node if="$(arg real_robots)" pkg="rosbag" type="record" name="record_rosbag"
+    <arg name="extra_cameras" default="false" />
+
+<group if="$(arg real_robots)">
+ <node unless="$(arg extra_cameras)" pkg="rosbag" type="record" name="record_rosbag"
        args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag 
 			/RosAria_control/cmd_vel
 			/RosAria_control/pose
@@ -14,7 +17,27 @@
 			/dynamixel_ed_pro_control/joint_states
 			/robot2/visual_local_guidance/uav_msg
 			/dynamixel_workbench_mx/joint_states
-			/robot1/arm_general/goal_command" />
+			/robot1/arm_general/goal_command"
+  />
+ <node if="$(arg extra_cameras)" pkg="rosbag" type="record" name="record_rosbag"
+       args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag 
+			/RosAria_control/cmd_vel
+			/RosAria_control/pose
+			/RosAria_control/motors_state
+			/ps_eye_camera/image_raw
+			/bebop/image_raw
+			/bebop/cmd_vel
+			/bebop/odom
+			/tag_detections 
+			/dynamixel_ed_pro_control/joint_states
+			/robot2/visual_local_guidance/uav_msg
+			/dynamixel_workbench_mx/joint_states
+			/robot1/arm_general/goal_command
+			/ps_eye_camera_pioneer/image_raw
+			/usb_camera_arm/image_raw"
+  />			
+</group>
+
 <group unless="$(arg real_robots)">
   <node if="$(arg simulation)" pkg="rosbag" type="record" name="record_rosbag"
        args="record -o  /home/edd/catkin_ws/src/ed_pmov/bags/rosbag  

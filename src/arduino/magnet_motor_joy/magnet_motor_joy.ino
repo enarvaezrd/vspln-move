@@ -64,10 +64,11 @@ void setup()
   //myServo.writeMicroseconds(1500);  // Stop 
   pinMode(13, OUTPUT);
   pinMode(10, OUTPUT);
+  nh.getHardware()->setBaud(9600);
   nh.initNode();
   //nh.advertise(chatter);
   nh.subscribe(sub);
-  nh.getHardware()->setBaud(57600);
+ // 
 }
 
 // Spining the node each times to listen from the topic

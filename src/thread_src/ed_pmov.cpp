@@ -39,8 +39,8 @@ std::vector<double> Arm_Joint_State::GetCurrentArmJoints()
 
     arm_measurements_mtx.unlock();
 
-    if (joint_count != 6)
-        std::cerr << "Error ed_pmov.cpp: joints are not complete, Number of Joints: " << joint_count <<", mx: "<<mx_joints<<", pro: "<<pro_joints<< "\n";
+  //  if (joint_count != 6)
+    //    std::cerr << "Error ed_pmov.cpp: joints are not complete, Number of Joints: " << joint_count <<", mx: "<<mx_joints<<", pro: "<<pro_joints<< "\n";
 
     return arm_joints_state;
 }
@@ -415,6 +415,10 @@ std::vector<double> Ed_Pmov::ReadCurrentJoints()
     if (load_joint_states_sub)
     { //real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
+    
+        currentJoints[0]=arm.current_joint_request_[0]; //copy pro joints impossible to read
+        currentJoints[1]=arm.current_joint_request_[1];
+        currentJoints[2]=arm.current_joint_request_[2];
         arm.Update_Current_Joint_state(currentJoints);
         //Print(" Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
 

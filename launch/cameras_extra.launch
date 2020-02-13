@@ -1,0 +1,27 @@
+<launch>
+
+  <arg name="video_device_arm" default="/dev/video2"/> 
+  <arg name="video_device_pioneer" default="/dev/video3"/>
+  <arg name="camera_name_arm" default="camera_arm"/>
+  <arg name="camera_name_pioneer" default="camera_pioneer"/>
+  <arg name="view_cameras" default="true"/>
+
+<!--Call image nodes -->
+  <include file="$(find ed_pmov)/launch/usb_cam.launch">
+        <arg name="video_device" default="$(arg video_device_arm)"/> 
+  	<arg name="camera_name" default="$(arg camera_name_arm)"/>
+  </include>
+  <include file="$(find ed_pmov)/launch/ps_eye_cam_extra.launch">
+        <arg name="video_device" default="$(arg video_device_pioneer)"/> 
+  	<arg name="camera_name" default="$(arg camera_name_pioneer)"/>
+  </include>
+
+<!--View images -->
+  <node if="$(arg view_cameras)" name="image_$(arg camera_name_arm)" pkg="image_view" type="image_view" args="image:=/usb_$(arg camera_name_arm)/image_raw">
+        <param name="autosize" value="true" />
+  </node>
+  <node if="$(arg view_cameras)" name="image_$(arg camera_name_pioneer)" pkg="image_view" type="image_view" args="image:=/ps_eye_$(arg camera_name_pioneer)/image_raw">
+        <param name="autosize" value="true" />
+  </node>
+
+</launch>
