@@ -452,7 +452,7 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
         {
             minArmAltitude = minArm_Altitude_Limit + 1.0 * ((rad_int + rad_margin) - rad);
             num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.1); //0.135
-           // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
+                                                                                // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
         }
         else
         {
@@ -713,6 +713,7 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
         quad_pose.position.x -= xc11;
         quad_pose.position.y += yc11;
     }
+    quad_pose.position.z = CurrentArmPose.position.z + marker_pose.position.z;
 #ifdef STREAMING
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.x);
     Text_Stream_eeff_uav_relative->write_Data(quad_pose.position.y);
@@ -828,8 +829,24 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
         else
         {
             tracking_process = true;
+            storage_process = false;
         }
     }
+    if (controller_msg.buttons[14] == 1.0 && controller_msg.axes[4] == -1.0)
+    {
+        if (storage_process)
+        {
+            storage_process = false;
+        }
+        else
+        {
+            storage_process = true;
+            tracking_process = false;
+            docking_process = false;
+        }
+    }
+    Print("tracking, docking, storage", tracking_process, docking_process, storage_process);
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
 }
 
 #endif

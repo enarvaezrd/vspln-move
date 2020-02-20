@@ -22,6 +22,11 @@
         <arg name="namespace" default="bebop" />
   </include>
 
+<!--Real pioneer controllers-->
+  <include file="$(find ed_control)/launch/pioneer_p3dx_control.launch">
+	<arg name="launch_joystick" default="false"/> 
+	<arg name="pioneer_port" default="/dev/ttyUSB2"/> 
+  </include>
 
 <!--Record -->
   <include file="$(find ed_pmov)/launch/record_nodes.launch">
@@ -43,5 +48,6 @@
   	<arg name="camera_name_arm" default="camera_arm"/>
   	<arg name="view_cameras" default="true"/>
   </include>
+
 
 </launch>

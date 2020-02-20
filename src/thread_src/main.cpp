@@ -52,24 +52,29 @@ int main(int argc, char **argv)
     ros::NodeHandle nodle_handle;
 
     Printer Print;
-    std::vector<double> joint_valuesT(6);
+    std::vector<double> joint_values_storage(6), joint_values_storage_transition(6);
     std::mutex m;
-    joint_valuesT[0] = -PI / 2 + 0.1;
-    joint_valuesT[1] = 2.25; //PI/2;
-    joint_valuesT[2] = 2.0;  //PI/2;
-    joint_valuesT[3] = 0.0;  // PI/2;
-    joint_valuesT[4] = 0.0;
-    joint_valuesT[5] = 0.0; // PI/2;
+    joint_values_storage[0] = -PI / 2;
+    joint_values_storage[1] = PI / 2 + 0.1;  //PI/2;
+    joint_values_storage[2] = -PI / 2 - 0.3; //PI/2;
+    joint_values_storage[3] = -PI / 2;       // PI/2;
+    joint_values_storage[4] = 1.86;
+    joint_values_storage[5] = -PI + 0.7; // PI/2;
+
+    joint_values_storage_transition = joint_values_storage;
+    joint_values_storage_transition[2] = 0.5;
+    joint_values_storage_transition[5] = 0.0;
+
     sleep(1.0);
     rrt_planif::RRT RRT_model(image_size, d_prv, d_pr_m, prof_expl, max_dimm, num_nodes_per_region, load_joints_state_sub);
-    RRT_model.ArmModel.SendMovement_byJointsValues(joint_valuesT);
+    RRT_model.ArmModel.SendMovement_byJointsValues(joint_values_storage);
 
     PredNs::Prediction Predict_B(image_size, d_prv, d_pr_m, prof_expl, Map_size, max_dimm, rrt_extension, rad_int, rad_ext);
     ObstacleMapGen ObstacleMap(Map_size, max_dimm, image_size, rad_int, rad_ext, laser_topic);
     RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y, real_robots);
 
     ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
-    sleep(2.0);
+    sleep(10.0);
     auto image_MarkerARM_Pos = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
     int scale = floor(image_size / (2.0 * max_dimm));
 
@@ -103,8 +108,20 @@ int main(int argc, char **argv)
     target_pose.position.y = UAV_position_y;
     target_pose.position.z = alturap;
 
+    geometry_msgs::Pose target_pose_storage = target_pose;
+    target_pose_storage.orientation.w = 0.0;    //0.1
+    target_pose_storage.orientation.x = -0.707; //0.10
+    target_pose_storage.orientation.y = -0.707;
+    target_pose_storage.orientation.z = 0.0;
+
+    target_pose_storage.position.x = 0.3; //0.1
+    target_pose_storage.position.y = 0.0;
+    target_pose_storage.position.z = alturap;
+
     UavArm_tools.setArmPoseReq(target_pose);
     //target_pose = UavArm_tools.getArmPoseReq();
+    RRT_model.ArmModel.SendMovement_byJointsValues(joint_values_storage);
+    sleep(3.0);
     bool reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
     sleep(1.0);
     RRT_model.ArmModel.PrintCurrentPose("====> POSE WITH POSE REQUEST ::::");
@@ -121,13 +138,13 @@ int main(int argc, char **argv)
      reqState = RRT_model.ArmModel.ReqMovement_byPose(target_pose);
    
 */
-    sleep(4.0);
+    sleep(12.0);
     geometry_msgs::Pose target_posea = RRT_model.ArmModel.getCurrentPose();
-    geometry_msgs::Pose target_pose_noTracking = target_posea;
-
+    geometry_msgs::Pose target_pose_noTracking = target_pose;
+    target_pose_noTracking.position.x = UAV_position_x; //0.1
     target_pose_noTracking.position.y = 0.0;
-    target_pose_noTracking.position.z -= 0.05;
-    RRT_model.ArmModel.PrintCurrentPose("====>SPOSEA TARGET ::::");
+
+    RRT_model.ArmModel.PrintCurrentPose("====>POSE TRACKING TARGET ::::");
     UavArm_tools.setArmPoseReq(target_posea);
 
     IAngleMark = UavArm_tools.ConvPosetoAngles(target_posea);
@@ -377,6 +394,7 @@ int main(int argc, char **argv)
         geometry_msgs::Pose OldLocalUAVPose = target_posea;
         deque<double> localUAV_Vel;
         cv::Mat Image_control_loop;
+        bool comes_from_storage = false;
         auto timestamp = std::chrono::high_resolution_clock::now();
         while (ros::ok())
         {
@@ -454,9 +472,14 @@ int main(int argc, char **argv)
 #endif
             //  Print("Current pose request", CurrentArmRequest.position.x, CurrentArmRequest.position.y);
             //  y_correction = CurrentArmRequest.position.y;
-            if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process) //tracking
+            if (fresh_request_local && UavArm_tools.Controller_Commands.tracking_process && !UavArm_tools.Controller_Commands.storage_process) //tracking
             {
-
+                if (comes_from_storage)
+                {
+                    RRT_model.ArmModel.SendMovement_byJointsValues(joint_values_storage_transition);
+                    sleep(3.7);
+                    comes_from_storage = false;
+                }
                 control_msgs::FollowJointTrajectoryGoal ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(CurrentArmRequest);
 
                 if (ArmGoal.trajectory.points.size() > 0)
@@ -475,8 +498,14 @@ int main(int argc, char **argv)
             }
             else
             {
-                if (!UavArm_tools.Controller_Commands.tracking_process) //no tracking
+                if (!UavArm_tools.Controller_Commands.tracking_process && !UavArm_tools.Controller_Commands.storage_process) //no tracking
                 {
+                    if (comes_from_storage)
+                    {
+                        RRT_model.ArmModel.SendMovement_byJointsValues(joint_values_storage_transition);
+                        sleep(3.7);
+                        comes_from_storage = false;
+                    }
                     auto ArmGoal = RRT_model.ArmModel.Req_Joints_byPose_FIx_Orientation(target_pose_noTracking); //return to origin
 
                     if (ArmGoal.trajectory.points.size() > 0)
@@ -488,7 +517,13 @@ int main(int argc, char **argv)
                         RRT_model.ArmModel.Request_Movement_byJointsTrajectory(ArmGoal);
                     }
                 }
-               
+                if (UavArm_tools.Controller_Commands.storage_process)
+                {
+
+                    RRT_model.ArmModel.SendMovement_byJointsValues(joint_values_storage);
+                    sleep(1.0);
+                    comes_from_storage = true;
+                }
             }
             timestamp1 = std::chrono::high_resolution_clock::now();
 

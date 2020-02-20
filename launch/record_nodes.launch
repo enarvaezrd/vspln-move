@@ -10,6 +10,9 @@
 			/RosAria_control/pose
 			/RosAria_control/motors_state
 			/ps_eye_camera/image_raw
+			/RosAria_control/pose
+			/RosAria_control/sonar
+			/joy
 			/bebop/image_raw
 			/bebop/cmd_vel
 			/bebop/odom
@@ -26,6 +29,8 @@
 			/RosAria_control/motors_state
 			/ps_eye_camera/image_raw
 			/bebop/image_raw
+			/RosAria_control/pose
+			/joy
 			/bebop/cmd_vel
 			/bebop/odom
 			/tag_detections 
@@ -49,5 +54,5 @@
 			/robot2/motor_status" />
 </group>
  
-
+<!--/RosAria_control/sonar-->
 </launch>

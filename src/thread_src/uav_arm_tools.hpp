@@ -33,12 +33,14 @@ public:
         sub_control_msg = nh_controller.subscribe(controller_topic.c_str(), 1, &ControllerCommands::Controller_Handler, this);
         docking_process = false;
         tracking_process = false;
+        storage_process = false;
     }
 
     void Controller_Handler(const sensor_msgs::Joy &controller_msg);
-
+    Printer Print;
     bool docking_process;
     bool tracking_process;
+    bool storage_process;
 
 private:
     ros::NodeHandle nh_controller;
@@ -51,15 +53,15 @@ public:
     PIDarm PIDdata;
     ControllerCommands Controller_Commands;
     int counter;
-    map<int,Positions2D> marker_offsets;
+    map<int, Positions2D> marker_offsets;
     uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_,
                   string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_,
-                  bool real_robots_, map<int,Positions2D> marker_offsets_) : rad_ext(rad_ext_),
-                                                                    rad_int(rad_int_), minArmAltitude(minArmAltitude_),
-                                                                    Controller_Commands(cntrl_topic_),
-                                                                    Docking_Altitude_Limit(Docking_Alt_Lim_),
-                                                                    DockingFactor(DockingFactor_), real_robots(real_robots_),
-                                                                    marker_offsets(marker_offsets_)
+                  bool real_robots_, map<int, Positions2D> marker_offsets_) : rad_ext(rad_ext_),
+                                                                              rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                                                              Controller_Commands(cntrl_topic_),
+                                                                              Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                                                              DockingFactor(DockingFactor_), real_robots(real_robots_),
+                                                                              marker_offsets(marker_offsets_)
 
     {
         tracking_state_delayed = 0;
@@ -74,7 +76,7 @@ public:
         PIDdata.Ki = 0.00;
         counter = 0;
         minArm_Altitude_Limit = minArmAltitude;
-docking_has_been_requested_=false;
+        docking_has_been_requested_ = false;
         DockingAltitude = minArm_Altitude_Limit;
 
         // rad_ext = 0.45;
@@ -86,20 +88,20 @@ docking_has_been_requested_=false;
         oldPos_ci.y.resize(6);
         oldPos_ciFull.x.resize(6);
         oldPos_ciFull.y.resize(6);
-        empty_pose.position.x=0.0;
-        empty_pose.position.y=0.0;
-        empty_pose.position.z=0.0;
-        empty_pose.orientation.x=0.0;
-        empty_pose.orientation.y=0.0;
-        empty_pose.orientation.z=0.0;
-        empty_pose.orientation.w=0.0;
+        empty_pose.position.x = 0.0;
+        empty_pose.position.y = 0.0;
+        empty_pose.position.z = 0.0;
+        empty_pose.orientation.x = 0.0;
+        empty_pose.orientation.y = 0.0;
+        empty_pose.orientation.z = 0.0;
+        empty_pose.orientation.w = 0.0;
         for (int i = 0; i < 6; i++)
         {
             oldPos_ci.x[i] = 0;
             oldPos_ci.y[i] = 0;
         }
         oldPos_ciFull = oldPos_ci; //initialize in zeros
-        armDelay = 0.0001;           //.035
+        armDelay = 0.0001;         //.035
         state = 0;
         DockingIteration = 0;
 #ifdef STREAMING
