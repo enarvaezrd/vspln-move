@@ -27,7 +27,7 @@ void joystick_handler( const std_msgs::Int8& joystick){
   if ( joystick.data==0 ||joystick.data==3)
   {
     digitalWrite(10, LOW);
-    myServo.write(180); // Opened
+    //myServo.write(0); // Closed
     
   }
  /* String str_data= String(joystick.buttons[11]);
@@ -45,13 +45,21 @@ void joystick_handler( const std_msgs::Int8& joystick){
     {
       digitalWrite(13, HIGH); 
       myServo.write(0); //Closed
+      //myServo.writeMicroseconds(800);
+      //delay(200);
+     // myServo.writeMicroseconds(800);
+     // delay(200);
     }
     else
     {
       digitalWrite(13, LOW); 
       myServo.write(180); // Opened
+      // myServo.writeMicroseconds(2500);
+      // delay(200);
+     // myServo.writeMicroseconds(2500);
+    // delay(200);
     } 
-    delay(5);
+    delay(50);
     return;
 }
 

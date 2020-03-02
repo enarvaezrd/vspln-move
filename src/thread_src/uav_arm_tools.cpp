@@ -5,7 +5,7 @@ using namespace ua_ns;
 
 void uav_arm_tools::counter_addOne()
 {
-    if (counter > 2)
+    if (counter > 3)
         counter = 0; //Enviar orientacion cada 2 pasos implementacion dentro de uavPose_to_armPose
 
     counter++;
@@ -23,7 +23,7 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
         if (state > marker_offsets.size())
             ROS_ERROR("ERROR in size of marker_offsets uav_arm_tools.cpp %d", (int)marker_offsets.size());
 
-        if (state > 1)
+        /*if (state > 100)//prev 1
         {
             for (int i = 0; i < state; i++)
             {
@@ -42,10 +42,11 @@ void uav_arm_tools::Marker_Handler(const AprilTagPose &apriltag_marker_detection
             marker_pose.position.x = Abs_pose.position.x;
             marker_pose.position.y = Abs_pose.position.y;
         }
-        else if (state == 1)
+        else*/
+        if (state == 1)
         {
             marker_poses_.push_front(apriltag_marker_detections.detections[0].pose.pose.pose);
-            if (marker_poses_.size() >= 2)
+            if (marker_poses_.size() >= 5)
             {
                 marker_poses_.pop_back();
             }
@@ -369,24 +370,27 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     //Quat quaternion = ArmOrientReq_toQuaternion(IAngleMark.yaw, CurrentArmPose);
 
     Angles AnglesCurrent = ConvPosetoAngles(CurrentArmPose);
-    Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw);
+    //double marker_angle_error = -PI / 2.0 + IAngleMark.yaw;
+    //Print("marker and marker error", IAngleMark.yaw, marker_angle_error);
+    Quat quaternion = Angles_toQuaternion(0, -PI, AnglesCurrent.yaw + IAngleMark.yaw / 3.0);
 
     //Print("|||| current arm angle, mark ", AnglesCurrent.yaw, IAngleMark.yaw);
     if (!real_robots)
         AnglesCurrent.yaw += PI / 2.0; //por el offset hay que hacer creer al sistema que la orientacion es esta
 
+    Print("marker yaw, current eefyaw,final yaw", IAngleMark.yaw, AnglesCurrent.yaw, AnglesCurrent.yaw + IAngleMark.yaw);
     //Transformacion en rotacion================================================================================
     double x_correction = (marker_pose.position.x) * sin(AnglesCurrent.yaw) + (marker_pose.position.y) * cos(AnglesCurrent.yaw);
     double y_correction = (marker_pose.position.x) * cos(AnglesCurrent.yaw) - (marker_pose.position.y) * sin(AnglesCurrent.yaw);
     //==========================================================================================================
 
-    if (counter > 1)
+    if (counter > 2)
     { //Envio de orientaciones cada determinado numero de iteraciones
         ArmPoseReq.orientation.x = quaternion.x;
         ArmPoseReq.orientation.y = quaternion.y;
         ArmPoseReq.orientation.z = quaternion.z;
         ArmPoseReq.orientation.w = quaternion.w;
-        counter = 0;
+        //counter = 0;
     }
 
     float corg;
@@ -412,13 +416,13 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     if (Controller_Commands.docking_process)
     {
         //Print("Docking ACTIVATED");
-        num.MinMax_Correction(x_correction, 0.0006); //as we dont want large corrections in docking
-        num.MinMax_Correction(y_correction, 0.0006);
+        num.MinMax_Correction(x_correction, docking_max_mov); //as we dont want large corrections in docking
+        num.MinMax_Correction(y_correction, docking_max_mov);
     }
     else
     {
-        num.MinMax_Correction(x_correction, 0.0008); //small but larger for common tracking
-        num.MinMax_Correction(y_correction, 0.0008);
+        num.MinMax_Correction(x_correction, tracking_max_mov); //small but larger for common tracking
+        num.MinMax_Correction(y_correction, tracking_max_mov);
     }
 
     Pose_msg PID_ArmReq = ArmPoseReq;
@@ -435,33 +439,11 @@ geometry_msgs::Pose uav_arm_tools::uavPose_to_ArmPoseReq_arm()
     // cout << "PID x: " << PID_ArmReq.position.x << ", y" << PID_ArmReq.position.y << endl;
 
     //cout << "PID cor x: " << x_correction << ", y" << y_correction << endl;
-
     double cat1, cat2, offx(0.0), offy(0.0);
     cat1 = PID_ArmReq.position.x - offx;
     cat2 = PID_ArmReq.position.y - offy;
     double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
-
-    // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
-    //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
-
-    //------agregar flag de contacto-------
-    if (!Controller_Commands.docking_process)
-    {
-        double rad_margin = 0.15;
-        if (rad <= (rad_int + rad_margin)) //0.012
-        {
-            minArmAltitude = minArm_Altitude_Limit + 1.0 * ((rad_int + rad_margin) - rad);
-            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.1); //0.135
-                                                                                // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
-        }
-        else
-        {
-            minArmAltitude -= 0.0001;
-            if (minArmAltitude <= minArm_Altitude_Limit)
-                minArmAltitude = minArm_Altitude_Limit;
-            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
-        }
-    }
+    CalculateAltitude_InternalRadius(PID_ArmReq.position.x, PID_ArmReq.position.y);
 
     /* 
     if (rad >= (rad_ext - 0.01))
@@ -727,7 +709,9 @@ geometry_msgs::Pose uav_arm_tools::Calc_LocalUAVPose()
     //  cout << "ANGLES: uav: " << IAngleMark1.yaw << ", EEFF" << AnglesCurrent.yaw << " corrx: " << xc11 << ", corry: " << yc11 << endl;
     //   cout << "QUAD POSE: x" << quad_pose.position.x << ", y" << quad_pose.position.y << endl;
     //  cout << "EEFF POSE: x" << CurrentArmPose.position.x << ", y" << CurrentArmPose.position.y << endl;
-
+    marker_pose_mobile_coords_mtx.lock();
+    marker_pose_mobile_coords = quad_pose;
+    marker_pose_mobile_coords_mtx.unlock();
     return quad_pose;
 }
 void uav_arm_tools::PIDReset()
@@ -762,16 +746,17 @@ void uav_arm_tools::CalculateDockingAltitude()
 {
     if (Controller_Commands.docking_process && state >= 1)
     {
-        DockingIteration += 1;
+        Controller_Commands.uav_visual_contact = true;
+        DockingIteration++;
 
-        double docking_altitude_calculated = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 25.0) * DockingFactor;
+        double docking_altitude_calculated = minArm_Altitude_Limit + log2(1.0 + double(DockingIteration) / 80.0) * DockingFactor;
         if (DockingAltitude < docking_altitude_calculated) //probably docking_altitude_calculated is smaller than DockingAltitude
         {
             DockingAltitude = docking_altitude_calculated;
         }
         else
         {
-            DockingIteration += 2;
+            DockingIteration++;
         }
 
         if (DockingAltitude >= Docking_Altitude_Limit)
@@ -782,11 +767,13 @@ void uav_arm_tools::CalculateDockingAltitude()
     }
     else
     {
-        tracking_state_delayed++;
-        if (tracking_state_delayed > 25 && docking_has_been_requested_)
-        {
 
+        tracking_state_delayed++;
+        if (tracking_state_delayed > 20 && docking_has_been_requested_)
+        {
+            Controller_Commands.uav_visual_contact = false;
             Controller_Commands.docking_process = false;
+            Controller_Commands.tracking_process = true;
             DockingIteration = 0;
             minArmAltitude -= 0.02;
             if (minArmAltitude <= minArm_Altitude_Limit)
@@ -799,6 +786,36 @@ void uav_arm_tools::CalculateDockingAltitude()
         }
 
         DockingAltitude = minArmAltitude; //the one calculated in uavPose_to_ArmPoseReq_arm
+    }
+    return;
+}
+void uav_arm_tools::CalculateAltitude_InternalRadius(double x_, double y_)
+{
+    double cat1, cat2, offx(0.0), offy(0.0);
+    cat1 = x_ - offx;
+    cat2 = y_ - offy;
+    double rad = sqrt((cat1 * cat1) + (cat2 * cat2));
+
+    // double difference_x = ArmPoseReq.position.x - PID_ArmReq.position.x;
+    //double difference_y = ArmPoseReq.position.y - PID_ArmReq.position.y;
+
+    //------agregar flag de contacto-------
+    if (!Controller_Commands.docking_process)
+    {
+        double rad_margin = 0.15;
+        if (rad <= (rad_int + rad_margin)) //0.012
+        {
+            minArmAltitude = minArm_Altitude_Limit + 1.0 * ((rad_int + rad_margin) - rad);
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit + 0.1); //0.135
+                                                                                // Print("ENter in Correction Z, rad. minalt", rad, minArmAltitude);
+        }
+        else
+        {
+            minArmAltitude -= 0.0001;
+            if (minArmAltitude <= minArm_Altitude_Limit)
+                minArmAltitude = minArm_Altitude_Limit;
+            num.MinMax_Correction(minArmAltitude, minArm_Altitude_Limit);
+        }
     }
     return;
 }
@@ -825,6 +842,7 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
         if (tracking_process)
         {
             tracking_process = false;
+            docking_process = false;
         }
         else
         {
@@ -845,6 +863,40 @@ void ControllerCommands::Controller_Handler(const sensor_msgs::Joy &Controller_M
             docking_process = false;
         }
     }
+
+    if (!tracking_process)
+    {
+        docking_process = false;
+    }
+    std_msgs::Int8 msg_arduino;
+    msg_arduino.data = 0;
+
+    if (!uav_visual_contact)
+    {
+        msg_arduino.data = 0;
+    }
+    else
+    {
+        msg_arduino.data = 1;
+    }
+    if (docking_process && tracking_process)
+    {
+        msg_arduino.data = 4;
+    }
+    else if (docking_process)
+    {
+        msg_arduino.data = 2;
+    }
+    else if (tracking_process)
+    {
+        msg_arduino.data = 3;
+    }
+    if (storage_process)
+    {
+        msg_arduino.data = 5;
+    }
+
+    dockign_state_pub.publish(msg_arduino);
     Print("tracking, docking, storage", tracking_process, docking_process, storage_process);
     std::this_thread::sleep_for(std::chrono::milliseconds(400));
 }

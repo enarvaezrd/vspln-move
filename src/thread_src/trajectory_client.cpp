@@ -120,7 +120,7 @@ control_msgs::FollowJointTrajectoryGoal FollowTrajectoryClient::makeArmUpTraject
   trajectory.joint_names = joint_names_;
   trajectory.points.resize(NUM_TRAJ_POINTS);
   // trajectory point:0
-  trajectory.points[0].time_from_start = ros::Duration(Wait_Time + 0.03);
+  trajectory.points[0].time_from_start = ros::Duration(Wait_Time + 0.01);
   trajectory.points[0].positions.resize(NUM_JOINTS);
   trajectory.points[0].positions = req_positions; //siempre poner en primera posicion, para controlador de motores dynamixel
   // trajectory point:1
@@ -159,11 +159,11 @@ double FollowTrajectoryClient::wait_time_calc(std::vector<double> joints)
   Ttimer = tempdiff / JVelB;
   if (Ttimer < 0.0)
   {
-    Ttimer = 0.001;
+    Ttimer = 0.0001;
   }
-  else if (Ttimer > 1.0)
+  else if (Ttimer > 0.5)
   {
-    Ttimer = 1.0;
+    Ttimer = 0.5;
   }
   return Ttimer;
 }

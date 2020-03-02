@@ -18,17 +18,18 @@ void Arm_Joint_State::Pro_Joints_State_Handler(const sensor_msgs::JointState &jo
 
 std::vector<double> Arm_Joint_State::GetCurrentArmJoints()
 {
-    arm_measurements_mtx.lock();
-    int joint_count = 0;
-    int pro_joints = 0;
+    int joint_count = 3;
+    int pro_joints = 3;
     int mx_joints = 0;
-    for (auto pro_joint : Pro_Joints_State.position)
+
+    arm_measurements_mtx.lock();
+    /*for (auto pro_joint : Pro_Joints_State.position)
     {
         pro_joints++;
         //  cout << "--- pro angles received: " << pro_joint << endl;
         arm_joints_state[joint_count] = pro_joint;
         joint_count++;
-    }
+    }*/
     for (auto mx_joint : Mx_Joints_State.position)
     {
         mx_joints++;
@@ -39,7 +40,7 @@ std::vector<double> Arm_Joint_State::GetCurrentArmJoints()
 
     arm_measurements_mtx.unlock();
 
-  //  if (joint_count != 6)
+    //  if (joint_count != 6)
     //    std::cerr << "Error ed_pmov.cpp: joints are not complete, Number of Joints: " << joint_count <<", mx: "<<mx_joints<<", pro: "<<pro_joints<< "\n";
 
     return arm_joints_state;
@@ -200,7 +201,7 @@ bool Ed_Pmov::ReqMovement_byPose_FIx_Orientation(geometry_msgs::Pose pose_req)
         }
         //usleep(delay_time_usecs);
         arm.startTrajectory(goale); //Inicio de trayectoria en GAZEBO
-       // usleep(delay_time_usecs);
+                                    // usleep(delay_time_usecs);
     }
     else
     {
@@ -225,7 +226,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
         std::vector<double> joints_result(6);
         kinematic_states_[0]->copyJointGroupPositions(joint_model_groups_[0], joints_result);
 
-      /*  std::vector<double> joints_result_pos(6);
+        /*  std::vector<double> joints_result_pos(6);
         geometry_msgs::Pose TPoseTemp = pose_req;
         TPoseTemp.orientation.w = 0.0;
         TPoseTemp.orientation.x = 1.0;
@@ -263,7 +264,7 @@ control_msgs::FollowJointTrajectoryGoal Ed_Pmov::Req_Joints_byPose_FIx_Orientati
     }
     else
     {
-         PrintPose("NO solution for pose request!", pose_req);
+        PrintPose("NO solution for pose request!", pose_req);
     }
     return goale;
 }
@@ -275,7 +276,7 @@ bool Ed_Pmov::Request_Movement_byJointsTrajectory(control_msgs::FollowJointTraje
         arm.startTrajectory(goal); //Inicio de trayectoria en GAZEBO
 
         // Print("delay time ", delay_time.count());
-       // std::this_thread::sleep_for(delay_time);
+        // std::this_thread::sleep_for(delay_time);
         return true;
     }
     else
@@ -415,10 +416,10 @@ std::vector<double> Ed_Pmov::ReadCurrentJoints()
     if (load_joint_states_sub)
     { //real
         currentJoints = ArmJointsState->GetCurrentArmJoints();
-    
-        currentJoints[0]=arm.current_joint_request_[0]; //copy pro joints impossible to read
-        currentJoints[1]=arm.current_joint_request_[1];
-        currentJoints[2]=arm.current_joint_request_[2];
+
+        currentJoints[0] = arm.current_joint_request_[0]; //copy pro joints impossible to read
+        currentJoints[1] = arm.current_joint_request_[1];
+        currentJoints[2] = arm.current_joint_request_[2];
         arm.Update_Current_Joint_state(currentJoints);
         //Print(" Current Joints: ", currentJoints[0], currentJoints[1], currentJoints[2], currentJoints[3], currentJoints[4], currentJoints[5]);
 

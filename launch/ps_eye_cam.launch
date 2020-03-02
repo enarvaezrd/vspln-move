@@ -6,9 +6,9 @@
   <arg name="video_device" default="/dev/video1"/> 
   <group ns="ps_eye_camera">
 
-    <node pkg="uvc_camera" type="uvc_camera_node" name="mycam" output="screen">
+    <node pkg="uvc_camera" type="uvc_camera_node" name="mycam" output="screen" respawn="true">
       <!-- Parameters used to find the camera -->
-      <param name="fps" value="40"/>
+      <param name="fps" value="30"/>
       <param name="height" value="480"/>
       <param name="width" value="640"/>
       <param name="Auto_Exposure" value="0"/>

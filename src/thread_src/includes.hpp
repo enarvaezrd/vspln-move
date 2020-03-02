@@ -40,6 +40,7 @@
 //UAV control message
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Int8.h>
 
 #include <thread>
 #include <future>

@@ -369,7 +369,7 @@
     <child link="link_conector_fr07s"/>
      <origin  xyz="0.00 0.0 0.0235"  rpy="1.570796327 0.0 -1.570796327 " />
      <axis  xyz="0 -1 0" />
-    <limit  lower="-3.14159" upper="3.1459" effort="10"  velocity="4.57" />
+    <limit  lower="-1.3" upper="3.1459" effort="10"  velocity="4.57" />
   </joint>
 
  <link  name="link_conector_fr07s">
@@ -427,7 +427,7 @@
     <child link="link_bracket_f5l"/>
      <origin  xyz="0.0 0.0 0.0"  rpy="0.0 1.570796327 3.141592654" />
      <axis  xyz="-1 0 0" />
-    <limit  lower="-1.825619449" upper="1.825619449" effort="10"  velocity="3.57" />
+    <limit  lower="-2.0" upper="2.15" effort="10"  velocity="3.57" />
   </joint>
 
  <link  name="link_bracket_f5l">

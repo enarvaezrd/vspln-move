@@ -18,32 +18,80 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     //10. tr_brk - Trajectory break, punto de quiebre de trayectorias, indica en donde termina la anterior y empieza la nueva trayectoria. q_tr en matlab
     //11. tr_old - Anterior trayectoria almacenada, para comparar con la nueva tr, y realizar composicion de trayectoria
 
-    int advance_prediction = 0;
+    int advance_prediction = 3;
     float delta_x_prev = 0.0;
     float delta_y_prev = 0.0;
     VectorDbl deltas_x_;
     VectorDbl deltas_y_;
 
+    VectorDbl accum_x_copy = acum_x;
+    VectorDbl accum_y_copy = acum_y;
+    double num_points=4.0;
+    acum_x[0] = CurrentEEFF_Pose.position.x + (1.0 * (Marker_Abs_Pose.position.x - CurrentEEFF_Pose.position.x) / num_points);
+    acum_y[0] = CurrentEEFF_Pose.position.y + (1.0 * (Marker_Abs_Pose.position.y - CurrentEEFF_Pose.position.y) / num_points);
+    acum_x[1] = CurrentEEFF_Pose.position.x + (2.0 * (Marker_Abs_Pose.position.x - CurrentEEFF_Pose.position.x) / num_points);
+    acum_y[1] = CurrentEEFF_Pose.position.y + (2.0 * (Marker_Abs_Pose.position.y - CurrentEEFF_Pose.position.y) / num_points);
+    acum_x[2] = CurrentEEFF_Pose.position.x + (3.0 * (Marker_Abs_Pose.position.x - CurrentEEFF_Pose.position.x) / num_points);
+    acum_y[2] = CurrentEEFF_Pose.position.y + (3.0 * (Marker_Abs_Pose.position.y - CurrentEEFF_Pose.position.y) / num_points);
+
+    double x_pre = acum_x[d_prv - 1];
+    double y_pre = acum_y[d_prv - 1];
     int n = 2;
+
+    /*for (double i = 1.0; i < d_prv - 1.0; i += 1.0)
+    {
+        acum_x[i] = CurrentEEFF_Pose.position.x + (i * (Marker_Abs_Pose.position.x - CurrentEEFF_Pose.position.x) / 4.0);
+        acum_y[i] = CurrentEEFF_Pose.position.y + (i * (Marker_Abs_Pose.position.y - CurrentEEFF_Pose.position.x) / 4.0);
+    }*/
+    // acum_x[d_prv - 1] = (acum_x[d_prv - 1] + x_pre) / 2.0;
+    //  acum_y[d_prv - 1] = (acum_y[d_prv - 1] + y_pre) / 2.0;
+#ifdef OPENCV_DRAW
+
+    for (int i = 0; i < d_prv; i++)
+    {
+        cv::circle(image_Ptraj, cv::Point(round((acum_x[i] + maxsc) * scale), round((acum_y[i] + maxsc) * scale)), 12, cv::Scalar(0, 0, 250), -1, 8);
+    }
+    cv::circle(image_Ptraj, cv::Point(round((Marker_Abs_Pose.position.x + maxsc) * scale), round((Marker_Abs_Pose.position.y + maxsc) * scale)), 4, cv::Scalar(0, 250, 250), -1, 8);
+    // cv::circle(image_Ptraj, cv::Point(round((CurrentEEFF_Pose.position.x + maxsc) * scale), round((CurrentEEFF_Pose.position.y + maxsc) * scale)), 4, cv::Scalar(0, 250, 250), -1, 8);
+
+#endif
+    if (acum_values != (d_pr_m + 1))
+        acum_values++;
+    else
+        acum_values = (d_pr_m + 1);
+
+    //for(int i = (d_prv-d_pr_m+1);i<(d_prv);i++)
+    for (int i = d_prv; i > (d_prv - d_pr_m); i--)
+    {
+        mean.vx += (acum_x[i] - acum_x[i - 1]); //Acumulo todo el vector (diferencias)
+        mean.vy += (acum_y[i] - acum_y[i - 1]);
+    }
+    mean.vx /= (acum_values - 1); // Acumulacion sobre numero de datos　vx　es la variacion promedio en x
+    mean.vy /= (acum_values - 1);
+
     for (int i = 0; i < acum_x.size() - 1; i++)
     {
+
         deltas_x_.push_back(acum_x[i + 1] - acum_x[i]);
         deltas_y_.push_back(acum_y[i + 1] - acum_y[i]);
     }
+    deltas_x_.push_back(CurrentEEFF_Pose.position.x - acum_x.back());
+    deltas_y_.push_back(CurrentEEFF_Pose.position.y - acum_y.back());
     for (int i = 0; i < deltas_x_.size() - 1; i++)
     {
         delta_x_prev += abs(abs(deltas_x_[i + 1]) - abs(deltas_x_[i]));
         delta_y_prev += abs(abs(deltas_y_[i + 1]) - abs(deltas_y_[i]));
     }
-    if (delta_x_prev < 0.001 && delta_y_prev < 0.001)
+    if (delta_x_prev < 0.0015 || delta_y_prev < 0.0015 || abs(delta_y_prev - delta_y_prev) < 0.001)
     {
         n = 1;
+        Print("Small deltas x y", delta_x_prev, delta_y_prev);
     }
-
+    // Print("Deltas x y", delta_x_prev, delta_y_prev);
     Position CurrentPoint;
-    CurrentPoint.xval = Marker_Abs_Pose.position.x;
-    CurrentPoint.yval = Marker_Abs_Pose.position.y;
-    CurrentPoint.zval = Marker_Abs_Pose.position.z;
+    CurrentPoint.xval = CurrentEEFF_Pose.position.x; //   CurrentEEFF_Pose    Marker_Abs_Pose
+    CurrentPoint.yval = CurrentEEFF_Pose.position.y;
+    CurrentPoint.zval = CurrentEEFF_Pose.position.z;
 
     tr_brk = 0;
     int prof_expl_adv = prof_expl + adv;
@@ -84,9 +132,9 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     { //Cuando ya se pueda calcular regresion, es decir cuando ya se hayan acumulado muchos valores para mean.vx mean.vy
 
         double vx = mean.vx, vy = mean.vy;
-        double vxtm = 0.002, vytm = 0.002;
-        float maxdm = 0.035, pnd = 1.0;
-        const int stepc = 1000;
+        double vxtm = 0.0003, vytm = 0.0003;
+        float maxdm = 0.001, pnd = 1.0;
+        const int stepc = 400;
         std::vector<double> xvala(stepc), yvala(stepc);
         //xvala.resize(stepc); si compila estas lineas no son necesarias
         //yvala.resize(stepc);
@@ -106,12 +154,14 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
             // traj.yval[i]=CurrentPoint.yvalc+(i*pnd*vy);
             traj.zval[i] = zvalue;
         }
-        double sationary_step_dist = 0.016; //0.0016
+        double sationary_step_dist = 0.0016; //0.0016
         flagMtx.lock();
-        if ((abs(acum_x[d_prv] - acum_x[d_prv - 1]) <= sationary_step_dist && abs(acum_y[d_prv] - acum_y[d_prv - 1]) <= sationary_step_dist) || docking_process_flag)
+        // Print("Differences", abs(accum_x_copy[d_prv] - accum_x_copy[d_prv - 1]), abs(accum_y_copy[d_prv] - accum_y_copy[d_prv - 1]));
+        if ((abs(accum_x_copy[d_prv] - accum_x_copy[d_prv - 1]) <= sationary_step_dist && abs(accum_y_copy[d_prv] - accum_y_copy[d_prv - 1]) <= sationary_step_dist) || docking_process_flag)
         {
-            fixed_dist = 0.001;
+            fixed_dist = 0.001; //0.001
             Stop_RRT_flag = true;
+            Print("RRT stopped dist", fixed_dist);
         }
         else
         {
@@ -120,7 +170,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
         }
         flagMtx.unlock();
         //=======================================================================================================================================
-        if (abs(mean.vx) >= abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
+        if (abs(mean.vx) > abs(mean.vy)) //Seleccion de modo, que eje es absisa y que eje es ordenadas , se escoge el que tenga mayou informacion, pasos mas grandes
         {
             Regression(acum_x, acum_y, d_prv, 1, n, coeffs);
 
@@ -237,7 +287,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     }
     Tr_Original = Tr;
 
-    Check_Recover_Trajectory(false);
+    /*Check_Recover_Trajectory(false);
     //Average_OldTrajectory();
     SmoothTrajectory_Average(7, 2);
     Check_Recover_Trajectory(false);
@@ -249,7 +299,7 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
         SmoothTrajectory_Average(3, 2);
         // Check_Recover_Trajectory(false);
     }
-
+*/
     //SmoothTrajectory_Average(3, 1);
 
     //SmoothTrajectory();
@@ -257,10 +307,12 @@ void Prediction::Trajectory_Prediction(geometry_msgs::Pose Marker_Abs_Pose, geom
     for (int i = 0; i < Tr.xval.size() - 1; i++)
     {
         //Recovered TRajectory
-        cv::circle(image_Ptraj, cv::Point(round((Tr.xval[i] + maxsc) * scale), round((Tr.yval[i] + maxsc) * scale)), 2, cv::Scalar(204, 0, 102), -1, 8);
+        cv::circle(image_Ptraj, cv::Point(round((Tr.xval[i] + maxsc) * scale), round((Tr.yval[i] + maxsc) * scale)), 3, cv::Scalar(204, 0, 102), -1, 8);
     }
     first_tr = true;
     Tr_old = Tr;
+    acum_x = accum_x_copy;
+    acum_y = accum_y_copy;
     return;
 }
 
@@ -735,8 +787,8 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
     mean.vy = 0.0;
     for (int i = 0; i < d_prv; i++)
     {
-        acum_x[i] = acum_x[i + 1] - ugv_state.velocity_linear.dx * ugv_state_factor;
-        acum_y[i] = acum_y[i + 1] + ugv_state.velocity_linear.dy * ugv_state_factor;
+        acum_x[i] = acum_x[i + 1]; //- ugv_state.velocity_linear.dx * ugv_state_factor;
+        acum_y[i] = acum_y[i + 1]; //+ ugv_state.velocity_linear.dy * ugv_state_factor;
     }
 
     acum_x[d_prv] = Marker_Abs_Pose.position.x;
@@ -754,23 +806,8 @@ struct rrtns::MeanValues Prediction::XYMean_Calculation(geometry_msgs::Pose Mark
     UAV_Velocity = UAV_Velocity_temp ;//   / (double)(d_prv-1);
     Velocity_mtx.unlock();
 */
-    eeff_min_height = Marker_Abs_Pose.position.z; //this is the z value for the entire rrt, modify here to contact phase
 
-    if (acum_values != (d_pr_m + 1))
-        acum_values++;
-    else
-        acum_values = (d_pr_m + 1);
-
-    //for(int i = (d_prv-d_pr_m+1);i<(d_prv);i++)
-    for (int i = d_prv; i > (d_prv - d_pr_m); i--)
-    {
-        mean.vx += (acum_x[i] - acum_x[i - 1]); //Acumulo todo el vector (diferencias)
-        mean.vy += (acum_y[i] - acum_y[i - 1]);
-    }
-    mean.vx /= (acum_values - 1); // Acumulacion sobre numero de datos　vx　es la variacion promedio en x
-    mean.vy /= (acum_values - 1);
-
-    Marker_Pose_Manipulator_Coords = Marker_Abs_Pose;
+    //Marker_Pose_Manipulator_Coords = Marker_Abs_Pose;
 
     return mean;
 }
@@ -1166,7 +1203,8 @@ void Prediction::RRT_Path_Generation()
         // cv::circle(image_Ptraj, cv::Point((nodes.coord[VS_Node_Indx][0] + maxsc) * scale, (nodes.coord[VS_Node_Indx][1] + maxsc) * scale), 6, Colors[0], CV_FILLED, 3, 8);
 #ifdef STREAMING
         Text_Stream_RRTData->write_TimeStamp();
-        for (int i = 0; i < Tr.xval.size(); i++)
+        int Tr_size = Tr.xval.size();
+        for (int i = 0; i < Tr_size; i++)
         {
             Text_Stream_RRTData->write_Data(Tr.xval[i]);
             Text_Stream_RRTData->write_Data(Tr.yval[i]);
@@ -1249,7 +1287,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
                 Road_VS_Result_Indx = i;
             }
         }
-
+        int original_indx = Road_VS_Result_Indx;
         Velocity_mtx.lock();
         double UAV_vel = UAV_Velocity;
         Velocity_mtx.unlock();
@@ -1284,7 +1322,7 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
             }
             if (trust_index > 0.3)
             {
-                Road_VS_Result_Indx -= 1;
+                Road_VS_Result_Indx -= 2;
             }
 
             Road_VS_Result_Indx -= PathPlanningAdvancing_Index;
@@ -1292,7 +1330,8 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
             if (Road_VS_Result_Indx < 0)
                 Road_VS_Result_Indx = 0;
         }
-        Print("TRUST index", trust_index);
+        Print("TRUST indexes", trust_index, Road_VS_Result_Indx, original_indx);
+        // Road_VS_Result_Indx=original_indx;   // must delete
         Final_VSPP_Index = PathPlanning_Indexes[Road_VS_Result_Indx];
 
         //Add more cases here
@@ -1302,9 +1341,12 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
         NextRobotRequest.position.x = nodes.coord[Final_VSPP_Index][0]; //Then copy position
         NextRobotRequest.position.y = nodes.coord[Final_VSPP_Index][1];
         NextRobotRequest.position.z = nodes.coord[Final_VSPP_Index][2];
+        Print("Poses NEXT", NextRobotRequest.position.x, NextRobotRequest.position.y, NextRobotRequest.position.z);
+        Print("Poses MARKERREQ", Marker_Pose_Manipulator_Coords.position.x, Marker_Pose_Manipulator_Coords.position.y, Marker_Pose_Manipulator_Coords.position.z);
+        //NextRobotRequest = Marker_Pose_Manipulator_Coords; //must delete
 
 #ifdef OPENCV_DRAW
-        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 7, cv::Scalar(200, 0, 0), -1, 8);
+        cv::circle(image_Ptraj, cv::Point((nodes.coord[Final_VSPP_Index][0] + maxsc) * scale, (nodes.coord[Final_VSPP_Index][1] + maxsc) * scale), 7, cv::Scalar(200, 200, 0), -1, 8);
 #endif
 
         if (UAV_vel > 0.01)
@@ -1318,9 +1360,9 @@ geometry_msgs::Pose Prediction::Selection_Function(float trust_index)
 #ifdef OPENCV_DRAW
         cv::circle(image_Ptraj, cv::Point((Tr.xval[adv] + maxsc) * scale, (Tr.yval[adv] + maxsc) * scale), 6, cv::Scalar(200, 0, 0), -1, 8);
 #endif
-        NextRobotRequest.position.x = Tr.xval[adv]; //Then copy position
+        /*NextRobotRequest.position.x = Tr.xval[adv]; //Then copy position
         NextRobotRequest.position.y = Tr.yval[adv];
-        NextRobotRequest.position.z = Tr.zval[adv];
+        NextRobotRequest.position.z = Tr.zval[adv];*/
         Final_VSPP_Index = adv;
     }
 #ifdef SREAMING
@@ -1465,7 +1507,7 @@ geometry_msgs::Pose Prediction::NoTarget_Sequence(geometry_msgs::Pose Marker_Abs
     return Final_EEFF_Pose;
 }
 
-void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose, bool docking_process_flag) //extraer vecindad
+void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose CurrentArmPose, geometry_msgs::Pose NextRequestPartialPose, bool docking_process_flag) //extraer vecindad
 {
 
     //tic();
@@ -1473,6 +1515,8 @@ void Prediction::Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_
     //Print("tiempo RRT XY Mean Calc",toc());
     //tic();
     // Print("-------RRt2 TrajPredict------------");
+    eeff_min_height = CurrentArmPose.position.z; //this is the z value for the entire rrt, modify here to contact phase
+    Marker_Pose_Manipulator_Coords = NextRequestPartialPose;
     Trajectory_Prediction(Marker_Abs_Pose, CurrentArmPose, docking_process_flag);
     // Print("AAA tiempo Traj Predict",toc());
 

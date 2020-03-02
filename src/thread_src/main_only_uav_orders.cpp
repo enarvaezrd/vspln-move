@@ -17,6 +17,10 @@ int main(int argc, char **argv)
     float max_dimm = 1.0;
     double rrt_extension = 0.1; //extension of each rrt step for regression 0.38 0.28
     int num_nodes_per_region = prof_expl + 15;
+    float EPS = 0.002;
+    double tracking_max_mov = 0.0015;
+    double docking_max_mov = 0.0008;
+
     double rad_int = 0.26;
     double rad_ext = 0.41;
     double armMinAltitude = 0.47;
@@ -56,7 +60,7 @@ int main(int argc, char **argv)
 
     RobotCommands Robot_Commands(odom_str, UAV_position_x, UAV_position_y,real_robots);
 
-    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets);
+    ua_ns::uav_arm_tools UavArm_tools(rad_int, rad_ext, armMinAltitude, controller_topic, Docking_Alt_Lim_, DockingFactor, real_robots, marker_offsets,tracking_max_mov,docking_max_mov);
     sleep(3.0);
     auto image_MarkerARM_Pos = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
     int scale = floor(image_size / (2.0 * max_dimm));

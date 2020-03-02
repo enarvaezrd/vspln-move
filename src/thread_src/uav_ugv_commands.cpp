@@ -35,7 +35,7 @@ Angles RobotCommands::ConvPosetoAngles(geometry_msgs::Pose pose) //Convertir qua
 
 void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_pose, double height_correction, double x_correction, double y_correction)
 {
-    Angles UAV_yaw_Angle = ConvPosetoAngles(uav_local_pose);                    //tal vez es necesario sacar el angulo del uav desde marker pose
+    Angles UAV_yaw_Angle = ConvPosetoAngles(uav_local_pose);                     //tal vez es necesario sacar el angulo del uav desde marker pose
     float x_error_local = uav_local_pose.position.x - (uav_xpos + x_correction); //Error calculation in local coordinates
     float y_error_local = uav_local_pose.position.y - (uav_ypos + y_correction); //(uav_ypos + (y_corection - uav_ypos) / 4.0);
     //std::cout<<"UAV LOCAL ERRORS: "<< x_error_local<<", y: "<< y_error_local<<std::endl;
@@ -44,6 +44,16 @@ void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_po
     UAV_yaw_Angle.yaw = fmod(UAV_yaw_Angle.yaw, PI);
     float x_error_uav = x_error_local * sin(UAV_yaw_Angle.yaw) + y_error_local * cos(UAV_yaw_Angle.yaw); //Rotation to UAV coordinates
     float y_error_uav = x_error_local * cos(UAV_yaw_Angle.yaw) - y_error_local * sin(UAV_yaw_Angle.yaw);
+
+    double alert_uav_command_thresh = 0.1;
+    if (x_error_uav > alert_uav_command_thresh || y_error_uav > alert_uav_command_thresh)
+    {
+        alert_uav_command = true;
+    }
+    else
+    {
+        alert_uav_command = false;
+    }
 
     if (x_error_uav > max_uav_correction)
         x_error_uav = max_uav_correction;
@@ -72,8 +82,8 @@ void RobotCommands::Calculate_and_Send_Commands(geometry_msgs::Pose uav_local_po
     uav_command.angular.x = 0.0;
     uav_command.angular.y = 0.0;
     uav_command.angular.z = 0.0;
-    uav_msg_pub.publish(uav_command);
 
+    uav_msg_pub.publish(uav_command);
     uav_speed = 0.1 * (abs(uav_command.linear.x - old_uav_command.linear.x) + abs(uav_command.linear.x - old_uav_command.linear.x));
     old_uav_command = uav_command;
     return;

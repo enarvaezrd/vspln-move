@@ -14,13 +14,15 @@ public:
     float uav_ypos;
     float uav_altitude;
     float max_uav_correction;
+    bool alert_uav_command;
 
     RobotCommands(std::string odometry_str_, double uav_x, double uav_y, bool real_robots_) : uav_xpos(uav_x),
                                                                                               uav_ypos(uav_y),   //0.22-0.4
                                                                                               uav_altitude(1.2), //0.94; 1.1 for non contact
-                                                                                              max_uav_correction(0.1),
+                                                                                              max_uav_correction(0.05),
                                                                                               odometry_str(odometry_str_),
-                                                                                              real_robots_flag(real_robots_)
+                                                                                              real_robots_flag(real_robots_),
+                                                                                              alert_uav_command(false)
     {
         uav_msg_pub = nh_uav_ugv_comm.advertise<geometry_msgs::Twist>("/robot2/visual_local_guidance/uav_msg", 1); //commands for the UAV
         sub_ugv_Odom = nh_uav_ugv_comm.subscribe(odometry_str.c_str(), 1, &RobotCommands::UGV_Odom_Handler, this); ///robot1/robotnik_base_control/odom

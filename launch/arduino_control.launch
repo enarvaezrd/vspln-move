@@ -1,6 +1,6 @@
 <launch>
 	<arg name="usb_port" default="/dev/ttyACM0"/>
-	<arg name="baud" default="20000"/>
+	<arg name="baud" default="9600"/>
  　　　　　　 <arg name="launch_joystick" default="true"/> 
 	<node pkg="ed_control" name="arduino_control" type="arduino_control" output="screen" respawn="true" />
 	<node pkg="rosserial_python" name="arduino_serial_node" type="serial_node.py" args="_port:=$(arg usb_port) _baud:=$(arg baud)" output="screen" respawn="true" />

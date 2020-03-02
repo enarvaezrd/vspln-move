@@ -71,18 +71,18 @@ void RRT::Initialize_VicinityRRT()
             dm = 0.05;
         //if (dm<=0.001) dm=0.001;
         //VD.R[j][1]  Es el radio de apertura creciente
-        vdr.R[j][2] = 0.002;  //valor de radio  z
+        vdr.R[j][2] = 0.001;  //valor de radio  z
         vdr.R[j][0] = 2 * dm; //dm, distancia entre puntos
 
         double acDist = 1.1;
         for (int k = 0; k <= j; k++)
         {
-            acDist += 0.8 * vdr.R[k][0];
+            acDist += 0.6 * vdr.R[k][0];
         }
         if (acDist == 0)
             acDist = 0.01; //Quitar o revisar valor
         double factorA = ((double(j) * double(j)) / (30 * double(prof_expl) * double(prof_expl)));
-        vdr.R[j][1] = 0.02 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
+        vdr.R[j][1] = 0.01 + factorA + ((acDist * acDist) - 1.14) / 20; //+((j*j*1.0)/5000)
 
         if (vdr.R[j][1] <= 0.0002)
             vdr.R[j][1] = 0.0002;
@@ -652,7 +652,7 @@ inline void RRT::RRT_AddValidCoord(VectorDbl q_rand_TR, VectorDbl q_randA_T, int
 #ifdef OPENCV_DRAW
     // mtxA.lock();
     //cv::line( image_Ptraj, cv::Point((q_new_f.coord[0]+maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ),cv::Point((q_min.coord[0]+maxsc)*scale,(q_min.coord[1]+maxsc)*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
-    //cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
+   cv::circle( image_Ptraj, cv::Point( (q_new_f.coord[0] +maxsc)*scale,(q_new_f.coord[1]+maxsc)*scale ), 1, Colors[It],CV_FILLED,  1, 8 );
     //int stw=3;
     //cv::line( image, cv::Point((q_new_f.coord[0] -vdr.TP[It][0] +maxsc/stw)*stw*scale,(q_new_f.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),cv::Point((q_min.coord[0]-vdr.TP[It][0]+maxsc/stw)*stw*scale,(q_min.coord[1]-vdr.TP[It][1]+maxsc/stw)*stw*scale ),  cv::Scalar( 00, 230, 50 ),  1, 8 );
 

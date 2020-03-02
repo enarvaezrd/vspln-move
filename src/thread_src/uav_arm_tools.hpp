@@ -31,16 +31,19 @@ public:
     ControllerCommands(string controller_topic)
     {
         sub_control_msg = nh_controller.subscribe(controller_topic.c_str(), 1, &ControllerCommands::Controller_Handler, this);
+        dockign_state_pub = nh_controller.advertise<std_msgs::Int8>("/docking_state", 1); //commands for the UAV
         docking_process = false;
         tracking_process = false;
         storage_process = false;
+        uav_visual_contact = false;
     }
-
+    ros::Publisher dockign_state_pub;
     void Controller_Handler(const sensor_msgs::Joy &controller_msg);
     Printer Print;
     bool docking_process;
     bool tracking_process;
     bool storage_process;
+    bool uav_visual_contact;
 
 private:
     ros::NodeHandle nh_controller;
@@ -56,12 +59,14 @@ public:
     map<int, Positions2D> marker_offsets;
     uav_arm_tools(float rad_int_, float rad_ext_, double minArmAltitude_,
                   string cntrl_topic_, double Docking_Alt_Lim_, float DockingFactor_,
-                  bool real_robots_, map<int, Positions2D> marker_offsets_) : rad_ext(rad_ext_),
-                                                                              rad_int(rad_int_), minArmAltitude(minArmAltitude_),
-                                                                              Controller_Commands(cntrl_topic_),
-                                                                              Docking_Altitude_Limit(Docking_Alt_Lim_),
-                                                                              DockingFactor(DockingFactor_), real_robots(real_robots_),
-                                                                              marker_offsets(marker_offsets_)
+                  bool real_robots_, map<int, Positions2D> marker_offsets_,
+                  double tr_max_mov_, double dock_max_mov) : rad_ext(rad_ext_),
+                                                             rad_int(rad_int_), minArmAltitude(minArmAltitude_),
+                                                             Controller_Commands(cntrl_topic_),
+                                                             Docking_Altitude_Limit(Docking_Alt_Lim_),
+                                                             DockingFactor(DockingFactor_), real_robots(real_robots_),
+                                                             marker_offsets(marker_offsets_), tracking_max_mov(tr_max_mov_),
+                                                             docking_max_mov(dock_max_mov)
 
     {
         tracking_state_delayed = 0;
@@ -148,6 +153,7 @@ public:
         ArmPoseReqFull.position.z = altitude;
     }
     void CalculateDockingAltitude();
+    void CalculateAltitude_InternalRadius(double, double);
     double getEEFFAltitude() { return DockingAltitude; }
 
     struct Quat ArmOrientReq_toQuaternion(double, Pose_msg);
@@ -174,9 +180,17 @@ public:
     }
     float getArmDelay() { return armDelay; }
     Pose_msg getMarkerPose() { return marker_pose; }
+    Pose_msg getMarkerPose_MobileCoords()
+    {
+        marker_pose_mobile_coords_mtx.lock();
+        auto marker_pose_mobile_coords_copy = marker_pose_mobile_coords;
+        marker_pose_mobile_coords_mtx.unlock();
+        return marker_pose_mobile_coords_copy;
+    }
     int getTrackingState() { return state; }
 
     void PIDReset();
+    int DockingIteration;
 
 private:
     Pose_msg empty_pose;
@@ -188,6 +202,7 @@ private:
     int state;
     float minArmAltitude;
     Pose_msg marker_pose;
+    Pose_msg marker_pose_mobile_coords;
     Pose_msg ArmPoseReq;
     Pose_msg ArmPoseReqFull;
     Pose_msg CurrentArmPose;
@@ -203,12 +218,15 @@ private:
     Positions2D oldPos_ciFull;
     NumberCorrection num;
     double DockingAltitude;
-    int DockingIteration;
+
     double Docking_Altitude_Limit;
     double DockingFactor;
     bool tracking_ok;
     int tracking_state_delayed;
     bool docking_has_been_requested_;
+    double tracking_max_mov;
+    double docking_max_mov;
+    std::mutex marker_pose_mobile_coords_mtx;
 };
 
 } // namespace ua_ns

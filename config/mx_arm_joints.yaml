@@ -11,8 +11,8 @@ joint_4:
 joint_5:
   ID: 55
   Return_Delay_Time: 0
-  Max_Position_Limit: 3312
-  Min_Position_Limit: 782
+  Max_Position_Limit: 3600
+  Min_Position_Limit: 500
   Velocity_Limit: 36
 joint_6:
   ID: 66

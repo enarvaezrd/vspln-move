@@ -18,7 +18,7 @@ public:
                                                                                          MapSize(map_size_ + 1),
                                                                                          max_dimm(max_dimm_),
                                                                                          rrt_extension(rrt_extension_),
-                                                                                         rad_int(rad_int_),
+                                                                                         rad_int(rad_int_ + 0.1),
                                                                                          rad_ext(rad_ext_)
     {
         adv = 1;
@@ -27,9 +27,9 @@ public:
         White_Imag = cv::Mat(image_size, image_size, CV_8UC3, cv::Scalar(255, 255, 255));
         maxsc = max_dimm;
         scale = floor(image_size / (2.0 * maxsc));
-        acum_x.resize((d_prv + 1));
-        acum_y.resize((d_prv + 1));
-        for (int i = 0; i < (d_prv + 1); i++)
+        acum_x.resize(d_prv);
+        acum_y.resize(d_prv);
+        for (int i = 0; i < d_prv; i++)
         {
             acum_x[i] = 0.0;
             acum_y[i] = 0.0;
@@ -50,7 +50,7 @@ public:
         PathPlanning_Available = false;
         PathPlanningAdvancing_Index = 0;
         first_tr = true;
-        
+
 #ifdef STREAMING
         Text_Stream_RRTData = new TextStream("/home/edd/catkin_ws/src/ed_pmov/rrtdata_v1.txt");
         Text_Stream_RRTData->write_Data("x");
@@ -62,7 +62,7 @@ public:
 #endif
         HalfMapSize = (MapSize - 1) / 2;
         MapResolution = (MapSize - 1) / (max_dimm * 2.0);
-        ugv_state_factor = 0.5; //40%
+        ugv_state_factor = 0.0; //40%  0.5
         UAV_Velocity = 0.0;
         int cn = 0;
         for (int i = 0; i < prof_expl + adv; i++)
@@ -129,7 +129,7 @@ public:
     }
     int Get_Adv() { return adv; }
     const int Get_TRbr() { return tr_brk; }
-    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, bool); //extraer vecindad
+    void Planif_SequenceA(geometry_msgs::Pose Marker_Abs_Pose, geometry_msgs::Pose, geometry_msgs::Pose, bool); //extraer vecindad
 
     geometry_msgs::Pose NoTarget_Sequence(geometry_msgs::Pose Marker_Abs_Pose); //No quad
     //const Nodes Get_Nodes(){return nodes;}

@@ -46,7 +46,7 @@
   <include file="$(find ed_pmov)/launch/camera_usb_extra.launch">
         <arg name="video_device_arm" default="/dev/video2"/> 
   	<arg name="camera_name_arm" default="camera_arm"/>
-  	<arg name="view_cameras" default="true"/>
+  	<arg name="view_cameras" default="false"/>
   </include>
 
 
